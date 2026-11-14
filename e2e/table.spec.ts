@@ -73,9 +73,12 @@ test('three players play a hand from deal to payout', async ({ browser }) => {
   await expect(ana.locator('.pot-amount')).toHaveText('130');
 
   for (let i = 0; i < 6; i++) await actWhoeverIsUp([ana, ben], '체크');
-  await expect(cat.getByText('누가 이겼나요?')).toBeVisible();
-  await cat.locator('.win-row').filter({ hasText: 'Ben' }).click();
-  await cat.getByRole('button', { name: 'Ben에게 130 지급' }).click();
+  // 승자 처리는 방장만: 다른 사람은 기다림 안내만 봐요
+  await expect(cat.getByText('방장(Ana)이 승자를 고르는 중이에요')).toBeVisible();
+  await expect(cat.locator('.win-row')).toHaveCount(0);
+  await expect(ana.getByText('누가 이겼나요?')).toBeVisible();
+  await ana.locator('.win-row').filter({ hasText: 'Ben' }).click();
+  await ana.getByRole('button', { name: 'Ben에게 130 지급' }).click();
 
   await expect(ana.locator('.stage-line')).toHaveText('Ben 승리');
   await expect(stackOf(ana, 'Ben')).toHaveText('1,070');
@@ -87,7 +90,9 @@ test('three players play a hand from deal to payout', async ({ browser }) => {
   await expect(ana.getByText('Ana → Ben')).toBeVisible();
   await ana.keyboard.press('Escape');
 
-  await ben.getByRole('button', { name: /다음 핸드 시작/ }).click();
+  await expect(ben.getByRole('button', { name: /다음 핸드 시작/ })).toHaveCount(0);
+  await expect(ben.getByText('방장(Ana)이 다음 핸드를 준비하는 중이에요')).toBeVisible();
+  await ana.getByRole('button', { name: /다음 핸드 시작/ }).click();
   await expect(ana.getByText('핸드 #2', { exact: true })).toBeVisible();
   for (const p of [ana, ben, cat]) expect((p as Page & { errors: string[] }).errors).toEqual([]);
 });
