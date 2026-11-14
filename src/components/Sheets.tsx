@@ -60,7 +60,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
   return (
     <div className="menu">
       <ul className="menu-group">
-        {room.undoLabel && item('되돌리기', () => run({ type: 'undo', v }).then((ok) => ok && setOpen(null)), { note: room.undoLabel })}
+        {isHost && room.undoLabel && item('되돌리기', () => run({ type: 'undo', v }).then((ok) => ok && setOpen(null)), { note: room.undoLabel })}
         {item('친구 초대', () => setOpen('invite'), { note: room.code })}
         {item('정산', () => setOpen('settle'))}
         {item('큰 화면 모드', onDisplay, { note: '테이블 가운데 두는 화면' })}

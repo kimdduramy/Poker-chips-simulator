@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   bySeat,
   eligibleForHand,
@@ -308,6 +308,28 @@ function RaisePanel({ legal, pot, currentBet, bb, opening: isBet, busy, onBack, 
 // ---------------- showdown ----------------
 
 function AwardPanel() {
+  const { isHost } = useTable();
+  return isHost ? <HostAwardPanel /> : <WaitForHost what="승자를 고르는" />;
+}
+
+/** 방장이 아닌 사람에게: 방장이 진행 중이라는 안내 + 방장이 자리를 비웠으면 넘겨받기 */
+function WaitForHost({ what, children }: { what: string; children?: ReactNode }) {
+  const { room, nameOf, away, run, busy } = useTable();
+  const hostAway = !room.hostId || away(room.hostId);
+  return (
+    <div className="dock">
+      {children}
+      <p className="dock-wait">{room.hostId ? `방장(${nameOf(room.hostId)})이 ${what} 중이에요` : '방장이 없어요'}</p>
+      {hostAway && (
+        <button className="btn btn-quiet btn-lg btn-block" disabled={busy} onClick={() => run({ type: 'takeHost' })}>
+          방장 넘겨받기
+        </button>
+      )}
+    </div>
+  );
+}
+
+function HostAwardPanel() {
   const { game, run, busy, v, nameOf } = useTable();
   const open = game.pots.filter((p) => !p.paid);
   const [picks, setPicks] = useState<Record<number, string[]>>({});
@@ -399,14 +421,19 @@ function chopNote(cut: { id: string; amount: number }[], nameOf: (id: string) =>
 // ---------------- hand over ----------------
 
 function ResultsPanel() {
-  const { game, run, busy, v, room, me } = useTable();
+  const { game, run, busy, v, room, me, isHost } = useTable();
   const ready = game.players.filter(eligibleForHand).length >= 2;
   const iAmOut = me && me.stack === 0;
+  const rebuy = iAmOut && (
+    <button className="btn btn-quiet btn-lg btn-block" disabled={busy} onClick={() => run({ type: 'rebuy' })}>
+      리바이 {fmt(game.settings.startingStack)}
+    </button>
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.closest('input, textarea, dialog[open]')) return;
-      if (e.key.toLowerCase() === 'n' && ready && !busy) {
+      if (e.key.toLowerCase() === 'n' && isHost && ready && !busy) {
         e.preventDefault();
         void run({ type: 'next', v });
       }
@@ -415,13 +442,11 @@ function ResultsPanel() {
     return () => window.removeEventListener('keydown', onKey);
   });
 
+  if (!isHost) return <WaitForHost what="다음 핸드를 준비하는">{rebuy}</WaitForHost>;
+
   return (
     <div className="dock dock-done">
-      {iAmOut && (
-        <button className="btn btn-quiet btn-lg btn-block" disabled={busy} onClick={() => run({ type: 'rebuy' })}>
-          리바이 {fmt(game.settings.startingStack)}
-        </button>
-      )}
+      {rebuy}
       <div className="done-actions">
         {room.undoLabel && (
           <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => run({ type: 'undo', v })} aria-label="지급 되돌리기">
