@@ -29,10 +29,12 @@
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 22px;
-  /* 베팅 현황 표·용어 설명 창 바탕 (50% 불투명) */
+  /* 베팅 현황 표 바탕 (50% 불투명) */
   --glass-70: color-mix(in oklch, var(--surface) 50%, transparent);
   /* 반투명 창 뒤 요소 흐림 */
   --glass-blur: blur(20px) saturate(140%);
+  /* 용어 설명 창 바탕 (70% 불투명) */
+  --glass-glossary: color-mix(in oklch, var(--surface) 70%, transparent);
   --glass-80: color-mix(in oklch, var(--surface) 80%, transparent);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -561,11 +563,11 @@ button:disabled {
 /* ---------- glossary (용어 설명) ---------- */
 
 .glossary {
-  background: var(--glass-70);
+  background: var(--glass-glossary);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-sm);
 }
 
 .glossary-title {
@@ -635,7 +637,81 @@ button:disabled {
   font-size: 0.9375rem;
 }
 
-/* 게임 중: 상단바 버튼으로 여는 작은 창 */
+/* 게임 중: 상단바 버튼으로 여는 작은 창 (탭 → 칩 → 설명 한 개) */
+
+.gl-compact {
+  display: grid;
+  gap: 8px;
+  padding: 8px 10px 10px;
+}
+
+.gl-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 2px;
+  border-radius: 6px;
+  background: color-mix(in oklch, var(--ink) 7%, transparent);
+}
+
+.gl-tab {
+  height: 26px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 560;
+}
+
+.gl-tab[aria-selected='true'] {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.gl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gl-chip {
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.gl-chip[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.gl-desc {
+  display: grid;
+  gap: 2px;
+  min-height: 4.6em;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.gl-desc-name {
+  font-weight: 650;
+  font-size: 0.8125rem;
+}
+
+.gl-desc-text {
+  color: var(--ink-2);
+  line-height: 1.45;
+  font-size: 0.75rem;
+}
 .glossary-pop-root {
   position: relative;
 }
@@ -647,9 +723,7 @@ button:disabled {
   right: -48px;
   z-index: 40;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  width: min(260px, calc(100vw - 16px));
-  max-height: min(42dvh, 340px);
+  width: min(250px, calc(100vw - 16px));
   box-shadow: 0 12px 32px oklch(0 0 0 / 0.18);
   font-size: 0.75rem;
   animation: fade-up 180ms var(--ease-out);

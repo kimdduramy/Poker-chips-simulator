@@ -101,7 +101,51 @@ export function GlossaryCard() {
   );
 }
 
-/** 게임 중용: 상단바의 작은 버튼으로 여는 작은 창. 바깥을 누르거나 Esc로 닫혀요. */
+/**
+ * 게임 중용: 화면을 덜 가리도록 긴 목록 대신
+ * [묶음 탭] → [용어 칩] → [고른 용어 설명 한 개]만 보여 주는 작은 창.
+ */
+function CompactGlossary() {
+  const [group, setGroup] = useState(0);
+  const [pick, setPick] = useState(0);
+  const terms = GROUPS[group].terms;
+  const t = terms[Math.min(pick, terms.length - 1)];
+  return (
+    <div className="gl-compact">
+      <div className="gl-tabs" role="tablist" aria-label="용어 묶음">
+        {GROUPS.map((g, i) => (
+          <button
+            key={g.title}
+            role="tab"
+            aria-selected={i === group}
+            className="gl-tab"
+            onClick={() => {
+              setGroup(i);
+              setPick(0);
+            }}
+          >
+            {g.title}
+          </button>
+        ))}
+      </div>
+      <div className="gl-chips">
+        {terms.map((x, i) => (
+          <button key={x.term} className="gl-chip" aria-pressed={i === pick} onClick={() => setPick(i)}>
+            {x.term}
+          </button>
+        ))}
+      </div>
+      <div className="gl-desc" aria-live="polite">
+        <span className="gl-desc-name">
+          {t.term} <span className="glossary-en">{t.en}</span>
+        </span>
+        <span className="gl-desc-text">{t.desc}</span>
+      </div>
+    </div>
+  );
+}
+
+/** 게임 중: 상단바의 작은 버튼으로 여는 작은 창. 바깥을 누르거나 Esc로 닫혀요. */
 export function GlossaryButton() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -139,9 +183,7 @@ export function GlossaryButton() {
               <Icon name="close" size={18} />
             </button>
           </div>
-          <ScrollBox className="glossary-scroll" viewportClassName="glossary-body" label="용어 목록">
-            <TermList />
-          </ScrollBox>
+          <CompactGlossary />
         </div>
       )}
     </div>
