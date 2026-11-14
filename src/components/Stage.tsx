@@ -92,15 +92,20 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
   const rows = bySeat(game).filter((p) => p.inHand || p.committed > 0);
   return (
     <div className="bet-board" role="region" aria-label="참가자별 베팅 현황">
-      <ScrollBox className="bet-board-scroll">
-      <table>
+      {/* 머리줄은 스크롤 영역 밖에 따로 두어 내용이 그 밑으로 비치지 않게 */}
+      <table className="bet-board-head" aria-hidden="true">
+        <BoardCols />
         <thead>
           <tr>
-            <th scope="col">플레이어</th>
-            <th scope="col" className="num">콜 금액</th>
-            <th scope="col" className="num">직전 베팅</th>
+            <th>플레이어</th>
+            <th className="num">콜 금액</th>
+            <th className="num">직전 베팅</th>
           </tr>
         </thead>
+      </table>
+      <ScrollBox className="bet-board-scroll">
+      <table aria-label="플레이어 / 콜 금액 / 직전 베팅">
+        <BoardCols />
         <tbody>
           {rows.map((p) => {
             const added = p.lastPaid ?? 0;
@@ -119,5 +124,16 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
       </table>
       </ScrollBox>
     </div>
+  );
+}
+
+/** 머리줄 표와 내용 표의 칸 너비를 똑같이 맞춰요. */
+function BoardCols() {
+  return (
+    <colgroup>
+      <col style={{ width: '42%' }} />
+      <col style={{ width: '27%' }} />
+      <col style={{ width: '31%' }} />
+    </colgroup>
   );
 }

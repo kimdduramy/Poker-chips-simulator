@@ -31,6 +31,8 @@
   --r-lg: 22px;
   /* 베팅 현황 표·용어 설명 창 바탕 (50% 불투명) */
   --glass-70: color-mix(in oklch, var(--surface) 50%, transparent);
+  /* 반투명 창 뒤 요소 흐림 */
+  --glass-blur: blur(20px) saturate(140%);
   --glass-80: color-mix(in oklch, var(--surface) 80%, transparent);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -560,8 +562,8 @@ button:disabled {
 
 .glossary {
   background: var(--glass-70);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
 }
@@ -791,8 +793,8 @@ button:disabled {
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--glass-80);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: 0 16px 40px oklch(0 0 0 / 0.22);
 }
 
@@ -1190,20 +1192,21 @@ button:disabled {
   max-width: 340px;
   margin-left: auto;
   align-self: stretch;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   contain: size;
   min-height: 7rem;
   background: var(--glass-70);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: 0;
   font-size: 0.8125rem;
 }
 
 .bet-board-scroll {
-  position: absolute;
-  inset: 0;
+  flex: 1 1 auto;
 }
 
 .bet-board table {
@@ -1220,11 +1223,14 @@ button:disabled {
   white-space: nowrap;
 }
 
-.bet-board thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--surface-2);
+.bet-board-head {
+  flex: none;
+  background: color-mix(in oklch, var(--surface-2) 60%, transparent);
+  border-bottom: 1px solid var(--line);
+}
+
+.bet-board-head th {
+  border-bottom: 0;
   color: var(--ink-2);
   font-weight: 560;
   font-size: 0.75rem;
@@ -1234,10 +1240,6 @@ button:disabled {
 .bet-board th:last-child,
 .bet-board td:last-child {
   padding-right: 18px;
-}
-
-.bet-board th:first-child {
-  width: 44%;
 }
 
 .bet-board .num {
@@ -1279,7 +1281,7 @@ button:disabled {
   .bet-board {
     font-size: 0.9375rem;
   }
-  .bet-board thead th {
+  .bet-board-head th {
     font-size: 0.8125rem;
   }
 }
@@ -2556,7 +2558,7 @@ button:disabled {
     padding: 5px 5px;
   }
 
-  .bet-board thead th {
+  .bet-board-head th {
     white-space: normal;
     line-height: 1.15;
     font-size: 0.6875rem;
