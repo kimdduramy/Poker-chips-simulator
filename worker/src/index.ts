@@ -27,7 +27,7 @@ export function randomCode() {
   return out.join('');
 }
 
-export function originAllowed(origin: string | null, env: Env) {
+export function originAllowed(origin: string | null, env: Env, requestHost?: string) {
   if (!origin) return true;
   let host: string;
   let protocol: string;
@@ -39,6 +39,8 @@ export function originAllowed(origin: string | null, env: Env) {
   const hostname = host.split(':')[0];
   if (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1')) return true;
   if (protocol !== 'https:') return false;
+  // 같은 사이트에서 온 요청은 허용 (내 Cloudflare Pages 주소가 뭐든 그대로 동작)
+  if (requestHost && host === requestHost) return true;
   if (hostname === 'piss-poker.pages.dev' || hostname.endsWith('.piss-poker.pages.dev')) return true;
   return (env.ALLOWED_ORIGINS ?? '')
     .split(',')
@@ -57,7 +59,7 @@ export default {
 
     if (parts[1] === 'health') return json({ ok: true });
 
-    if (!originAllowed(request.headers.get('Origin'), env)) return json({ error: 'Forbidden' }, 403);
+    if (!originAllowed(request.headers.get('Origin'), env, url.host)) return json({ error: 'Forbidden' }, 403);
 
     if (parts[1] === 'rooms' && parts.length === 2 && request.method === 'POST') {
       const ip = request.headers.get('cf-connecting-ip') ?? 'local';
