@@ -11,7 +11,7 @@ export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () 
         ? STREET_NAMES[game.street]
         : game.phase === 'showdown'
           ? '쇼다운'
-          : '판 종료';
+          : '핸드 종료';
   const online = conn.status === 'open';
 
   return (
@@ -20,7 +20,7 @@ export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () 
         <span className="mono">{room.code}</span>
       </button>
       <div className="topbar-phase" aria-live="polite">
-        {game.handNo > 0 && <span className="muted">{game.handNo}번째 판</span>}
+        {game.handNo > 0 && <span className="muted">핸드 #{game.handNo}</span>}
         <span className="phase-name" key={phase}>
           {phase}
         </span>

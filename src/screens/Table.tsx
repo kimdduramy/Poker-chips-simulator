@@ -27,7 +27,7 @@ export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: ()
       first?.focus();
     }
     wasMyTurn.current = myTurn;
-    document.title = myTurn ? `내 차례 · ${APP_NAME}` : `${game.phase === 'lobby' ? '대기실' : `${game.handNo}번째 판`} · ${APP_NAME}`;
+    document.title = myTurn ? `내 차례 · ${APP_NAME}` : `${game.phase === 'lobby' ? '대기실' : `$핸드 #{game.handNo}`} · ${APP_NAME}`;
   }, [myTurn, game.phase, game.handNo]);
 
   useEffect(() => () => void (document.title = APP_NAME), []);

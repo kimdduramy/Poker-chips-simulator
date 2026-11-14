@@ -22,7 +22,7 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
       <section className="lobby-section" aria-labelledby="lobby-players">
         <div className="section-head">
           <h2 id="lobby-players">
-            자리 <span className="muted num">{seats.length}/10</span>
+            좌석 <span className="muted num">{seats.length}/10</span>
           </h2>
           {isHost && (
             <button className="link-btn" onClick={onPlayers}>
@@ -42,7 +42,7 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
                   <span className="lobby-name">
                     {p.name}
                     {room.hostId === p.id && <span className="tag">방장</span>}
-                    {i === 0 && <span className="tag">첫 딜러</span>}
+                    {i === 0 && <span className="tag">첫 버튼</span>}
                   </span>
                   <span className="muted small">{m?.manual ? '폰 없음' : away(p.id) ? '자리 비움' : ''}</span>
                   {isHost && seats.length > 1 && (
@@ -65,7 +65,7 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
             })}
           </ol>
         )}
-        {isHost && seats.length > 1 && <p className="hint">실제로 앉은 순서대로, 딜러부터 시계 방향으로 맞춰 주세요. 이 순서대로 차례가 돌아요.</p>}
+        {isHost && seats.length > 1 && <p className="hint">실제 좌석 순서대로, 버튼부터 시계 방향으로 맞춰 주세요. 이 순서대로 액션이 돌아요.</p>}
       </section>
 
       <section className="lobby-section" aria-labelledby="lobby-rules">
@@ -85,7 +85,7 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
             </dd>
           </div>
           <div>
-            <dt>시작 칩</dt>
+            <dt>시작 스택</dt>
             <dd className="num">{fmt(startingStack)}</dd>
           </div>
         </dl>

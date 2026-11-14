@@ -124,7 +124,7 @@ export function validateSettings(s: Settings): Settings {
     isInt(s.sb, 0, s.bb) &&
     isInt(s.startingStack, s.bb, LIMITS.maxStack) &&
     isInt(s.buyInPrice, 0, LIMITS.maxPrice);
-  if (!ok) fail('INVALID', '블라인드나 칩 값이 범위를 벗어났어요');
+  if (!ok) fail('INVALID', '블라인드나 스택 값이 범위를 벗어났어요');
   return { sb: s.sb, bb: s.bb, startingStack: s.startingStack, buyInPrice: s.buyInPrice };
 }
 
@@ -216,7 +216,7 @@ export function legalActions(g: Game, id: string): Legal | null {
 
 export function addPlayer(g0: Game, id: string, name: string): Game {
   if (findPlayer(g0, id)) fail('INVALID', '이미 앉아 있어요');
-  if (g0.players.length >= MAX_PLAYERS) fail('INVALID', '자리가 꽉 찼어요');
+  if (g0.players.length >= MAX_PLAYERS) fail('INVALID', '좌석이 꽉 찼어요');
   const g = clone(g0);
   const seat = g.players.reduce((m, p) => Math.max(m, p.seat), -1) + 1;
   const stack = g.settings.startingStack;
@@ -278,7 +278,7 @@ export function renamePlayer(g0: Game, id: string, name: string): Game {
 }
 
 export function setSeatOrder(g0: Game, ids: string[]): Game {
-  if (handInProgress(g0)) fail('PHASE', '자리 순서는 판과 판 사이에만 바꿀 수 있어요');
+  if (handInProgress(g0)) fail('PHASE', '좌석 순서는 핸드와 핸드 사이에만 바꿀 수 있어요');
   const current = g0.players.map((p) => p.id).sort();
   const next = [...ids].sort();
   if (current.length !== next.length || current.some((id, i) => id !== next[i])) {
@@ -304,9 +304,9 @@ export function updateSettings(g0: Game, settings: Settings): Game {
 }
 
 export function setStack(g0: Game, id: string, stack: number): Game {
-  if (!isInt(stack, 0, LIMITS.maxStack)) fail('INVALID', '칩 값이 범위를 벗어났어요');
+  if (!isInt(stack, 0, LIMITS.maxStack)) fail('INVALID', '스택 값이 범위를 벗어났어요');
   const p0 = must(g0, id);
-  if (handInProgress(g0) && p0.inHand) fail('PHASE', '칩은 이번 판이 끝난 뒤에 고칠 수 있어요');
+  if (handInProgress(g0) && p0.inHand) fail('PHASE', '스택은 이번 핸드가 끝난 뒤에 수정할 수 있어요');
   const g = clone(g0);
   const p = must(g, id);
   p.buyIn += stack - p.stack;
@@ -316,7 +316,7 @@ export function setStack(g0: Game, id: string, stack: number): Game {
 
 export function rebuy(g0: Game, id: string): Game {
   const p0 = must(g0, id);
-  if (handInProgress(g0) && p0.inHand) fail('PHASE', '다시 받기는 이번 판이 끝난 뒤에 할 수 있어요');
+  if (handInProgress(g0) && p0.inHand) fail('PHASE', '리바이는 이번 핸드가 끝난 뒤에 할 수 있어요');
   if (p0.stack > 0) fail('INVALID', '아직 칩이 남아 있어요');
   const g = clone(g0);
   const p = must(g, id);
@@ -344,14 +344,14 @@ function post(p: Player, amount: number): number {
 }
 
 export function startHand(g0: Game): Game {
-  if (handInProgress(g0)) fail('PHASE', '이미 판이 진행 중이에요');
+  if (handInProgress(g0)) fail('PHASE', '이미 핸드가 진행 중이에요');
   const g = clone(g0);
   if (g.pendingSettings) {
     g.settings = g.pendingSettings;
     g.pendingSettings = null;
   }
   const elig = bySeat(g).filter(eligibleForHand);
-  if (elig.length < 2) fail('INVALID', '칩 있는 사람이 2명 이상 필요해요');
+  if (elig.length < 2) fail('INVALID', '스택이 있는 플레이어가 2명 이상 필요해요');
 
   let bbP: Player;
   const lastBb = findPlayer(g, g.lastBbId);

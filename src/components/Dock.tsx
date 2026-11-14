@@ -69,22 +69,22 @@ function MyStatus() {
   if (!me) return null;
   const inHand = me.inHand && (game.phase === 'betting' || game.phase === 'showdown');
   let note: string;
-  if (!inHand) note = me.stack === 0 ? '칩 소진' : me.sittingOut ? '쉬는 중' : '다음 판부터 참여';
-  else if (me.folded) note = '폴드함';
+  if (!inHand) note = me.stack === 0 ? '버스트' : me.sittingOut ? '싯아웃' : '다음 핸드부터 참여';
+  else if (me.folded) note = '폴드';
   else if (me.allIn) note = '올인';
-  else note = me.committed > 0 ? `팟에 ${fmt(me.committed)} 넣음` : '참여 중';
+  else note = me.committed > 0 ? `이번 핸드 ${fmt(me.committed)} 베팅` : '핸드 참여 중';
   const canRebuy = me.stack === 0 && !inHand;
   return (
     <div className="my-status">
       <div>
-        <span className="label">내 칩</span>
+        <span className="label">내 스택</span>
         <Num value={me.stack} className="my-stack" />
       </div>
       <div className="my-note">
         <span>{note}</span>
         {canRebuy && (
           <button className="btn btn-quiet btn-sm" disabled={busy} onClick={() => run({ type: 'rebuy' })}>
-            {fmt(game.settings.startingStack)} 다시 받기
+            리바이 {fmt(game.settings.startingStack)}
           </button>
         )}
       </div>
@@ -157,7 +157,7 @@ function ActionPanel({ legal, player, actingFor, onCancel }: ActionProps) {
       <div className="turn-head">
         <div>
           <span className="turn-title">{actingFor ? `${player.name} 대신 하는 중` : '내 차례'}</span>
-          <span className="turn-sub">남은 칩 {fmt(player.stack)}</span>
+          <span className="turn-sub">스택 {fmt(player.stack)}</span>
         </div>
         {actingFor && (
           <button className="icon-btn" onClick={onCancel} aria-label="대신 하기 그만두기">
@@ -209,7 +209,7 @@ function RaisePanel({ legal, pot, currentBet, bb, opening: isBet, busy, onBack, 
     const full = opening ? pot : currentBet + potAfterCall;
     return [
       { label: '최소', value: min },
-      { label: '팟 ½', value: clamp(half) },
+      { label: '1/2 팟', value: clamp(half) },
       { label: '팟', value: clamp(full) },
       { label: '올인', value: max },
     ];
@@ -331,19 +331,19 @@ function AwardPanel() {
   const potName = (i: number) => (open.length === 1 ? '팟' : i === 0 ? '메인 팟' : `사이드 팟 ${i}`);
   const only = open.length === 1 ? (picks[open[0].id] ?? []) : null;
   const payLabel = !complete
-    ? '승자를 눌러 주세요'
+    ? '승자를 선택하세요'
     : only && only.length === 1
-      ? `${nameOf(only[0])}에게 ${fmt(open[0].amount)} 주기`
+      ? `${nameOf(only[0])}에게 ${fmt(open[0].amount)} 지급`
       : only && only.length > 1
-        ? `${fmt(open[0].amount)} 나눠 갖기 (${only.length}명)`
-        : '칩 나눠 주기';
+        ? `${only.length}명 스플릿 · ${fmt(open[0].amount)}`
+        : '팟 지급';
 
   return (
     <div className="dock dock-award">
       <div className="turn-head">
         <div>
           <span className="turn-title">누가 이겼나요?</span>
-          <span className="turn-sub">이긴 사람을 모두 누르세요. 두 명 이상이면 나눠 가져요.</span>
+          <span className="turn-sub">승자를 모두 선택하세요. 2명 이상이면 스플릿돼요.</span>
         </div>
       </div>
       <div className="pots">
@@ -365,7 +365,7 @@ function AwardPanel() {
                     <button key={p.id} className="win-row" aria-pressed={on} onClick={() => toggle(pot.id, p.id)}>
                       <span className="win-box">{on && <Icon name="check" size={15} />}</span>
                       <span className="win-name">{nameOf(p.id)}</span>
-                      <span className="win-take num">{on ? `+${fmt(take.get(p.id) ?? 0)}` : picked.length > 0 ? '나눔' : ''}</span>
+                      <span className="win-take num">{on ? `+${fmt(take.get(p.id) ?? 0)}` : picked.length > 0 ? '–' : ''}</span>
                     </button>
                   );
                 })}
@@ -390,10 +390,10 @@ function AwardPanel() {
 function chopNote(cut: { id: string; amount: number }[], nameOf: (id: string) => string) {
   const low = Math.min(...cut.map((c) => c.amount));
   const odd = cut.filter((c) => c.amount > low);
-  if (odd.length === 0) return `${cut.length}명이 나눠 가져요. 한 명당 ${fmt(low)}.`;
+  if (odd.length === 0) return `${cut.length}명 스플릿, 1인당 ${fmt(low)}.`;
   const names = odd.map((c) => nameOf(c.id));
   const list = names.join(', ');
-  return `한 명당 ${fmt(low)}. 남는 칩은 딜러 다음 자리부터 ${list}에게.`;
+  return `1인당 ${fmt(low)}. 오드 칩은 버튼 왼쪽부터 ${list}에게.`;
 }
 
 // ---------------- hand over ----------------
@@ -419,7 +419,7 @@ function ResultsPanel() {
     <div className="dock dock-done">
       {iAmOut && (
         <button className="btn btn-quiet btn-lg btn-block" disabled={busy} onClick={() => run({ type: 'rebuy' })}>
-          {fmt(game.settings.startingStack)} 다시 받기
+          리바이 {fmt(game.settings.startingStack)}
         </button>
       )}
       <div className="done-actions">
@@ -429,7 +429,7 @@ function ResultsPanel() {
           </button>
         )}
         <button className="btn btn-primary btn-xl grow" disabled={!ready || busy} onClick={() => run({ type: 'next', v })}>
-          {ready ? '다음 판 시작' : '칩 있는 사람이 2명 이상 필요해요'}
+          {ready ? '다음 핸드 시작' : '스택이 있는 플레이어가 2명 이상 필요해요'}
           {ready && <kbd className="kbd">N</kbd>}
         </button>
       </div>
@@ -447,7 +447,7 @@ function LobbyDock() {
     return (
       <div className="dock">
         <p className="dock-wait">
-          {room.hostId ? `${nameOf(room.hostId)}님이 첫 판을 시작하길 기다리는 중` : '방장을 기다리는 중'}
+          {room.hostId ? `${nameOf(room.hostId)}님이 첫 핸드를 시작하길 기다리는 중` : '방장을 기다리는 중'}
         </p>
         {hostAway && (
           <button className="btn btn-quiet btn-lg btn-block" disabled={busy} onClick={() => run({ type: 'takeHost' })}>
@@ -460,7 +460,7 @@ function LobbyDock() {
   return (
     <div className="dock">
       <button className="btn btn-primary btn-xl btn-block" disabled={!ready || busy} onClick={() => run({ type: 'start', v })}>
-        {ready ? '첫 판 시작' : '한 명 더 필요해요'}
+        {ready ? '첫 핸드 시작' : '플레이어가 1명 더 필요해요'}
       </button>
     </div>
   );

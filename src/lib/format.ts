@@ -10,6 +10,6 @@ export const signedMoney = (cents: number) =>
 export const APP_NAME = '칩 포커';
 
 export const STREET_NAMES = ['프리플랍', '플랍', '턴', '리버'] as const;
-export const NEXT_CARDS = ['', '플랍 3장 까세요', '턴 1장 까세요', '리버 1장 까세요'] as const;
+export const NEXT_CARDS = ['', '플랍 오픈', '턴 오픈', '리버 오픈'] as const;
 
 export const roomUrl = (code: string) => `${location.origin}/t/${code}`;

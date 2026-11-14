@@ -6,16 +6,16 @@ import { Num } from './Num';
 
 export function outcomeLine(game: Game, nameOf: (id: string) => string) {
   const winners = [...new Set(game.results.map((r) => r.id))];
-  if (winners.length === 0) return '판 종료';
+  if (winners.length === 0) return '핸드 종료';
   const names = winners.map(nameOf);
   if (winners.length > 1) {
     const contested = game.pots.filter((pot) => pot.eligible.length > 1);
     const everyPotSplit = contested.every((pot) => game.results.filter((r) => r.potId === pot.id).length > 1);
-    return everyPotSplit ? `${names.join(', ')} 나눠 가짐` : `${names.join(', ')} 팟 가져감`;
+    return everyPotSplit ? `${names.join(', ')} 스플릿` : `${names.join(', ')} 팟 획득`;
   }
   const folders = game.players.filter((p) => p.folded).length;
   const walk = game.street === 0 && winners[0] === game.bbId && folders === game.players.length - 1 && game.lastAction?.kind === 'fold';
-  return walk ? `${names[0]} 그냥 가져감 (모두 폴드)` : `${names[0]} 승리`;
+  return walk ? `${names[0]} 워크 (전원 폴드)` : `${names[0]} 승리`;
 }
 
 export function Stage() {
@@ -34,12 +34,12 @@ export function Stage() {
       <>
         {freshStreet && <span className="deal-hint">{NEXT_CARDS[game.street]}</span>}
         <span>
-          {actor.id === you.id ? '지금 내' : actor.name} 차례{toCall > 0 ? ` · 콜하려면 ${fmt(toCall)}` : ''}
+          {actor.id === you.id ? '내' : actor.name} 액션{toCall > 0 ? ` · 콜 ${fmt(toCall)}` : ''}
         </span>
       </>
     );
   } else if (game.phase === 'showdown') {
-    line = <span>{game.runout ? '모두 올인. 남은 카드 다 까요.' : '카드 공개!'}</span>;
+    line = <span>{game.runout ? '올인 · 런아웃' : '핸드를 공개하세요'}</span>;
   } else if (game.phase === 'done') {
     line = <span>{outcomeLine(game, nameOf)}</span>;
   }
@@ -94,9 +94,9 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
       <table>
         <thead>
           <tr>
-            <th scope="col">참가자</th>
-            <th scope="col" className="num">낼 칩</th>
-            <th scope="col" className="num">방금 낸</th>
+            <th scope="col">플레이어</th>
+            <th scope="col" className="num">콜 금액</th>
+            <th scope="col" className="num">직전 베팅</th>
           </tr>
         </thead>
         <tbody>
