@@ -29,7 +29,7 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
     try {
       const info = await roomInfo(code);
       if (!info) {
-        setError(`No table called ${code}. Check the code on the host's screen.`);
+        setError(`${code} 테이블이 없어요. 방장 화면의 코드를 다시 확인해 주세요.`);
         setBusy(null);
         return;
       }
@@ -43,23 +43,23 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
   return (
     <main id="main" className="home" tabIndex={-1}>
       <a className="skip-link" href="#home-actions">
-        Skip to actions
+        바로가기
       </a>
       <section className="home-hero">
         <h1 className="wordmark">
-          <mark>Piss</mark> Poker
+          <mark>칩</mark> 포커
         </h1>
-        <p className="home-tagline">Chips on your phone. Cards on the table.</p>
+        <p className="home-tagline">칩은 폰으로, 카드는 테이블에서.</p>
       </section>
 
       <section id="home-actions" className="home-actions">
         <button className="btn btn-primary btn-xl" onClick={start} disabled={busy !== null}>
-          {busy === 'new' ? 'Setting up…' : 'Start a table'}
+          {busy === 'new' ? '만드는 중…' : '테이블 만들기'}
         </button>
 
         <form className="join-form" onSubmit={join}>
           <label htmlFor="code" className="field-label">
-            Have a code?
+            코드가 있나요?
           </label>
           <div className="join-row">
             <input
@@ -78,7 +78,7 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
               aria-describedby={error ? 'home-error' : undefined}
             />
             <button className="btn btn-quiet btn-lg" disabled={code.length !== CODE_LENGTH || busy !== null}>
-              {busy === 'join' ? 'Finding…' : 'Join'}
+              {busy === 'join' ? '찾는 중…' : '입장'}
             </button>
           </div>
         </form>
@@ -90,16 +90,11 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
       </section>
 
       <ol className="home-how">
-        <li>Start a table and share the code.</li>
-        <li>Everyone joins on their own phone.</li>
-        <li>Deal real cards. The app keeps every chip honest.</li>
+        <li>테이블을 만들고 코드를 공유해요.</li>
+        <li>각자 자기 폰으로 들어와요.</li>
+        <li>카드는 진짜로 돌리고, 칩 계산은 앱이 해요.</li>
       </ol>
 
-      <nav className="home-links" aria-label="Site">
-        <a href="/about/">About</a>
-        <a href="/contact/">Contact</a>
-        <a href="/privacy/">Privacy</a>
-      </nav>
     </main>
   );
 }

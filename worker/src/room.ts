@@ -44,7 +44,7 @@ const MAX_SOCKETS = 40;
 const MAX_MEMBERS = 10;
 const RATE_PER_SEC = 8;
 const RATE_BURST = 20;
-const STREETS = ['Preflop', 'Flop', 'Turn', 'River'];
+const STREETS = ['프리플랍', '플랍', '턴', '리버'];
 
 interface Member {
   id: string;
@@ -199,14 +199,14 @@ export class Room extends DurableObject<Env> {
     if (!this.takeToken(att.connId)) {
       const b = this.buckets.get(att.connId);
       if (b && b.strikes > 20) ws.close(4008, 'Too many messages');
-      else this.send(ws, { type: 'err', code: 'RATE', message: 'Slow down' });
+      else this.send(ws, { type: 'err', code: 'RATE', message: '너무 빨라요. 천천히 눌러 주세요' });
       return;
     }
     this.lastMsg.set(att.connId, Date.now());
 
     const msg = parseClientMessage(message);
     if (!msg) {
-      this.send(ws, { type: 'err', code: 'INVALID', message: 'Malformed message' });
+      this.send(ws, { type: 'err', code: 'INVALID', message: '잘못된 요청이에요' });
       return;
     }
     try {
@@ -219,7 +219,7 @@ export class Room extends DurableObject<Env> {
         if (code === 'STALE') this.sendState(ws);
       } else {
         console.error('room error', e);
-        this.send(ws, { type: 'err', seq: msg.seq, code: 'INVALID', message: 'Something went wrong' });
+        this.send(ws, { type: 'err', seq: msg.seq, code: 'INVALID', message: '문제가 생겼어요' });
       }
     }
   }
@@ -265,17 +265,17 @@ export class Room extends DurableObject<Env> {
       this.broadcast();
       return;
     }
-    if (!att.tokenHash) deny('FORBIDDEN', 'Say hello first');
+    if (!att.tokenHash) deny('FORBIDDEN', '먼저 연결해 주세요');
 
     const me = att.memberId ? s.members.find((m) => m.id === att.memberId) : undefined;
-    const requireMember = () => me ?? deny('FORBIDDEN', 'Join the table first');
+    const requireMember = () => me ?? deny('FORBIDDEN', '먼저 테이블에 참가해 주세요');
     const requireHost = () => {
       const m = requireMember();
-      if (s.hostId !== m.id) deny('FORBIDDEN', 'Only the host can do that');
+      if (s.hostId !== m.id) deny('FORBIDDEN', '방장만 할 수 있어요');
       return m;
     };
     const checkV = (v: number) => {
-      if (v !== s.v) deny('STALE', 'The table changed. Try again.');
+      if (v !== s.v) deny('STALE', '테이블이 바뀌었어요. 다시 시도해 주세요.');
     };
     const nameOf = (id: string) => s.members.find((m) => m.id === id)?.name ?? findPlayer(s.game, id)?.name ?? 'Someone';
     /** Self, the host, or anyone acting for a seat without a present player. */
@@ -283,16 +283,16 @@ export class Room extends DurableObject<Env> {
       const m = requireMember();
       const id = targetId ?? m.id;
       if (id === m.id || s.hostId === m.id) return id;
-      const target = s.members.find((x) => x.id === id) ?? deny('INVALID', 'Unknown player');
-      if (!this.isAway(target)) deny('FORBIDDEN', `${target.name} is still here`);
+      const target = s.members.find((x) => x.id === id) ?? deny('INVALID', '없는 플레이어예요');
+      if (!this.isAway(target)) deny('FORBIDDEN', `${target.name}님이 아직 자리에 있어요`);
       return id;
     };
 
     switch (msg.type) {
       case 'join': {
-        if (me) deny('INVALID', 'Already seated');
+        if (me) deny('INVALID', '이미 앉아 있어요');
         const name = this.uniqueName(msg.name);
-        if (s.members.length >= MAX_MEMBERS) deny('INVALID', 'Table is full');
+        if (s.members.length >= MAX_MEMBERS) deny('INVALID', '자리가 꽉 찼어요');
         const member: Member = { id: randomId(), name, tokenHash: att.tokenHash, manual: false, joinedAt: Date.now() };
         s.game = addPlayer(s.game, member.id, name);
         s.members.push(member);
@@ -305,29 +305,29 @@ export class Room extends DurableObject<Env> {
             other.serializeAttachment(oa);
           }
         }
-        this.log('table', `${name} joined`);
+        this.log('table', `${name} 입장`);
         this.commit();
         return;
       }
       case 'addSeat': {
         requireHost();
         const name = this.uniqueName(msg.name);
-        if (s.members.length >= MAX_MEMBERS) deny('INVALID', 'Table is full');
+        if (s.members.length >= MAX_MEMBERS) deny('INVALID', '자리가 꽉 찼어요');
         const member: Member = { id: randomId(), name, tokenHash: null, manual: true, joinedAt: Date.now() };
         s.game = addPlayer(s.game, member.id, name);
         s.members.push(member);
-        this.log('table', `${name} sat down without a phone`);
+        this.log('table', `${name} 입장 (폰 없음)`);
         this.commit();
         return;
       }
       case 'claim': {
-        if (me) deny('INVALID', 'Already seated');
-        const target = s.members.find((m) => m.id === msg.playerId) ?? deny('INVALID', 'Unknown player');
+        if (me) deny('INVALID', '이미 앉아 있어요');
+        const target = s.members.find((m) => m.id === msg.playerId) ?? deny('INVALID', '없는 플레이어예요');
         const othersHere = s.members.some((m) => m.id !== target.id && !this.isAway(m));
         const targetHere = !target.manual && !this.isAway(target);
         if (!othersHere && !targetHere) {
           this.applyClaim(target, att.tokenHash as string);
-          this.log('table', `${target.name} is back on a new device`);
+          this.log('table', `${target.name} 새 기기로 복귀`);
           this.commit();
           return;
         }
@@ -349,17 +349,17 @@ export class Room extends DurableObject<Env> {
       }
       case 'resolveClaim': {
         const m = requireMember();
-        const claim = s.claims.find((c) => c.id === msg.claimId) ?? deny('INVALID', 'Request already handled');
+        const claim = s.claims.find((c) => c.id === msg.claimId) ?? deny('INVALID', '이미 처리된 요청이에요');
         s.claims = s.claims.filter((c) => c.id !== claim.id);
         const target = s.members.find((x) => x.id === claim.playerId);
         if (msg.allow && target) {
           this.applyClaim(target, claim.tokenHash);
-          this.log('table', `${m.name} moved ${target.name} to a new device`);
+          this.log('table', `${m.name}님이 ${target.name}의 자리를 새 기기로 옮김`);
         } else {
           for (const other of this.ctx.getWebSockets()) {
             const oa = other.deserializeAttachment() as Attachment;
             if (oa.connId === claim.connId) {
-              this.send(other, { type: 'err', code: 'FORBIDDEN', message: 'The table declined that request' });
+              this.send(other, { type: 'err', code: 'FORBIDDEN', message: '테이블에서 요청을 거절했어요' });
             }
           }
         }
@@ -369,15 +369,15 @@ export class Room extends DurableObject<Env> {
       case 'start': {
         requireHost();
         checkV(msg.v);
-        if (s.game.phase !== 'lobby') deny('PHASE', 'The game already started');
-        this.mutate('Start the game', (g) => startHand(g));
+        if (s.game.phase !== 'lobby') deny('PHASE', '이미 게임이 시작됐어요');
+        this.mutate('게임 시작', (g) => startHand(g));
         return;
       }
       case 'next': {
         requireMember();
         checkV(msg.v);
-        if (s.game.phase !== 'done') deny('PHASE', 'The hand is not over');
-        this.mutate('Deal the next hand', (g) => startHand(g));
+        if (s.game.phase !== 'done') deny('PHASE', '아직 판이 안 끝났어요');
+        this.mutate('다음 판 시작', (g) => startHand(g));
         return;
       }
       case 'act': {
@@ -385,41 +385,41 @@ export class Room extends DurableObject<Env> {
         checkV(msg.v);
         const actorId = msg.playerId ?? m.id;
         if (actorId !== m.id) {
-          const target = s.members.find((x) => x.id === actorId) ?? deny('INVALID', 'Unknown player');
-          if (!this.isAway(target)) deny('FORBIDDEN', `${target.name} is still here`);
+          const target = s.members.find((x) => x.id === actorId) ?? deny('INVALID', '없는 플레이어예요');
+          if (!this.isAway(target)) deny('FORBIDDEN', `${target.name}님이 아직 자리에 있어요`);
         }
         const before = s.game;
         const after = act(before, actorId, { kind: msg.kind, amount: msg.amount });
         const text = this.describeAction(before, after, actorId);
-        const suffix = actorId !== m.id ? ` (by ${m.name})` : '';
+        const suffix = actorId !== m.id ? ` (${m.name} 대신)` : '';
         this.mutate(text + suffix, () => after, 'action');
         return;
       }
       case 'award': {
         requireMember();
         checkV(msg.v);
-        this.mutate('Award the pot', (g) => award(g, msg.winners));
+        this.mutate('팟 지급', (g) => award(g, msg.winners));
         return;
       }
       case 'undo': {
         const m = requireMember();
         checkV(msg.v);
-        const snap = this.undo.pop() ?? deny('INVALID', 'Nothing to undo');
+        const snap = this.undo.pop() ?? deny('INVALID', '되돌릴 게 없어요');
         s.game = this.reconcile(snap.game);
         s.v += 1;
-        this.log('undo', `${m.name} undid: ${snap.label}`);
+        this.log('undo', `${m.name} 되돌림: ${snap.label}`);
         this.commit();
         return;
       }
       case 'sit': {
         const id = requireControl(msg.playerId);
-        this.mutate(`${nameOf(id)} ${msg.out ? 'sits out' : 'sits back in'}`, (g) => setSittingOut(g, id, msg.out), 'table');
+        this.mutate(`${nameOf(id)} ${msg.out ? '쉬기' : '다시 참여'}`, (g) => setSittingOut(g, id, msg.out), 'table');
         return;
       }
       case 'rebuy': {
         const id = requireControl(msg.playerId);
         this.mutate(
-          `${nameOf(id)} rebuys for ${fmt(s.game.settings.startingStack)}`,
+          `${nameOf(id)} ${fmt(s.game.settings.startingStack)} 다시 받음`,
           (g) => rebuy(g, id),
           'table',
         );
@@ -432,8 +432,8 @@ export class Room extends DurableObject<Env> {
       }
       case 'kick': {
         const host = requireHost();
-        if (msg.playerId === host.id) deny('INVALID', 'Use leave instead');
-        const target = s.members.find((x) => x.id === msg.playerId) ?? deny('INVALID', 'Unknown player');
+        if (msg.playerId === host.id) deny('INVALID', '나가기를 이용해 주세요');
+        const target = s.members.find((x) => x.id === msg.playerId) ?? deny('INVALID', '없는 플레이어예요');
         this.removeMember(target, 'kicked');
         return;
       }
@@ -443,7 +443,7 @@ export class Room extends DurableObject<Env> {
         const pending = s.game.phase === 'betting' || s.game.phase === 'showdown';
         const { sb, bb, startingStack } = msg.settings;
         this.mutate(
-          `Blinds ${fmt(sb)}/${fmt(bb)}, stack ${fmt(startingStack)}${pending ? ' from next hand' : ''}`,
+          `블라인드 ${fmt(sb)}/${fmt(bb)}, 시작 칩 ${fmt(startingStack)}${pending ? ' (다음 판부터)' : ''}`,
           (g) => updateSettings(g, msg.settings),
           'table',
         );
@@ -453,7 +453,7 @@ export class Room extends DurableObject<Env> {
         requireHost();
         checkV(msg.v);
         this.mutate(
-          `${nameOf(msg.playerId)} set to ${fmt(msg.stack)}`,
+          `${nameOf(msg.playerId)} 칩을 ${fmt(msg.stack)}(으)로 수정`,
           (g) => setStack(g, msg.playerId, msg.stack),
           'table',
         );
@@ -462,25 +462,25 @@ export class Room extends DurableObject<Env> {
       case 'seatOrder': {
         requireHost();
         checkV(msg.v);
-        this.mutate('Seats rearranged', (g) => setSeatOrder(g, msg.ids), 'table');
+        this.mutate('자리 순서 변경', (g) => setSeatOrder(g, msg.ids), 'table');
         return;
       }
       case 'transferHost': {
         const host = requireHost();
-        const target = s.members.find((x) => x.id === msg.playerId) ?? deny('INVALID', 'Unknown player');
-        if (target.manual) deny('INVALID', 'That seat has no phone');
+        const target = s.members.find((x) => x.id === msg.playerId) ?? deny('INVALID', '없는 플레이어예요');
+        if (target.manual) deny('INVALID', '폰 없는 자리예요');
         s.hostId = target.id;
-        this.log('table', `${host.name} made ${target.name} the host`);
+        this.log('table', `${host.name} → ${target.name} 방장 넘김`);
         this.commit();
         return;
       }
       case 'takeHost': {
         const m = requireMember();
-        if (m.manual) deny('FORBIDDEN', 'Not allowed');
+        if (m.manual) deny('FORBIDDEN', '할 수 없어요');
         const host = s.members.find((x) => x.id === s.hostId);
-        if (host && !this.isAway(host)) deny('FORBIDDEN', `${host.name} is still hosting`);
+        if (host && !this.isAway(host)) deny('FORBIDDEN', `${host.name}님이 아직 방장이에요`);
         s.hostId = m.id;
-        this.log('table', `${m.name} is now the host`);
+        this.log('table', `${m.name} 새 방장`);
         this.commit();
         return;
       }
@@ -505,7 +505,7 @@ export class Room extends DurableObject<Env> {
     const s = this.s as Stored;
     const name = (id: string | null) => findPlayer(after, id)?.name ?? s.members.find((m) => m.id === id)?.name ?? '';
     if (after.handNo !== before.handNo) {
-      this.log('hand', `Hand ${after.handNo}. ${name(after.buttonId)} has the button`);
+      this.log('hand', `${after.handNo}번째 판. 딜러: ${name(after.buttonId)}`);
     } else if (kind !== 'hand') {
       this.log(kind, label);
     }
@@ -513,14 +513,14 @@ export class Room extends DurableObject<Env> {
       this.log('hand', STREETS[after.street]);
     }
     if (after.phase === 'showdown' && before.phase !== 'showdown') {
-      this.log('hand', after.runout ? 'All in. Run out the board' : 'Showdown');
+      this.log('hand', after.runout ? '모두 올인. 남은 카드 다 까요' : '쇼다운');
     }
     if (after.results.length > 0 && after.phase === 'done' && before.phase !== 'done') {
       const totals = new Map<string, number>();
       for (const r of after.results) totals.set(r.id, (totals.get(r.id) ?? 0) + r.amount);
       for (const [id, amount] of totals) {
         const p = findPlayer(after, id) ?? after.departed.find((d) => d.id === id);
-        this.log('win', `${p?.name ?? 'Someone'} wins ${fmt(amount)}`);
+        this.log('win', `${p?.name ?? '누군가'} ${fmt(amount)} 획득`);
       }
     }
   }
@@ -528,19 +528,19 @@ export class Room extends DurableObject<Env> {
   private describeAction(before: Game, after: Game, id: string) {
     const p = findPlayer(after, id);
     const la = after.lastAction;
-    if (!p || !la) return 'Action';
+    if (!p || !la) return '행동';
     switch (la.kind) {
       case 'fold':
-        return `${p.name} folds`;
+        return `${p.name} 폴드`;
       case 'check':
-        return `${p.name} checks`;
+        return `${p.name} 체크`;
       case 'call':
-        return la.allIn ? `${p.name} calls all in for ${fmt(la.amount)}` : `${p.name} calls ${fmt(la.amount)}`;
+        return la.allIn ? `${p.name} 올인 콜 ${fmt(la.amount)}` : `${p.name} 콜 ${fmt(la.amount)}`;
       case 'raise':
-        if (la.allIn) return `${p.name} is all in for ${fmt(la.amount)}`;
-        return before.currentBet === 0 ? `${p.name} bets ${fmt(la.amount)}` : `${p.name} raises to ${fmt(la.amount)}`;
+        if (la.allIn) return `${p.name} 올인 ${fmt(la.amount)}`;
+        return before.currentBet === 0 ? `${p.name} 벳 ${fmt(la.amount)}` : `${p.name} 레이즈 ${fmt(la.amount)}`;
       default:
-        return `${p.name} acts`;
+        return `${p.name} 행동`;
     }
   }
 
@@ -582,11 +582,11 @@ export class Room extends DurableObject<Env> {
         ws.close(4002, 'Removed by host');
       }
     }
-    this.undo.push({ label: `${target.name} ${how}`, game: before });
+    this.undo.push({ label: `${target.name} ${how === 'left' ? '나감' : '내보내짐'}`, game: before });
     if (this.undo.length > UNDO_DEPTH) this.undo.shift();
     s.game = after;
     s.v += 1;
-    this.log('table', how === 'left' ? `${target.name} left` : `${target.name} was removed`);
+    this.log('table', how === 'left' ? `${target.name} 나감` : `${target.name} 내보내짐`);
     this.logTransition(before, after, '', 'hand');
     this.commit();
   }
@@ -612,9 +612,9 @@ export class Room extends DurableObject<Env> {
 
   private uniqueName(raw: string) {
     const s = this.s as Stored;
-    const name = cleanName(raw) ?? deny('INVALID', 'Pick a name');
+    const name = cleanName(raw) ?? deny('INVALID', '이름을 정해 주세요');
     if (s.members.some((m) => sameName(m.name, name))) {
-      deny('INVALID', `${name} is already at the table. If that is you, tap your name.`);
+      deny('INVALID', `${name} 이름이 이미 있어요. 본인이라면 아래에서 이름을 누르세요.`);
     }
     return name;
   }

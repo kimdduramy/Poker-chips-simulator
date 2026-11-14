@@ -9,6 +9,7 @@ import { Sheets, type SheetName } from '../components/Sheets';
 import { Stage } from '../components/Stage';
 import { turnAlert, unlockAudio, useWakeLock } from '../lib/device-features';
 import { useTable } from '../lib/table';
+import { APP_NAME } from '../lib/format';
 
 export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: () => void }) {
   const { game, you, conn } = useTable();
@@ -26,21 +27,21 @@ export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: ()
       first?.focus();
     }
     wasMyTurn.current = myTurn;
-    document.title = myTurn ? 'Your turn · Piss Poker' : `${game.phase === 'lobby' ? 'Lobby' : `Hand ${game.handNo}`} · Piss Poker`;
+    document.title = myTurn ? `내 차례 · ${APP_NAME}` : `${game.phase === 'lobby' ? '대기실' : `${game.handNo}번째 판`} · ${APP_NAME}`;
   }, [myTurn, game.phase, game.handNo]);
 
-  useEffect(() => () => void (document.title = 'Piss Poker'), []);
+  useEffect(() => () => void (document.title = APP_NAME), []);
 
   return (
     <div className="table-shell" data-turn={myTurn || undefined} data-phase={game.phase} onPointerDown={unlockAudio}>
       <a className="skip-link" href="#table-main">
-        Skip to table
+        테이블로 바로가기
       </a>
       <Header onInvite={() => setSheet('invite')} onMenu={() => setSheet('menu')} />
       <GameAnnouncer />
       {conn.status === 'reconnecting' && (
         <div className="offline" role="status">
-          Reconnecting…
+          다시 연결 중…
         </div>
       )}
       <Claims />
@@ -54,7 +55,7 @@ export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: ()
           </>
         )}
       </main>
-      <aside ref={dockRef} className="dock-wrap" aria-label="Your actions">
+      <aside ref={dockRef} className="dock-wrap" aria-label="내 행동">
         <Dock />
       </aside>
       <Sheets open={sheet} setOpen={setSheet} onDisplay={onDisplay} onLeft={onLeft} />

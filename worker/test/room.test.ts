@@ -112,7 +112,7 @@ describe('playing a hand', () => {
     s = await ana.settle();
     expect(s.room.game.street).toBe(1);
     expect(s.room.log.map((l) => l.text)).toEqual(
-      expect.arrayContaining(['Ana raises to 40', 'Ben calls 35', 'Cat calls 30', 'Flop']),
+      expect.arrayContaining(['Ana 레이즈 40', 'Ben 콜 35', 'Cat 콜 30', '플랍']),
     );
 
     for (let street = 1; street <= 3; street++) {
@@ -133,7 +133,7 @@ describe('playing a hand', () => {
     s = await ana.settle();
     expect(s.room.game.phase).toBe('done');
     expect(s.room.game.players.find((p) => p.id === idOf(cat))?.stack).toBe(1080);
-    expect(s.room.log.at(-1)?.text).toBe('Cat wins 120');
+    expect(s.room.log.at(-1)?.text).toBe('Cat 120 획득');
 
     const vDone = s.v;
     const [first, second] = await Promise.all([
@@ -151,14 +151,14 @@ describe('playing a hand', () => {
     await ana.ok({ type: 'start', v: ana.state.v });
     await ana.ok({ type: 'act', v: ana.state.v, kind: 'raise', amount: 100 });
     let s = await ben.settle();
-    expect(s.room.undoLabel).toBe('Ana raises to 100');
+    expect(s.room.undoLabel).toBe('Ana 레이즈 100');
     const v = s.v;
     const [a, b] = await Promise.all([ben.request({ type: 'undo', v }), ana.request({ type: 'undo', v })]);
     expect([a.type, b.type].sort()).toEqual(['err', 'ok']);
     s = await ana.settle();
     expect(s.room.game.toActId).toBe(idOf(ana));
     expect(s.room.game.currentBet).toBe(10);
-    expect(s.room.log.at(-1)?.text).toMatch(/undid: Ana raises to 100/);
+    expect(s.room.log.at(-1)?.text).toMatch(/되돌림: Ana 레이즈 100/);
   });
 
   it('undo never removes someone who joined afterwards', async () => {
@@ -225,7 +225,7 @@ describe('seats and devices', () => {
     const kind = game.currentBet > deeSeat.bet ? 'call' : 'check';
     await ben.ok({ type: 'act', v: ben.state.v, kind, playerId: dee.id });
     s = await ana.settle();
-    expect(s.room.log.some((l) => l.text.startsWith('Dee ') && l.text.endsWith('(by Ben)'))).toBe(true);
+    expect(s.room.log.some((l) => l.text.startsWith('Dee ') && l.text.endsWith('(Ben 대신)'))).toBe(true);
   });
 
   it('a new device must be approved to take over a seat, and the old device is signed out', async () => {
@@ -241,7 +241,7 @@ describe('seats and devices', () => {
     s = await phone2.settle();
     expect(s.you.id).toBe(benId);
     await ben.waitFor((m) => m.type === 'closed' && m.reason === 'replaced');
-    expect(ana.state.room.log.at(-1)?.text).toBe('Ana moved Ben to a new device');
+    expect(ana.state.room.log.at(-1)?.text).toBe('Ana님이 Ben의 자리를 새 기기로 옮김');
   });
 
   it('declined claims tell the requester', async () => {

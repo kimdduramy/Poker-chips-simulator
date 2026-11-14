@@ -79,13 +79,12 @@ function walk(dir: string, out: string[] = []): string[] {
 describe('agent-facing published content', () => {
   const root = join(process.cwd());
 
-  it('ships homepage HTML with 500+ characters of meaningful body text and a clear H1', () => {
+  it('ships a Korean homepage shell that mounts the app and stays out of search', () => {
     const html = readFileSync(join(root, 'index.html'), 'utf8');
-    expect(html).toMatch(/<h1[\s\S]*?Piss[\s\S]*?Poker[\s\S]*?tracker/i);
-    expect(html).toMatch(/"@type": "Organization"/);
-    expect(html).toMatch(/"contactPoint"/);
-    expect(html).toMatch(/"PostalAddress"/);
-    expect(visibleText(html).length).toBeGreaterThanOrEqual(500);
+    expect(html).toMatch(/<html lang="ko">/);
+    expect(html).toMatch(/<title>칩 포커/);
+    expect(html).toMatch(/name="robots" content="noindex"/);
+    expect(html).toMatch(/<div id="root">/);
   });
 
   it('ships trust pages with 500+ characters each', () => {

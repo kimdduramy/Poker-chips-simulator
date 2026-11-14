@@ -7,7 +7,9 @@ export const signed = (n: number) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-
 export const signedMoney = (cents: number) =>
   cents > 0 ? `+${money(cents)}` : cents < 0 ? `−${money(-cents)}` : money(0);
 
-export const STREET_NAMES = ['Preflop', 'Flop', 'Turn', 'River'] as const;
-export const NEXT_CARDS = ['', 'Deal the flop', 'Deal the turn', 'Deal the river'] as const;
+export const APP_NAME = '칩 포커';
+
+export const STREET_NAMES = ['프리플랍', '플랍', '턴', '리버'] as const;
+export const NEXT_CARDS = ['', '플랍 3장 까세요', '턴 1장 까세요', '리버 1장 까세요'] as const;
 
 export const roomUrl = (code: string) => `${location.origin}/t/${code}`;

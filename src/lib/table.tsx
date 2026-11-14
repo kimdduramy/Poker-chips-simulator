@@ -37,7 +37,7 @@ export function TableProvider({ conn, children }: { conn: RoomConnection; childr
         const reply = await send(msg);
         if (!reply.ok) {
           window.dispatchEvent(new Event('pp:reject'));
-          toast(reply.code === 'STALE' ? 'The table moved. Take another look.' : reply.message);
+          toast(reply.code === 'STALE' ? '그새 테이블이 바뀌었어요. 다시 확인해 주세요.' : reply.message);
         }
         return reply.ok;
       } finally {
@@ -64,7 +64,7 @@ export function TableProvider({ conn, children }: { conn: RoomConnection; childr
       serverNow,
       member,
       away: (id) => isAway(member(id), serverNow),
-      nameOf: (id) => member(id)?.name ?? findPlayer(room.game, id)?.name ?? 'Someone',
+      nameOf: (id) => member(id)?.name ?? findPlayer(room.game, id)?.name ?? '누군가',
       run,
       busy: inflight > 0,
     };

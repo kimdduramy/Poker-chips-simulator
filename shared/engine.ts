@@ -122,7 +122,7 @@ export function validateSettings(s: Settings): Settings {
     isInt(s.sb, 0, s.bb) &&
     isInt(s.startingStack, s.bb, LIMITS.maxStack) &&
     isInt(s.buyInPrice, 0, LIMITS.maxPrice);
-  if (!ok) fail('INVALID', 'Blinds or stack are out of range');
+  if (!ok) fail('INVALID', '블라인드나 칩 값이 범위를 벗어났어요');
   return { sb: s.sb, bb: s.bb, startingStack: s.startingStack, buyInPrice: s.buyInPrice };
 }
 
@@ -155,7 +155,7 @@ export function createGame(settings: Settings): Game {
 export const findPlayer = (g: Game, id: string | null | undefined) =>
   id ? g.players.find((p) => p.id === id) : undefined;
 
-const must = (g: Game, id: string): Player => findPlayer(g, id) ?? fail('INVALID', 'Unknown player');
+const must = (g: Game, id: string): Player => findPlayer(g, id) ?? fail('INVALID', '없는 플레이어예요');
 
 export const bySeat = (g: Game) => [...g.players].sort((a, b) => a.seat - b.seat);
 export const canAct = (p: Player) => p.inHand && !p.folded && !p.allIn;
@@ -213,8 +213,8 @@ export function legalActions(g: Game, id: string): Legal | null {
 // ---------- table management ----------
 
 export function addPlayer(g0: Game, id: string, name: string): Game {
-  if (findPlayer(g0, id)) fail('INVALID', 'Already seated');
-  if (g0.players.length >= MAX_PLAYERS) fail('INVALID', 'Table is full');
+  if (findPlayer(g0, id)) fail('INVALID', '이미 앉아 있어요');
+  if (g0.players.length >= MAX_PLAYERS) fail('INVALID', '자리가 꽉 찼어요');
   const g = clone(g0);
   const seat = g.players.reduce((m, p) => Math.max(m, p.seat), -1) + 1;
   const stack = g.settings.startingStack;
@@ -276,11 +276,11 @@ export function renamePlayer(g0: Game, id: string, name: string): Game {
 }
 
 export function setSeatOrder(g0: Game, ids: string[]): Game {
-  if (handInProgress(g0)) fail('PHASE', 'Reorder seats between hands');
+  if (handInProgress(g0)) fail('PHASE', '자리 순서는 판과 판 사이에만 바꿀 수 있어요');
   const current = g0.players.map((p) => p.id).sort();
   const next = [...ids].sort();
   if (current.length !== next.length || current.some((id, i) => id !== next[i])) {
-    fail('INVALID', 'Seat order must list every player once');
+    fail('INVALID', '모든 플레이어가 한 번씩 들어가야 해요');
   }
   const g = clone(g0);
   ids.forEach((id, i) => {
@@ -302,9 +302,9 @@ export function updateSettings(g0: Game, settings: Settings): Game {
 }
 
 export function setStack(g0: Game, id: string, stack: number): Game {
-  if (!isInt(stack, 0, LIMITS.maxStack)) fail('INVALID', 'Stack is out of range');
+  if (!isInt(stack, 0, LIMITS.maxStack)) fail('INVALID', '칩 값이 범위를 벗어났어요');
   const p0 = must(g0, id);
-  if (handInProgress(g0) && p0.inHand) fail('PHASE', 'Change stacks after this hand');
+  if (handInProgress(g0) && p0.inHand) fail('PHASE', '칩은 이번 판이 끝난 뒤에 고칠 수 있어요');
   const g = clone(g0);
   const p = must(g, id);
   p.buyIn += stack - p.stack;
@@ -314,8 +314,8 @@ export function setStack(g0: Game, id: string, stack: number): Game {
 
 export function rebuy(g0: Game, id: string): Game {
   const p0 = must(g0, id);
-  if (handInProgress(g0) && p0.inHand) fail('PHASE', 'Rebuy after this hand');
-  if (p0.stack > 0) fail('INVALID', 'You still have chips');
+  if (handInProgress(g0) && p0.inHand) fail('PHASE', '다시 받기는 이번 판이 끝난 뒤에 할 수 있어요');
+  if (p0.stack > 0) fail('INVALID', '아직 칩이 남아 있어요');
   const g = clone(g0);
   const p = must(g, id);
   p.stack = g.settings.startingStack;
@@ -348,7 +348,7 @@ export function startHand(g0: Game): Game {
     g.pendingSettings = null;
   }
   const elig = bySeat(g).filter(eligibleForHand);
-  if (elig.length < 2) fail('INVALID', 'Need at least two players with chips');
+  if (elig.length < 2) fail('INVALID', '칩 있는 사람이 2명 이상 필요해요');
 
   let bbP: Player;
   const lastBb = findPlayer(g, g.lastBbId);
@@ -396,25 +396,25 @@ export function startHand(g0: Game): Game {
 }
 
 export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: number }): Game {
-  if (g0.phase !== 'betting') fail('PHASE', 'No betting right now');
-  if (g0.toActId !== id) fail('NOT_TURN', 'Not your turn');
+  if (g0.phase !== 'betting') fail('PHASE', '지금은 베팅할 수 없어요');
+  if (g0.toActId !== id) fail('NOT_TURN', '내 차례가 아니에요');
   const g = clone(g0);
   const p = must(g, id);
   const toCall = g.currentBet - p.bet;
   switch (action.kind) {
     case 'fold':
-      if (toCall <= 0) fail('INVALID', 'Checking is free');
+      if (toCall <= 0) fail('INVALID', '콜할 금액이 없어요. 체크하세요');
       p.folded = true;
       g.lastAction = { id, kind: 'fold', amount: 0, allIn: false };
       break;
     case 'check':
-      if (toCall > 0) fail('INVALID', 'You need to call or fold');
+      if (toCall > 0) fail('INVALID', '콜하거나 폴드해야 해요');
       p.acted = true;
       p.actedLevel = g.currentBet;
       g.lastAction = { id, kind: 'check', amount: 0, allIn: false };
       break;
     case 'call': {
-      if (toCall <= 0) fail('INVALID', 'Nothing to call');
+      if (toCall <= 0) fail('INVALID', '콜할 금액이 없어요');
       const paid = post(p, toCall);
       p.acted = true;
       p.actedLevel = g.currentBet;
@@ -422,10 +422,10 @@ export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: n
       break;
     }
     case 'raise': {
-      if (!raiseAllowed(g, p)) fail('INVALID', 'Raising is not allowed');
+      if (!raiseAllowed(g, p)) fail('INVALID', '지금은 레이즈할 수 없어요');
       const to = action.amount;
       const max = p.bet + p.stack;
-      if (!isInt(to, 1, LIMITS.maxStack) || to <= g.currentBet || to > max) fail('INVALID', 'Invalid amount');
+      if (!isInt(to, 1, LIMITS.maxStack) || to <= g.currentBet || to > max) fail('INVALID', '금액이 올바르지 않아요');
       const target = to as number;
       const inc = target - g.currentBet;
       if (inc < g.minRaise && target !== max) {
@@ -440,7 +440,7 @@ export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: n
       break;
     }
     default:
-      fail('INVALID', 'Unknown action');
+      fail('INVALID', '알 수 없는 행동이에요');
   }
   advance(g, p.seat);
   return g;
@@ -561,7 +561,7 @@ function finish(g: Game) {
 
 /** winners maps pot id to the ids that split it. Every unpaid pot must be covered. */
 export function award(g0: Game, winners: Record<string, string[]>): Game {
-  if (g0.phase !== 'showdown') fail('PHASE', 'Nothing to award');
+  if (g0.phase !== 'showdown') fail('PHASE', '지급할 팟이 없어요');
   const g = clone(g0);
   const unpaid = g.pots.filter((p) => !p.paid);
   for (const pot of unpaid) {
@@ -571,7 +571,7 @@ export function award(g0: Game, winners: Record<string, string[]>): Game {
       w.length > 0 &&
       new Set(w).size === w.length &&
       w.every((id) => pot.eligible.includes(id));
-    if (!valid) fail('INVALID', 'Pick a winner for every pot');
+    if (!valid) fail('INVALID', '모든 팟의 승자를 골라 주세요');
   }
   for (const pot of unpaid) payout(g, pot, winners[String(pot.id)]);
   finish(g);

@@ -63,7 +63,7 @@ export default {
       const ip = request.headers.get('cf-connecting-ip') ?? 'local';
       if (env.CREATE_LIMITER) {
         const { success } = await env.CREATE_LIMITER.limit({ key: ip });
-        if (!success) return json({ error: 'Too many new tables. Try again in a minute.' }, 429);
+        if (!success) return json({ error: '테이블을 너무 많이 만들었어요. 1분 뒤에 다시 시도해 주세요.' }, 429);
       }
       for (let attempt = 0; attempt < 8; attempt++) {
         const code = randomCode();
@@ -73,7 +73,7 @@ export default {
         });
         if (res.status === 201) return json({ code }, 201);
       }
-      return json({ error: 'Could not create a table' }, 503);
+      return json({ error: '테이블을 만들지 못했어요' }, 503);
     }
 
     if (parts[1] === 'rooms' && parts.length >= 3) {
@@ -81,13 +81,13 @@ export default {
       if (!isRoomCode(code)) return json({ error: 'Not found' }, 404);
       if (parts.length === 3 && request.method === 'GET') {
         const res = await stub(env, code).fetch('https://room/info');
-        if (res.status === 404) return json({ error: 'No table with that code' }, 404);
+        if (res.status === 404) return json({ error: '그 코드의 테이블이 없어요' }, 404);
         return json(await res.json());
       }
       if (parts.length === 4 && parts[3] === 'ws') {
         if (request.headers.get('Upgrade') !== 'websocket') return json({ error: 'Expected WebSocket' }, 426);
         const res = await stub(env, code).fetch('https://room/ws', { headers: request.headers });
-        if (res.status === 404) return json({ error: 'No table with that code' }, 404);
+        if (res.status === 404) return json({ error: '그 코드의 테이블이 없어요' }, 404);
         return res;
       }
     }
