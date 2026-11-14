@@ -104,7 +104,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
         <ul className="menu-group">
           {confirmLeave ? (
             <li className="confirm-row">
-              <span>{inHand ? '이번 판은 폴드돼요.' : '테이블에서 나갈까요?'}</span>
+              <span>{isHost ? '방장이 나가면 모두에게 테이블이 닫혀요.' : inHand ? '이번 판은 폴드돼요.' : '테이블에서 나갈까요?'}</span>
               <button className="btn btn-quiet btn-sm" onClick={() => setConfirmLeave(false)}>
                 취소
               </button>
@@ -119,7 +119,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
               </button>
             </li>
           ) : (
-            item('테이블 나가기', () => setConfirmLeave(true), { danger: true })
+            item(isHost ? '테이블 닫고 나가기' : '테이블 나가기', () => setConfirmLeave(true), { danger: true })
           )}
         </ul>
       )}

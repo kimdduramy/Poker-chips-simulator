@@ -8,6 +8,7 @@ const CLOSED_COPY = {
   expired: { title: '테이블이 닫혔어요', body: '12시간 동안 아무 활동이 없으면 테이블이 닫혀요. 새로 만들면 돼요.' },
   kicked: { title: '테이블에서 내보내졌어요', body: '방장이 이 테이블에서 내보냈어요.' },
   replaced: { title: '자리가 옮겨졌어요', body: '내 자리가 다른 기기로 넘어갔어요.' },
+  ended: { title: '방장이 테이블을 닫았어요', body: '방장이 새 테이블을 만들면 새 코드로 다시 들어오세요.' },
 } as const;
 
 export function Room({ code, display, navigate }: { code: string; display: boolean; navigate: (to: string) => void }) {

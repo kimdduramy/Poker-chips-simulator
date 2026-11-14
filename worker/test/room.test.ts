@@ -278,13 +278,23 @@ describe('seats and devices', () => {
     expect(s.room.members.map((m) => m.name)).toEqual(['Ana', 'Ben']);
   });
 
-  it('when the host leaves, hosting passes to someone still here', async () => {
-    const { clients, idOf } = await table(['Ana', 'Ben']);
-    const [ana, ben] = clients;
+  it('when the host leaves, the table closes for everyone instead of living on', async () => {
+    const { clients, code } = await table(['Ana', 'Ben', 'Cat']);
+    const [ana, ben, cat] = clients;
     await ana.ok({ type: 'leave' });
-    const s = await ben.settle();
-    expect(s.room.hostId).toBe(idOf(ben));
-    expect(s.you.isHost).toBe(true);
+    await ben.waitFor((m) => m.type === 'closed' && m.reason === 'ended');
+    await cat.waitFor((m) => m.type === 'closed' && m.reason === 'ended');
+    const info = await api(`/api/rooms/${code}`);
+    expect(info.status).toBe(404);
+  });
+
+  it('when someone else leaves, the table carries on with the same host', async () => {
+    const { clients, idOf } = await table(['Ana', 'Ben', 'Cat']);
+    const [ana, ben] = clients;
+    await ben.ok({ type: 'leave' });
+    const s = await ana.settle();
+    expect(s.room.hostId).toBe(idOf(ana));
+    expect(s.room.members.map((m) => m.name)).toEqual(['Ana', 'Cat']);
   });
 
   it('host can be taken over only when the host is away', async () => {
