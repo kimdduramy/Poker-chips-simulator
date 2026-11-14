@@ -5,6 +5,8 @@ import { ScrollBox } from './ScrollBox';
 
 interface Term {
   term: string;
+  /** 게임 중 작은 창 목록에 쓰는 짧은 이름 (없으면 term) */
+  short?: string;
   en: string;
   desc: string;
 }
@@ -15,9 +17,9 @@ const GROUPS: { title: string; terms: Term[] }[] = [
     title: '진행',
     terms: [
       { term: '핸드', en: 'Hand', desc: '카드를 받고 팟을 지급할 때까지의 한 판. 화면 위 "핸드 #3"은 세 번째 판이에요.' },
-      { term: '버튼 (D)', en: 'Dealer Button', desc: '딜러 위치 표시. 매 핸드 시계 방향으로 한 칸씩 옮겨지고, 블라인드와 액션 순서의 기준이 돼요.' },
-      { term: '스몰 블라인드 (SB)', en: 'Small Blind', desc: '버튼 바로 왼쪽 사람이 카드를 받기 전에 의무로 내는 베팅. 보통 빅 블라인드의 절반이에요.' },
-      { term: '빅 블라인드 (BB)', en: 'Big Blind', desc: 'SB 왼쪽 사람이 의무로 내는 베팅. 최소 베팅 단위가 돼요.' },
+      { term: '버튼 (D)', short: '버튼', en: 'Dealer Button', desc: '딜러 위치 표시. 매 핸드 시계 방향으로 한 칸씩 옮겨지고, 블라인드와 액션 순서의 기준이 돼요.' },
+      { term: '스몰 블라인드 (SB)', short: 'SB', en: 'Small Blind', desc: '버튼 바로 왼쪽 사람이 카드를 받기 전에 의무로 내는 베팅. 보통 빅 블라인드의 절반이에요.' },
+      { term: '빅 블라인드 (BB)', short: 'BB', en: 'Big Blind', desc: 'SB 왼쪽 사람이 의무로 내는 베팅. 최소 베팅 단위가 돼요.' },
       { term: '프리플랍', en: 'Preflop', desc: '각자 개인 카드 2장만 받은 상태의 첫 베팅 라운드.' },
       { term: '플랍', en: 'Flop', desc: '가운데 공유 카드 3장을 펼친 뒤의 베팅 라운드.' },
       { term: '턴', en: 'Turn', desc: '공유 카드 4번째 장을 펼친 뒤의 베팅 라운드.' },
@@ -42,7 +44,7 @@ const GROUPS: { title: string; terms: Term[] }[] = [
     terms: [
       { term: '스택', en: 'Stack', desc: '지금 내가 가진 칩.' },
       { term: '팟', en: 'Pot', desc: '이번 핸드에 모두가 낸 칩이 모인 곳. 이긴 사람이 가져가요.' },
-      { term: '메인 팟 / 사이드 팟', en: 'Main / Side Pot', desc: '누가 올인하면 그 사람이 걸 수 있는 만큼이 메인 팟, 그 위로 나머지 사람끼리 더 건 칩이 사이드 팟이에요. 올인한 사람은 메인 팟만 이길 수 있어요.' },
+      { term: '메인 팟 / 사이드 팟', short: '사이드 팟', en: 'Main / Side Pot', desc: '누가 올인하면 그 사람이 걸 수 있는 만큼이 메인 팟, 그 위로 나머지 사람끼리 더 건 칩이 사이드 팟이에요. 올인한 사람은 메인 팟만 이길 수 있어요.' },
       { term: '콜 금액', en: 'To Call', desc: '베팅 현황 표의 숫자. 지금 콜하려면 더 내야 하는 칩이에요.' },
       { term: '직전 베팅', en: 'Last Bet', desc: '베팅 현황 표의 숫자. 그 사람이 마지막 액션에서 팟에 추가로 넣은 칩이에요.' },
       { term: '바이인', en: 'Buy-in', desc: '게임에 참여하면서 받은 칩. 정산 표에서는 리바이까지 합친 총액이에요.' },
@@ -57,7 +59,7 @@ const GROUPS: { title: string; terms: Term[] }[] = [
       { term: '런아웃', en: 'Run-out', desc: '모두 올인해서 더 베팅할 게 없을 때 남은 공유 카드를 한 번에 다 펼치는 것.' },
       { term: '워크', en: 'Walk', desc: '프리플랍에서 모두 폴드해서 빅 블라인드가 그냥 팟을 가져가는 것.' },
       { term: '버스트', en: 'Bust', desc: '스택을 다 잃은 상태. 리바이하면 다시 참여할 수 있어요.' },
-      { term: '싯아웃 / 싯인', en: 'Sit out / in', desc: '자리는 그대로 두고 핸드 참여만 쉬는 것 / 다시 참여하는 것.' },
+      { term: '싯아웃 / 싯인', short: '싯아웃', en: 'Sit out / in', desc: '자리는 그대로 두고 핸드 참여만 쉬는 것 / 다시 참여하는 것.' },
     ],
   },
 ];
@@ -120,19 +122,17 @@ function CompactGlossary({ group, pick, onPick }: { group: number; pick: number;
   const t = terms[Math.min(pick, terms.length - 1)];
   return (
     <div className="gl-compact">
-      <div className="gl-chips">
-        {terms.map((x, i) => (
-          <span key={x.term} className="gl-chip-wrap">
-            {i > 0 && (
-              <span className="gl-sep" aria-hidden="true">
-                ·
-              </span>
-            )}
-            <button className="gl-chip" aria-pressed={i === pick} onClick={() => onPick(i)}>
-              {x.term}
-            </button>
-          </span>
-        ))}
+      {/* 줄 맨 앞의 구분점(·)은 바깥 틀에서 잘려 안 보여요 */}
+      <div className="gl-chips-clip">
+        <div className="gl-chips">
+          {terms.map((x, i) => (
+            <span key={x.term} className="gl-chip-wrap">
+              <button className="gl-chip" aria-pressed={i === pick} aria-label={x.term} onClick={() => onPick(i)}>
+                {x.short ?? x.term}
+              </button>
+            </span>
+          ))}
+        </div>
       </div>
       <div className="gl-desc" aria-live="polite">
         <span className="gl-desc-name">

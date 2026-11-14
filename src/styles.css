@@ -672,22 +672,33 @@ button:disabled {
   font-weight: 650;
 }
 
+.gl-chips-clip {
+  overflow: hidden;
+}
+
 .gl-chips {
   /* 4. 글자 목록: 버튼 모양 없이 고른 것만 굵게 + 밑줄 */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  row-gap: 2px;
+  row-gap: 3px;
+  margin-left: -11px;
 }
 
 .gl-chip-wrap {
+  position: relative;
   display: inline-flex;
-  align-items: center;
+  padding-left: 11px;
   white-space: nowrap;
 }
 
-.gl-sep {
-  padding: 0 5px;
+/* 항목 앞 구분점: 줄 맨 앞 것은 .gl-chips-clip 밖이라 잘려요 */
+.gl-chip-wrap::before {
+  content: '·';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--line-strong);
   font-size: 0.6875rem;
 }
@@ -864,26 +875,30 @@ button:disabled {
 }
 
 .hold-pill {
-  display: inline-grid;
-  place-items: center;
-  height: 28px;
+  /* 깔끔한 보조 버튼: 테두리 없이 옅은 바탕 + 카드 아이콘 */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
   margin: 0 4px;
-  padding: 0 11px;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: var(--surface);
+  padding: 0 9px 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: color-mix(in oklch, var(--ink) 7%, transparent);
   color: var(--ink);
   font: inherit;
   font-size: 0.75rem;
-  font-weight: 650;
+  font-weight: 620;
   white-space: nowrap;
-  box-shadow: 0 1px 0 oklch(0 0 0 / 0.06);
   transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+
+.hold-pill-icon {
+  opacity: 0.75;
 }
 
 .hold-pill[aria-pressed='true'] {
   background: var(--ink);
-  border-color: var(--ink);
   color: var(--bg);
 }
 
@@ -2761,6 +2776,32 @@ button:disabled {
 /* 375px급 폰에서는 '핸드 #N'을 숨겨 단계 이름이 버튼과 겹치지 않게 */
 @media (max-width: 380px) {
   .topbar-phase .muted {
+    display: none;
+  }
+}
+
+/* 팟·액션 글자는 줄바꿈 없이 자리를 먼저 차지하고, 베팅 현황 표가 남은 폭을 써요 */
+.stage-main {
+  flex: 0 0 auto;
+}
+
+.act-line > span {
+  white-space: nowrap;
+}
+
+/* 아주 좁은 폰: 족보 버튼 아이콘을 숨겨 가운데 단계 표시와 겹치지 않게 */
+@media (max-width: 374px) {
+  .hold-pill-icon {
+    display: none;
+  }
+
+  .hold-pill {
+    padding: 0 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .hold-pill-icon {
     display: none;
   }
 }

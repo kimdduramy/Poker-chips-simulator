@@ -68,7 +68,17 @@ export function HandRanksHold({ variant = 'icon' }: { variant?: 'icon' | 'pill' 
         onKeyUp={(e) => (e.key === ' ' || e.key === 'Enter') && setOpen(false)}
         onBlur={() => setOpen(false)}
       >
-        {variant === 'icon' ? '족보' : '족보 보기 · 누르고 있기'}
+        {variant === 'icon' ? (
+          <>
+            <svg className="hold-pill-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="6" width="11" height="15" rx="2" />
+              <path d="M9 3.5 18.6 5a2 2 0 0 1 1.7 2.3l-1.8 11.5" />
+            </svg>
+            족보
+          </>
+        ) : (
+          '족보 보기 · 누르고 있기'
+        )}
       </button>
       {open &&
         createPortal(
