@@ -449,9 +449,9 @@ button:disabled {
 }
 
 .wordmark {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 400;
+  /* 한글 워드마크: 세리프 이탤릭 대신 또렷한 고딕 */
+  font-family: var(--font-sans);
+  font-weight: 760;
   font-size: clamp(3.5rem, 17vw, 5rem);
   line-height: 0.95;
   letter-spacing: -0.02em;
@@ -551,6 +551,134 @@ button:disabled {
 
 .home-links a:hover {
   color: var(--ink-2);
+}
+
+/* ---------- glossary (용어 설명) ---------- */
+
+.glossary {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.glossary-title {
+  font-size: 1.0625rem;
+  font-weight: 620;
+}
+
+.glossary-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.glossary-body:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.glossary-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.glossary-group-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 0 6px;
+  padding: 4px 0;
+  background: var(--surface);
+  font-size: 0.75rem;
+  font-weight: 620;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.glossary-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.glossary-item dt {
+  font-weight: 620;
+}
+
+.glossary-en {
+  margin-left: 4px;
+  font-weight: 400;
+  font-size: 0.8em;
+  color: var(--ink-3);
+}
+
+.glossary-item dd {
+  margin: 2px 0 0;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+/* 메인 화면: 홈 열 너비에 맞춘 큰 카드 */
+.glossary-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px 18px 0;
+}
+
+.glossary-card .glossary-body {
+  max-height: min(420px, 55dvh);
+  margin: 0 -18px;
+  padding: 0 18px 18px;
+  font-size: 0.9375rem;
+}
+
+/* 게임 중: 상단바 버튼으로 여는 작은 창 */
+.glossary-pop-root {
+  position: relative;
+}
+
+.glossary-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  /* 메뉴 버튼(44px)+간격까지 오른쪽으로 맞춰 화면 밖으로 나가지 않게 */
+  right: -48px;
+  z-index: 40;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(260px, calc(100vw - 16px));
+  max-height: min(42dvh, 340px);
+  box-shadow: 0 12px 32px oklch(0 0 0 / 0.18);
+  font-size: 0.75rem;
+  animation: fade-up 180ms var(--ease-out);
+}
+
+.glossary-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 6px 4px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.glossary-pop .glossary-title {
+  font-size: 0.875rem;
+}
+
+.glossary-pop .glossary-body {
+  padding: 8px 14px 14px;
+}
+
+.glossary-pop .glossary-groups {
+  gap: 14px;
+}
+
+.glossary-pop .glossary-list {
+  gap: 8px;
+}
+
+.icon-btn-sm {
+  width: 36px;
+  height: 36px;
 }
 
 /* ---------- join and notices ---------- */

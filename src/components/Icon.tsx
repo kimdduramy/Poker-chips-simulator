@@ -10,6 +10,7 @@ const paths = {
   minus: 'M5 12h14',
   plus: 'M12 5v14M5 12h14',
   back: 'm15 18-6-6 6-6',
+  help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4M12 16.8v.1',
 } as const;
 
 export type IconName = keyof typeof paths;
