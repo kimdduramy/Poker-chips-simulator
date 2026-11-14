@@ -112,6 +112,8 @@ const fmt = (n: number) => n.toLocaleString('en-US');
 export class Room extends DurableObject<Env> {
   private s: Stored | null = null;
   private undo: Snapshot[] = [];
+  /** 되돌린 상태들: 다시 하기(redo)로 앞으로 갈 수 있어요. 새 변경이 생기면 비워요. */
+  private redo: Snapshot[] = [];
   private alarmAt: number | null = null;
   /** Set when the host leaves: the table closes for everyone once the reply is sent. */
   private closeAfterReply = false;
@@ -124,6 +126,7 @@ export class Room extends DurableObject<Env> {
     void ctx.blockConcurrencyWhile(async () => {
       this.s = (await ctx.storage.get<Stored>('room')) ?? null;
       this.undo = (await ctx.storage.get<Snapshot[]>('undo')) ?? [];
+      this.redo = (await ctx.storage.get<Snapshot[]>('redo')) ?? [];
       this.alarmAt = await ctx.storage.getAlarm();
     });
   }
@@ -153,6 +156,7 @@ export class Room extends DurableObject<Env> {
         turnId: null,
       };
       this.undo = [];
+      this.redo = [];
       this.persist();
       return Response.json({ code }, { status: 201 });
     }
@@ -250,6 +254,7 @@ export class Room extends DurableObject<Env> {
     }
     this.s = null;
     this.undo = [];
+    this.redo = [];
     this.alarmAt = null;
     await this.ctx.storage.deleteAlarm();
     await this.ctx.storage.deleteAll();
@@ -273,6 +278,7 @@ export class Room extends DurableObject<Env> {
     }
     this.s = null;
     this.undo = [];
+    this.redo = [];
     this.alarmAt = null;
     await this.ctx.storage.deleteAll();
   }
@@ -429,9 +435,23 @@ export class Room extends DurableObject<Env> {
         const m = requireHost();
         checkV(msg.v);
         const snap = this.undo.pop() ?? deny('INVALID', '되돌릴 게 없어요');
+        this.redo.push({ label: snap.label, game: s.game });
+        if (this.redo.length > UNDO_DEPTH) this.redo.shift();
         s.game = this.reconcile(snap.game);
         s.v += 1;
         this.log('undo', `${m.name} 되돌림: ${snap.label}`);
+        this.commit();
+        return;
+      }
+      case 'redo': {
+        const m = requireHost();
+        checkV(msg.v);
+        const snap = this.redo.pop() ?? deny('INVALID', '다시 할 게 없어요');
+        this.undo.push({ label: snap.label, game: s.game });
+        if (this.undo.length > UNDO_DEPTH) this.undo.shift();
+        s.game = this.reconcile(snap.game);
+        s.v += 1;
+        this.log('undo', `${m.name} 다시 하기: ${snap.label}`);
         this.commit();
         return;
       }
@@ -524,6 +544,7 @@ export class Room extends DurableObject<Env> {
     const before = s.game;
     const after = fn(before);
     this.undo.push({ label, game: before });
+    this.redo = [];
     if (this.undo.length > UNDO_DEPTH) this.undo.shift();
     s.game = after;
     s.v += 1;
@@ -613,6 +634,7 @@ export class Room extends DurableObject<Env> {
       }
     }
     this.undo.push({ label: `${target.name} ${how === 'left' ? '나감' : '내보내짐'}`, game: before });
+    this.redo = [];
     if (this.undo.length > UNDO_DEPTH) this.undo.shift();
     s.game = after;
     s.v += 1;
@@ -670,7 +692,7 @@ export class Room extends DurableObject<Env> {
 
   private persist() {
     const s = this.s as Stored;
-    void this.ctx.storage.put({ room: s, undo: this.undo });
+    void this.ctx.storage.put({ room: s, undo: this.undo, redo: this.redo });
     const deadline = s.lastActivity + IDLE_TTL_MS;
     if (this.alarmAt === null || Math.abs(deadline - this.alarmAt) > 30 * 60 * 1000) {
       this.alarmAt = deadline;
@@ -746,6 +768,7 @@ export class Room extends DurableObject<Env> {
       claims: s.claims.map(({ id, playerId, at }) => ({ id, playerId, at })),
       log: s.log.slice(-LOG_SEND),
       undoLabel: this.undo.at(-1)?.label ?? null,
+      redoLabel: this.redo.at(-1)?.label ?? null,
       turnStartedAt: s.turnStartedAt,
     };
   }

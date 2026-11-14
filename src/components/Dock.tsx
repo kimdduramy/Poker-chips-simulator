@@ -421,7 +421,7 @@ function chopNote(cut: { id: string; amount: number }[], nameOf: (id: string) =>
 // ---------------- hand over ----------------
 
 function ResultsPanel() {
-  const { game, run, busy, v, room, me, isHost } = useTable();
+  const { game, run, busy, v, me, isHost } = useTable();
   const ready = game.players.filter(eligibleForHand).length >= 2;
   const iAmOut = me && me.stack === 0;
   const rebuy = iAmOut && (
@@ -448,11 +448,6 @@ function ResultsPanel() {
     <div className="dock dock-done">
       {rebuy}
       <div className="done-actions">
-        {room.undoLabel && (
-          <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => run({ type: 'undo', v })} aria-label="지급 되돌리기">
-            <Icon name="undo" />
-          </button>
-        )}
         <button className="btn btn-primary btn-xl grow" disabled={!ready || busy} onClick={() => run({ type: 'next', v })}>
           {ready ? '다음 핸드 시작' : '스택이 있는 플레이어가 2명 이상 필요해요'}
           {ready && <kbd className="kbd">N</kbd>}

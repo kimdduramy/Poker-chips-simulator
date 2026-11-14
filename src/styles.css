@@ -1459,6 +1459,103 @@ button:disabled {
   }
 }
 
+/* ---------- 방장 되돌리기 / 다시 하기 바 ---------- */
+
+.hist-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 6px var(--gutter);
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.hist-btn {
+  position: relative;
+  display: inline-flex;
+  flex: 1 1 0;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 10px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--ink) 6%, transparent);
+  color: var(--ink);
+  font: inherit;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.hist-btn:last-child {
+  justify-content: flex-end;
+}
+
+.hist-btn:disabled {
+  opacity: 0.4;
+}
+
+/* 누르는 동안 왼쪽부터 차오르는 바탕 */
+.hist-fill {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: color-mix(in oklch, var(--accent) 70%, transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.hist-btn[data-holding] .hist-fill {
+  transform: scaleX(1);
+  transition: transform var(--hold-ms) linear;
+}
+
+.hist-btn > :not(.hist-fill) {
+  position: relative;
+  z-index: 1;
+}
+
+.hist-text {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.hist-text-end {
+  text-align: right;
+}
+
+.hist-kind {
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.hist-what {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  color: var(--ink-3);
+}
+
+.hist-redo-icon {
+  display: inline-grid;
+  transform: scaleX(-1);
+}
+
+.hist-hint {
+  align-self: center;
+  flex: none;
+  font-size: 0.625rem;
+  color: var(--ink-3);
+  writing-mode: horizontal-tb;
+}
+
 /* ---------- seats ---------- */
 
 .seats {
