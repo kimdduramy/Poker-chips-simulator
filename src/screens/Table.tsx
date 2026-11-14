@@ -3,6 +3,7 @@ import { Claims } from '../components/Claims';
 import { Dock } from '../components/Dock';
 import { GameAnnouncer } from '../components/GameAnnouncer';
 import { Header } from '../components/Header';
+import { HistoryBar } from '../components/HistoryBar';
 import { Lobby } from '../components/Lobby';
 import { Seats } from '../components/Seats';
 import { Sheets, type SheetName } from '../components/Sheets';
@@ -56,6 +57,7 @@ export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: ()
         )}
       </main>
       <aside ref={dockRef} className="dock-wrap" aria-label="내 행동">
+        <HistoryBar />
         <Dock />
       </aside>
       <Sheets open={sheet} setOpen={setSheet} onDisplay={onDisplay} onLeft={onLeft} />

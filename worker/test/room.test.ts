@@ -168,6 +168,32 @@ describe('playing a hand', () => {
     expect(s.room.log.at(-1)?.text).toMatch(/되돌림: Ana 레이즈 100/);
   });
 
+  it('redo replays an undone change, only for the host, and a new change clears it', async () => {
+    const { clients } = await table(['Ana', 'Ben']);
+    const [ana, ben] = clients;
+    await ana.ok({ type: 'start', v: ana.state.v });
+    await ana.ok({ type: 'act', v: ana.state.v, kind: 'raise', amount: 100 });
+    let s = await ana.ok({ type: 'undo', v: ana.state.v });
+    s = await ana.settle();
+    expect(s.room.game.currentBet).toBe(10);
+    expect(s.room.redoLabel).toBe('Ana 레이즈 100');
+    expect(await ben.request({ type: 'redo', v: s.v })).toMatchObject({ code: 'FORBIDDEN' });
+    await ana.ok({ type: 'redo', v: s.v });
+    s = await ana.settle();
+    expect(s.room.game.currentBet).toBe(100);
+    expect(s.room.redoLabel).toBeNull();
+    expect(s.room.undoLabel).toBe('Ana 레이즈 100');
+
+    // 되돌린 뒤 새 행동을 하면 다시 하기는 사라져요
+    await ana.ok({ type: 'undo', v: s.v });
+    s = await ana.settle();
+    expect(s.room.redoLabel).not.toBeNull();
+    await ana.ok({ type: 'act', v: s.v, kind: 'call' });
+    s = await ana.settle();
+    expect(s.room.redoLabel).toBeNull();
+    expect(await ana.request({ type: 'redo', v: s.v })).toMatchObject({ code: 'INVALID' });
+  });
+
   it('undo never removes someone who joined afterwards', async () => {
     const { code, clients } = await table(['Ana', 'Ben']);
     const [ana] = clients;

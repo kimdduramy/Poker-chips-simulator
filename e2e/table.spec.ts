@@ -202,8 +202,8 @@ test('anyone can act for a seat without a phone, and undo rolls it back', async 
   await expect(ana.getByText('플랍 오픈')).toBeVisible();
 
   await ana.getByRole('button', { name: '메뉴' }).click();
-  await expect(ana.getByText('Gran 체크 (Ben 대신)')).toBeVisible();
-  await ana.getByRole('button', { name: /^되돌리기/ }).click();
+  await expect(ana.locator('dialog[open]').getByText('Gran 체크 (Ben 대신)')).toBeVisible();
+  await ana.locator('dialog[open]').getByRole('button', { name: /^되돌리기/ }).click();
   await expect(ben.getByRole('button', { name: 'Gran 대신 하기' })).toBeVisible();
   await expect(ben.locator('.phase-name')).toHaveText('프리플랍');
 });
@@ -325,4 +325,41 @@ test('hand rankings show only while held, glossary opens small, and mid-hand joi
   const late = await ctx.newPage();
   await late.goto(`/t/${code}`);
   await expect(late.getByText('핸드 #1 진행 중')).toBeVisible();
+});
+
+test('host undo / redo bar needs a long press, so a quick tap does nothing', async ({ browser }) => {
+  const ana = await seat(browser, 'Ana');
+  const ben = await seat(browser, 'Ben', codeOf(ana));
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
+  await expect(yourTurn(ana)).toBeVisible();
+  await ana.getByRole('button', { name: '콜 5' }).click();
+  await expect(yourTurn(ben)).toBeVisible();
+
+  // 방장이 아닌 사람에겐 바가 없어요
+  await expect(ben.locator('.hist-bar')).toHaveCount(0);
+
+  const undo = ana.getByRole('button', { name: '되돌리기 (꾹 누르기)' });
+  await expect(undo).toBeEnabled();
+  // 톡 건드리면 아무 일도 안 일어나요
+  await undo.click();
+  await ana.waitForTimeout(800);
+  await expect(yourTurn(ben)).toBeVisible();
+
+  // 꾹 누르면 되돌려져요
+  const box = (await undo.boundingBox())!;
+  await ana.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await ana.mouse.down();
+  await ana.waitForTimeout(800);
+  await ana.mouse.up();
+  await expect(yourTurn(ana)).toBeVisible();
+
+  // 다시 하기도 꾹 눌러서 앞으로
+  const redo = ana.getByRole('button', { name: '다시 하기 (꾹 누르기)' });
+  await expect(redo).toBeEnabled();
+  const rb = (await redo.boundingBox())!;
+  await ana.mouse.move(rb.x + rb.width / 2, rb.y + rb.height / 2);
+  await ana.mouse.down();
+  await ana.waitForTimeout(800);
+  await ana.mouse.up();
+  await expect(yourTurn(ben)).toBeVisible();
 });

@@ -29,6 +29,7 @@ export type ClientMessage =
   | { type: 'award'; v: number; winners: Record<string, string[]> }
   | { type: 'next'; v: number }
   | { type: 'undo'; v: number }
+  | { type: 'redo'; v: number }
   | { type: 'sit'; out: boolean; playerId?: string }
   | { type: 'rebuy'; playerId?: string }
   | { type: 'leave' }
@@ -73,6 +74,8 @@ export interface RoomView {
   claims: ClaimView[];
   log: LogEntry[];
   undoLabel: string | null;
+  /** 방금 되돌린 것을 다시 실행할 수 있으면 그 설명 */
+  redoLabel: string | null;
   turnStartedAt: number | null;
 }
 
@@ -131,6 +134,7 @@ export function parseClientMessage(raw: string): Envelope | null {
     case 'start':
     case 'next':
     case 'undo':
+    case 'redo':
       return isNum(v) ? out({ type: m.type, v }) : null;
     case 'act': {
       if (!isNum(v) || typeof m.kind !== 'string' || !KINDS.includes(m.kind) || !optId(m.playerId)) return null;
