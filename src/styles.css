@@ -29,7 +29,8 @@
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 22px;
-  --glass-70: color-mix(in oklch, var(--surface) 70%, transparent);
+  /* 베팅 현황 표·용어 설명 창 바탕 (50% 불투명) */
+  --glass-70: color-mix(in oklch, var(--surface) 50%, transparent);
   --glass-80: color-mix(in oklch, var(--surface) 80%, transparent);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -584,12 +585,8 @@ button:disabled {
 }
 
 .glossary-group-title {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   margin: 0 0 6px;
   padding: 4px 0;
-  background: color-mix(in oklch, var(--surface) 96%, transparent);
   font-size: 0.75rem;
   font-weight: 620;
   letter-spacing: 0.04em;
