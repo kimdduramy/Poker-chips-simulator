@@ -1329,9 +1329,10 @@ button:disabled {
 .bet-board {
   /* 높이는 왼쪽(팟 ~ 차례 문구)에 맞추고, 넘치면 안에서 스크롤 */
   position: relative;
-  flex: 1 1 0;
+  /* 가로 폭은 좁게: 내용(이름·숫자 2칸)에 맞춘 정도 */
+  flex: 0 1 220px;
   min-width: 0;
-  max-width: 340px;
+  max-width: 220px;
   margin-left: auto;
   align-self: stretch;
   display: flex;
