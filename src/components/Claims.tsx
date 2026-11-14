@@ -41,14 +41,14 @@ export function Claims() {
   return (
     <div ref={rootRef} className="claim" role="alertdialog" aria-modal="true" aria-labelledby="claim-text">
       <p id="claim-text">
-        A new device wants to take <strong>{nameOf(claim.playerId)}</strong>’s seat.
+        새 기기가 <strong>{nameOf(claim.playerId)}</strong>의 자리를 가져가려고 해요.
       </p>
       <div className="claim-actions">
         <button className="btn btn-quiet btn-sm" disabled={busy} onClick={() => run({ type: 'resolveClaim', claimId: claim.id, allow: false })}>
-          Deny
+          거절
         </button>
         <button className="btn btn-primary btn-sm" disabled={busy} onClick={() => run({ type: 'resolveClaim', claimId: claim.id, allow: true })}>
-          Allow
+          허용
         </button>
       </div>
     </div>

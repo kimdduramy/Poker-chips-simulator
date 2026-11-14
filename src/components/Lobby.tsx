@@ -13,7 +13,7 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
     ids.splice(index + delta, 0, id);
     void run({ type: 'seatOrder', v, ids });
   };
-  const { sb, bb, startingStack, buyInPrice } = game.settings;
+  const { sb, bb, startingStack } = game.settings;
 
   return (
     <div className="lobby">
@@ -22,16 +22,16 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
       <section className="lobby-section" aria-labelledby="lobby-players">
         <div className="section-head">
           <h2 id="lobby-players">
-            Seats <span className="muted num">{seats.length}/10</span>
+            자리 <span className="muted num">{seats.length}/10</span>
           </h2>
           {isHost && (
             <button className="link-btn" onClick={onPlayers}>
-              Manage
+              관리
             </button>
           )}
         </div>
         {seats.length === 0 ? (
-          <p className="muted">Nobody has joined yet.</p>
+          <p className="muted">아직 아무도 안 들어왔어요.</p>
         ) : (
           <ol className="lobby-seats">
             {seats.map((p, i) => {
@@ -41,20 +41,20 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
                   <span className="seat-index num">{i + 1}</span>
                   <span className="lobby-name">
                     {p.name}
-                    {room.hostId === p.id && <span className="tag">host</span>}
-                    {i === 0 && <span className="tag">first button</span>}
+                    {room.hostId === p.id && <span className="tag">방장</span>}
+                    {i === 0 && <span className="tag">첫 딜러</span>}
                   </span>
-                  <span className="muted small">{m?.manual ? 'no phone' : away(p.id) ? 'away' : ''}</span>
+                  <span className="muted small">{m?.manual ? '폰 없음' : away(p.id) ? '자리 비움' : ''}</span>
                   {isHost && seats.length > 1 && (
                     <span className="reorder">
-                      <button className="icon-btn" disabled={i === 0 || busy} onClick={() => move(i, -1)} aria-label={`Move ${p.name} up`}>
+                      <button className="icon-btn" disabled={i === 0 || busy} onClick={() => move(i, -1)} aria-label={`${p.name} 위로`}>
                         <Icon name="up" size={18} />
                       </button>
                       <button
                         className="icon-btn"
                         disabled={i === seats.length - 1 || busy}
                         onClick={() => move(i, 1)}
-                        aria-label={`Move ${p.name} down`}
+                        aria-label={`${p.name} 아래로`}
                       >
                         <Icon name="down" size={18} />
                       </button>
@@ -65,32 +65,28 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
             })}
           </ol>
         )}
-        {isHost && seats.length > 1 && <p className="hint">Order seats the way you sit, clockwise from the dealer.</p>}
+        {isHost && seats.length > 1 && <p className="hint">실제로 앉은 순서대로, 딜러부터 시계 방향으로 맞춰 주세요. 이 순서대로 차례가 돌아요.</p>}
       </section>
 
       <section className="lobby-section" aria-labelledby="lobby-rules">
         <div className="section-head">
-          <h2 id="lobby-rules">Game</h2>
+          <h2 id="lobby-rules">게임</h2>
           {isHost && (
             <button className="link-btn" onClick={onSettings}>
-              Edit
+              수정
             </button>
           )}
         </div>
         <dl className="facts">
           <div>
-            <dt>Blinds</dt>
+            <dt>블라인드</dt>
             <dd className="num">
               {fmt(sb)}/{fmt(bb)}
             </dd>
           </div>
           <div>
-            <dt>Starting stack</dt>
+            <dt>시작 칩</dt>
             <dd className="num">{fmt(startingStack)}</dd>
-          </div>
-          <div>
-            <dt>Buy-in</dt>
-            <dd className="num">{buyInPrice > 0 ? `$${(buyInPrice / 100).toFixed(2)}` : 'Chips only'}</dd>
           </div>
         </dl>
       </section>

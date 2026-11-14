@@ -6,17 +6,17 @@ import { Num } from './Num';
 
 export function seatStatus(p: Player, phase: string, away: boolean, manual: boolean): string | null {
   const inHand = (phase === 'betting' || phase === 'showdown') && p.inHand;
-  if (p.leaving) return 'left';
-  if (inHand && p.folded) return 'folded';
-  if (inHand && p.allIn) return 'all in';
+  if (p.leaving) return '나감';
+  if (inHand && p.folded) return '폴드';
+  if (inHand && p.allIn) return '올인';
   if (!inHand && (phase === 'betting' || phase === 'showdown')) {
-    if (p.stack === 0) return 'busted';
-    return p.sittingOut ? 'sitting out' : 'next hand';
+    if (p.stack === 0) return '칩 소진';
+    return p.sittingOut ? '쉬는 중' : '다음 판부터';
   }
-  if (p.stack === 0 && phase !== 'lobby') return 'busted';
-  if (p.sittingOut) return 'sitting out';
-  if (manual) return 'no phone';
-  if (away) return 'away';
+  if (p.stack === 0 && phase !== 'lobby') return '칩 소진';
+  if (p.sittingOut) return '쉬는 중';
+  if (manual) return '폰 없음';
+  if (away) return '자리 비움';
   return null;
 }
 
@@ -48,7 +48,7 @@ export function Seats() {
   });
 
   return (
-    <ul ref={listRef} className="seats" aria-label="Players">
+    <ul ref={listRef} className="seats" aria-label="플레이어">
       <span
         className="seat-glide"
         aria-hidden="true"
@@ -76,12 +76,12 @@ export function Seats() {
               <span className="seat-name">
                 {p.name}
                 {hand && game.buttonId === p.id && (
-                  <span className="dealer" title="Dealer button">
-                    <span className="sr-only">Dealer</span>
+                  <span className="dealer" title="딜러 버튼">
+                    <span className="sr-only">딜러</span>
                     <span aria-hidden="true">D</span>
                   </span>
                 )}
-                {p.id === you.id && <span className="seat-you">you</span>}
+                {p.id === you.id && <span className="seat-you">나</span>}
               </span>
               {(blind || status) && (
                 <span className="seat-meta">

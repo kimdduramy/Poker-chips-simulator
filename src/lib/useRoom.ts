@@ -95,7 +95,7 @@ export function useRoom(code: string): RoomConnection {
 
     ws.onclose = () => {
       if (wsRef.current !== ws) return;
-      failPending('Connection lost');
+      failPending('연결이 끊겼어요');
       if (stopped.current) return;
       setStatus('reconnecting');
       attempt.current += 1;
@@ -168,7 +168,7 @@ export function useRoom(code: string): RoomConnection {
         ws.onclose = null;
         ws.close();
       }
-      failPending('Left the table');
+      failPending('테이블에서 나갔어요');
     };
   }, [code, connect, reconnect, failPending]);
 
@@ -177,14 +177,14 @@ export function useRoom(code: string): RoomConnection {
       new Promise<Reply>((resolve) => {
         const ws = wsRef.current;
         if (!ws || ws.readyState !== WebSocket.OPEN) {
-          resolve({ ok: false, code: 'OFFLINE', message: 'Reconnecting. Try again in a second.' });
+          resolve({ ok: false, code: 'OFFLINE', message: '다시 연결 중이에요. 잠시 후 다시 눌러 주세요.' });
           return;
         }
         seqRef.current += 1;
         const seq = seqRef.current;
         const timer = window.setTimeout(() => {
           pending.current.delete(seq);
-          resolve({ ok: false, code: 'OFFLINE', message: 'No response. Reconnecting.' });
+          resolve({ ok: false, code: 'OFFLINE', message: '응답이 없어요. 다시 연결 중이에요.' });
           reconnect();
         }, REQUEST_TIMEOUT);
         pending.current.set(seq, { resolve, timer });
