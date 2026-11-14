@@ -33,6 +33,9 @@ describe('http api', () => {
     expect(originAllowed('http://localhost:5173', {} as never)).toBe(true);
     expect(originAllowed('https://piss-poker.pages.dev.evil.com', {} as never)).toBe(false);
     expect(originAllowed('http://piss-poker.pages.dev', {} as never)).toBe(false);
+    // 내 배포 주소(같은 사이트)에서 온 요청은 허용, 다른 사이트는 거절
+    expect(originAllowed('https://chip-poker.pages.dev', {} as never, 'chip-poker.pages.dev')).toBe(true);
+    expect(originAllowed('https://evil.example', {} as never, 'chip-poker.pages.dev')).toBe(false);
   });
 
   it('rate limits table creation per address', async () => {
