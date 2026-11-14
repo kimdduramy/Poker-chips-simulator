@@ -101,36 +101,28 @@ export function GlossaryCard() {
   );
 }
 
-/**
- * 게임 중용: 화면을 덜 가리도록 긴 목록 대신
- * [묶음 탭] → [용어 칩] → [고른 용어 설명 한 개]만 보여 주는 작은 창.
- */
-function CompactGlossary() {
-  const [group, setGroup] = useState(0);
-  const [pick, setPick] = useState(0);
+/** 게임 중 작은 창의 제목 줄 탭: 용어 설명 [진행|액션|칩과 팟|상황] */
+function GroupTabs({ group, onPick }: { group: number; onPick: (i: number) => void }) {
+  return (
+    <div className="gl-tabs" role="tablist" aria-label="용어 묶음">
+      {GROUPS.map((g, i) => (
+        <button key={g.title} role="tab" aria-selected={i === group} className="gl-tab" onClick={() => onPick(i)}>
+          {g.title}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** 게임 중용: 화면을 덜 가리도록 [용어 칩] → [고른 용어 설명 한 개]만 보여 줘요. */
+function CompactGlossary({ group, pick, onPick }: { group: number; pick: number; onPick: (i: number) => void }) {
   const terms = GROUPS[group].terms;
   const t = terms[Math.min(pick, terms.length - 1)];
   return (
     <div className="gl-compact">
-      <div className="gl-tabs" role="tablist" aria-label="용어 묶음">
-        {GROUPS.map((g, i) => (
-          <button
-            key={g.title}
-            role="tab"
-            aria-selected={i === group}
-            className="gl-tab"
-            onClick={() => {
-              setGroup(i);
-              setPick(0);
-            }}
-          >
-            {g.title}
-          </button>
-        ))}
-      </div>
       <div className="gl-chips">
         {terms.map((x, i) => (
-          <button key={x.term} className="gl-chip" aria-pressed={i === pick} onClick={() => setPick(i)}>
+          <button key={x.term} className="gl-chip" aria-pressed={i === pick} onClick={() => onPick(i)}>
             {x.term}
           </button>
         ))}
@@ -148,6 +140,8 @@ function CompactGlossary() {
 /** 게임 중: 상단바의 작은 버튼으로 여는 작은 창. 바깥을 누르거나 Esc로 닫혀요. */
 export function GlossaryButton() {
   const [open, setOpen] = useState(false);
+  const [group, setGroup] = useState(0);
+  const [pick, setPick] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -179,11 +173,18 @@ export function GlossaryButton() {
         <div id="glossary-pop" className="glossary glossary-pop" role="dialog" aria-label="용어 설명">
           <div className="glossary-pop-head">
             <span className="glossary-title">용어 설명</span>
-            <button className="icon-btn icon-btn-sm" aria-label="닫기" onClick={() => setOpen(false)}>
-              <Icon name="close" size={18} />
+            <GroupTabs
+              group={group}
+              onPick={(i) => {
+                setGroup(i);
+                setPick(0);
+              }}
+            />
+            <button className="gl-close" aria-label="닫기" onClick={() => setOpen(false)}>
+              <Icon name="close" size={14} />
             </button>
           </div>
-          <CompactGlossary />
+          <CompactGlossary group={group} pick={pick} onPick={setPick} />
         </div>
       )}
     </div>

@@ -58,7 +58,7 @@ test('three players play a hand from deal to payout', async ({ browser }) => {
   await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
 
   await expect(yourTurn(ana)).toBeVisible();
-  await expect(ben.getByText('Ana 액션 · 콜 10')).toBeVisible();
+  await expect(ben.locator('.act-line')).toHaveText(/Ana 액션\s*콜 10/);
   await ana.getByRole('button', { name: '레이즈' }).click();
   await ana.getByLabel('금액').fill('60');
   await ana.getByRole('textbox').fill('60');

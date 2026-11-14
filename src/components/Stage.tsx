@@ -34,8 +34,9 @@ export function Stage() {
     line = (
       <>
         {freshStreet && <span className="deal-hint">{NEXT_CARDS[game.street]}</span>}
-        <span>
-          {actor.id === you.id ? '내' : actor.name} 액션{toCall > 0 ? ` · 콜 ${fmt(toCall)}` : ''}
+        <span className="act-line">
+          <span>{actor.id === you.id ? '내' : actor.name} 액션</span>
+          {toCall > 0 && <span className="act-call">콜 {fmt(toCall)}</span>}
         </span>
       </>
     );

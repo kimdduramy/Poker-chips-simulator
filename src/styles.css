@@ -641,28 +641,29 @@ button:disabled {
 
 .gl-compact {
   display: grid;
-  gap: 8px;
-  padding: 8px 10px 10px;
+  gap: 7px;
+  padding: 7px 10px 9px;
 }
 
 .gl-tabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
+  display: flex;
+  gap: 1px;
   padding: 2px;
-  border-radius: 6px;
+  border-radius: 5px;
   background: color-mix(in oklch, var(--ink) 7%, transparent);
 }
 
 .gl-tab {
-  height: 26px;
+  height: 20px;
+  padding: 0 5px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 4px;
   background: transparent;
   color: var(--ink-2);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 560;
+  white-space: nowrap;
 }
 
 .gl-tab[aria-selected='true'] {
@@ -673,18 +674,19 @@ button:disabled {
 .gl-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
 }
 
 .gl-chip {
-  height: 24px;
-  padding: 0 8px;
+  height: 18px;
+  padding: 0 5px;
   border: 1px solid var(--line-strong);
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.625rem;
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -723,7 +725,7 @@ button:disabled {
   right: -48px;
   z-index: 40;
   display: grid;
-  width: min(250px, calc(100vw - 16px));
+  width: min(270px, calc(100vw - 16px));
   box-shadow: 0 12px 32px oklch(0 0 0 / 0.18);
   font-size: 0.75rem;
   animation: fade-up 180ms var(--ease-out);
@@ -732,13 +734,28 @@ button:disabled {
 .glossary-pop-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 6px 6px 4px 14px;
+  gap: 6px;
+  padding: 3px 4px 3px 10px;
   border-bottom: 1px solid var(--line);
 }
 
+.gl-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-2);
+}
+
 .glossary-pop .glossary-title {
-  font-size: 0.875rem;
+  flex: none;
+  font-size: 0.8125rem;
+  white-space: nowrap;
 }
 
 .glossary-pop .glossary-scroll {
@@ -831,9 +848,28 @@ button:disabled {
   touch-action: none;
 }
 
-.icon-btn.hold-btn {
-  width: auto;
-  padding: 0 8px;
+.hold-pill {
+  display: inline-grid;
+  place-items: center;
+  height: 28px;
+  margin: 0 4px;
+  padding: 0 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 oklch(0 0 0 / 0.06);
+  transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+
+.hold-pill[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
 }
 
 .hold-btn-text {
@@ -843,7 +879,7 @@ button:disabled {
   letter-spacing: -0.01em;
 }
 
-.hold-btn[aria-pressed='true'] {
+.btn.hold-btn[aria-pressed='true'] {
   background: var(--surface-2);
 }
 
@@ -1104,7 +1140,29 @@ button:disabled {
   }
 }
 
+.topbar {
+  position: relative;
+  /* 단계 표시가 absolute라서 그리드는 [왼쪽 | 오른쪽] 두 칸 */
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.topbar-start {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  min-width: 0;
+}
+
+/* 단계 표시(핸드 #1 프리플랍)는 화면 정가운데에 고정 */
 .topbar-phase {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--safe-top) + 6px);
+  height: 44px;
+  align-items: center !important;
+  transform: translateX(-50%);
+  pointer-events: none;
   display: flex;
   gap: 8px;
   align-items: baseline;
@@ -1210,6 +1268,16 @@ button:disabled {
   color: var(--ink-2);
 }
 
+.act-line {
+  display: grid;
+  gap: 2px;
+}
+
+.act-call {
+  font-size: 0.9em;
+  color: var(--ink-3);
+}
+
 .deal-hint {
   display: inline-flex;
   align-items: center;
@@ -1271,10 +1339,11 @@ button:disabled {
   overflow: hidden;
   contain: size;
   min-height: 7rem;
-  background: var(--glass-70);
+  /* 배경에 녹아들도록: 테두리 없이 아주 옅은 바탕 */
+  background: color-mix(in oklch, var(--ink) 3%, transparent);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 0;
   font-size: 0.8125rem;
 }
@@ -1293,14 +1362,13 @@ button:disabled {
 .bet-board td {
   padding: 6px 8px;
   text-align: left;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid color-mix(in oklch, var(--line) 45%, transparent);
   white-space: nowrap;
 }
 
 .bet-board-head {
   flex: none;
-  background: color-mix(in oklch, var(--surface-2) 60%, transparent);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid color-mix(in oklch, var(--line) 70%, transparent);
 }
 
 .bet-board-head th {
@@ -2645,8 +2713,38 @@ button:disabled {
 }
 
 @media (max-width: 374px) {
-  .topbar .icon-btn.hold-btn {
-    width: auto;
-    padding: 0 4px;
+  .hold-pill {
+    margin: 0 2px;
+    padding: 0 8px;
+  }
+}
+
+/* 상단바 오른쪽 버튼을 조금 좁혀 가운데 단계 표시와 겹치지 않게 */
+.topbar .icon-btn {
+  width: 38px;
+}
+
+.topbar-end {
+  gap: 2px;
+}
+
+.topbar .hold-pill {
+  margin: 0 2px;
+}
+
+.topbar-phase {
+  gap: 6px;
+}
+
+@media (max-width: 374px) {
+  .topbar .icon-btn {
+    width: 34px;
+  }
+}
+
+/* 375px급 폰에서는 '핸드 #N'을 숨겨 단계 이름이 버튼과 겹치지 않게 */
+@media (max-width: 380px) {
+  .topbar-phase .muted {
+    display: none;
   }
 }

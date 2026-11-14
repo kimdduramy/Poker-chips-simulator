@@ -18,9 +18,12 @@ export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () 
 
   return (
     <header className="topbar">
-      <button className="code-btn" onClick={onInvite} aria-label={`테이블 ${room.code}. 친구 초대`}>
-        <span className="mono">{room.code}</span>
-      </button>
+      <div className="topbar-start">
+        <button className="code-btn" onClick={onInvite} aria-label={`테이블 ${room.code}. 친구 초대`}>
+          <span className="mono">{room.code}</span>
+        </button>
+        <span className="conn" data-online={online} title={online ? '연결됨' : '다시 연결 중'} role="img" aria-label={online ? '연결됨' : '다시 연결 중'} />
+      </div>
       <div className="topbar-phase" aria-live="polite">
         {game.handNo > 0 && <span className="muted">핸드 #{game.handNo}</span>}
         <span className="phase-name" key={phase}>
@@ -28,7 +31,6 @@ export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () 
         </span>
       </div>
       <div className="topbar-end">
-        <span className="conn" data-online={online} title={online ? '연결됨' : '다시 연결 중'} role="img" aria-label={online ? '연결됨' : '다시 연결 중'} />
         <HandRanksHold />
         <GlossaryButton />
         <button className="icon-btn" onClick={onMenu} aria-label="메뉴">

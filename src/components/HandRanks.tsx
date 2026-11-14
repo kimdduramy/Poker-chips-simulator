@@ -51,7 +51,7 @@ export function HandRanksHold({ variant = 'icon' }: { variant?: 'icon' | 'pill' 
     <>
       <button
         type="button"
-        className={variant === 'icon' ? 'icon-btn hold-btn' : 'btn btn-quiet btn-sm hold-btn'}
+        className={variant === 'icon' ? 'hold-pill hold-btn' : 'btn btn-quiet btn-sm hold-btn'}
         aria-label="족보 보기 (누르고 있는 동안 표시)"
         aria-pressed={open}
         onPointerDown={(e) => {
@@ -68,7 +68,7 @@ export function HandRanksHold({ variant = 'icon' }: { variant?: 'icon' | 'pill' 
         onKeyUp={(e) => (e.key === ' ' || e.key === 'Enter') && setOpen(false)}
         onBlur={() => setOpen(false)}
       >
-        {variant === 'icon' ? <span className="hold-btn-text">족보</span> : '족보 보기 · 누르고 있기'}
+        {variant === 'icon' ? '족보' : '족보 보기 · 누르고 있기'}
       </button>
       {open &&
         createPortal(
