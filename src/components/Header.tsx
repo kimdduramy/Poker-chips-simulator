@@ -1,6 +1,7 @@
 import { STREET_NAMES } from '../lib/format';
 import { useTable } from '../lib/table';
 import { GlossaryButton } from './Glossary';
+import { HandRanksHold } from './HandRanks';
 import { Icon } from './Icon';
 
 export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () => void }) {
@@ -28,6 +29,7 @@ export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () 
       </div>
       <div className="topbar-end">
         <span className="conn" data-online={online} title={online ? '연결됨' : '다시 연결 중'} role="img" aria-label={online ? '연결됨' : '다시 연결 중'} />
+        <HandRanksHold />
         <GlossaryButton />
         <button className="icon-btn" onClick={onMenu} aria-label="메뉴">
           <Icon name="menu" />

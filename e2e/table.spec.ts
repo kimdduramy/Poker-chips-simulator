@@ -295,3 +295,29 @@ test('when the host leaves, the old table closes for everyone and a new table st
   await ana.waitForURL(/\/t\/[A-Z]{4}$/);
   await expect(ana.getByText('아직 아무도 없어요', { exact: false })).toBeVisible();
 });
+
+test('hand rankings show only while held, glossary opens small, and mid-hand joiners see the hand number', async ({ browser }) => {
+  const ana = await seat(browser, 'Ana');
+  const code = codeOf(ana);
+  await seat(browser, 'Ben', code);
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
+
+  const hold = ana.getByRole('button', { name: /족보 보기/ });
+  const box = (await hold.boundingBox())!;
+  await ana.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await ana.mouse.down();
+  await expect(ana.getByText('로열 플러시')).toBeVisible();
+  await ana.mouse.up();
+  await expect(ana.getByText('로열 플러시')).toBeHidden();
+
+  await ana.getByRole('button', { name: '용어 설명' }).click();
+  await expect(ana.getByRole('dialog', { name: '용어 설명' })).toBeVisible();
+  await ana.keyboard.press('Escape');
+  await expect(ana.getByRole('dialog', { name: '용어 설명' })).toBeHidden();
+
+  const ctx = await browser.newContext(test.info().project.use);
+  contexts.push(ctx);
+  const late = await ctx.newPage();
+  await late.goto(`/t/${code}`);
+  await expect(late.getByText('핸드 #1 진행 중')).toBeVisible();
+});

@@ -27,7 +27,7 @@ export function GameAnnouncer() {
       const who = actor.id === you.id ? '내 차례예요' : `${actor.name} 차례예요`;
       const toCall = game.currentBet - actor.bet;
       parts.push(
-        `$핸드 #{game.handNo}, ${street}. ${fresh}${who}${toCall > 0 ? `, 콜 ${fmt(toCall)}` : ''}. 팟 ${fmt(pot)}.`,
+        `핸드 ${game.handNo}, ${street}. ${fresh}${who}${toCall > 0 ? `, 콜 ${fmt(toCall)}` : ''}. 팟 ${fmt(pot)}.`,
       );
     } else if (game.phase === 'showdown') {
       parts.push(

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { HandRanksHold } from './HandRanks';
 import { Icon } from './Icon';
+import { ScrollBox } from './ScrollBox';
 
 interface Term {
   term: string;
@@ -86,12 +88,15 @@ function TermList() {
 export function GlossaryCard() {
   return (
     <section className="glossary glossary-card" aria-labelledby="glossary-title">
-      <h2 id="glossary-title" className="glossary-title">
-        홀덤 용어 설명
-      </h2>
-      <div className="glossary-body" tabIndex={0}>
-        <TermList />
+      <div className="glossary-card-head">
+        <h2 id="glossary-title" className="glossary-title">
+          홀덤 용어 설명
+        </h2>
+        <HandRanksHold variant="pill" />
       </div>
+      <ScrollBox className="glossary-scroll" viewportClassName="glossary-body" label="홀덤 용어 목록">
+        <TermList />
+      </ScrollBox>
     </section>
   );
 }
@@ -134,9 +139,9 @@ export function GlossaryButton() {
               <Icon name="close" size={18} />
             </button>
           </div>
-          <div className="glossary-body">
+          <ScrollBox className="glossary-scroll" viewportClassName="glossary-body" label="용어 목록">
             <TermList />
-          </div>
+          </ScrollBox>
         </div>
       )}
     </div>

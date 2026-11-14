@@ -3,6 +3,7 @@ import { bySeat, findPlayer, potTotal, type Game, type Player } from '../../shar
 import { fmt, NEXT_CARDS } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
+import { ScrollBox } from './ScrollBox';
 
 export function outcomeLine(game: Game, nameOf: (id: string) => string) {
   const winners = [...new Set(game.results.map((r) => r.id))];
@@ -90,7 +91,8 @@ function owes(game: Game, p: Player): string {
 function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
   const rows = bySeat(game).filter((p) => p.inHand || p.committed > 0);
   return (
-    <div className="bet-board" role="region" aria-label="참가자별 베팅 현황" tabIndex={0}>
+    <div className="bet-board" role="region" aria-label="참가자별 베팅 현황">
+      <ScrollBox className="bet-board-scroll">
       <table>
         <thead>
           <tr>
@@ -115,6 +117,7 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
           })}
         </tbody>
       </table>
+      </ScrollBox>
     </div>
   );
 }
