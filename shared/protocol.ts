@@ -89,7 +89,7 @@ export type ServerMessage =
   | { type: 'state'; v: number; serverNow: number; room: RoomView; you: YouView }
   | { type: 'ok'; seq: number }
   | { type: 'err'; seq?: number; code: ErrorCode; message: string }
-  | { type: 'closed'; reason: 'expired' | 'kicked' | 'replaced' };
+  | { type: 'closed'; reason: 'expired' | 'kicked' | 'replaced' | 'ended' };
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);

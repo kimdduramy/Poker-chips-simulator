@@ -282,3 +282,16 @@ test('unknown table codes and room pages explain themselves', async ({ page }) =
   await page.goto('/t/QQQQ');
   await expect(page.getByText('QQQQ 테이블이 없어요')).toBeVisible();
 });
+
+test('when the host leaves, the old table closes for everyone and a new table starts empty', async ({ browser }) => {
+  const ana = await seat(browser, 'Ana');
+  const ben = await seat(browser, 'Ben', codeOf(ana));
+  await ana.getByRole('button', { name: '메뉴' }).click();
+  await ana.getByRole('button', { name: '테이블 닫고 나가기' }).click();
+  await ana.getByRole('button', { name: '나가기', exact: true }).click();
+  await expect(ben.getByText('방장이 테이블을 닫았어요')).toBeVisible();
+  await ana.waitForURL(/\/$/);
+  await ana.getByRole('button', { name: '테이블 만들기' }).click();
+  await ana.waitForURL(/\/t\/[A-Z]{4}$/);
+  await expect(ana.getByText('아직 아무도 없어요', { exact: false })).toBeVisible();
+});

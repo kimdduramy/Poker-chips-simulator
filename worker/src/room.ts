@@ -113,6 +113,8 @@ export class Room extends DurableObject<Env> {
   private s: Stored | null = null;
   private undo: Snapshot[] = [];
   private alarmAt: number | null = null;
+  /** Set when the host leaves: the table closes for everyone once the reply is sent. */
+  private closeAfterReply = false;
   private buckets = new Map<string, { tokens: number; at: number; strikes: number }>();
   private lastMsg = new Map<string, number>();
 
@@ -212,6 +214,10 @@ export class Room extends DurableObject<Env> {
     try {
       await this.handle(ws, att, msg);
       if (msg.seq !== undefined) this.send(ws, { type: 'ok', seq: msg.seq });
+      if (this.closeAfterReply) {
+        this.closeAfterReply = false;
+        await this.closeTable(ws);
+      }
     } catch (e) {
       if (e instanceof Reject || e instanceof RuleError) {
         const code = e.code as ErrorCode;
@@ -230,6 +236,23 @@ export class Room extends DurableObject<Env> {
 
   async webSocketError(ws: WebSocket) {
     this.dropConnection(ws);
+  }
+
+  /** Ends the table: everyone else is told the host closed it, then the room is wiped. */
+  private async closeTable(leaver: WebSocket) {
+    for (const ws of this.ctx.getWebSockets()) {
+      if (ws !== leaver) this.send(ws, { type: 'closed', reason: 'ended' });
+      try {
+        ws.close(4005, 'Table closed by host');
+      } catch {
+        // already closed
+      }
+    }
+    this.s = null;
+    this.undo = [];
+    this.alarmAt = null;
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
   }
 
   async alarm() {
@@ -427,6 +450,12 @@ export class Room extends DurableObject<Env> {
       }
       case 'leave': {
         const m = requireMember();
+        // 방장이 직접 나가면 옛 방이 남지 않도록 테이블을 모두에게 닫아요.
+        // (방장이 그냥 끊긴 경우에는 takeHost로 다른 사람이 넘겨받을 수 있어요.)
+        if (s.hostId === m.id) {
+          this.closeAfterReply = true;
+          return;
+        }
         this.removeMember(m, 'left');
         return;
       }

@@ -5,7 +5,7 @@ import { deviceToken } from './device';
 
 export type StateMsg = Extract<ServerMessage, { type: 'state' }>;
 export type Status = 'connecting' | 'open' | 'reconnecting' | 'missing' | 'closed';
-export type ClosedReason = 'expired' | 'kicked' | 'replaced';
+export type ClosedReason = 'expired' | 'kicked' | 'replaced' | 'ended';
 export type Reply = { ok: true } | { ok: false; code: string; message: string };
 
 const PING_EVERY = 10_000;
