@@ -122,9 +122,16 @@ function CompactGlossary({ group, pick, onPick }: { group: number; pick: number;
     <div className="gl-compact">
       <div className="gl-chips">
         {terms.map((x, i) => (
-          <button key={x.term} className="gl-chip" aria-pressed={i === pick} onClick={() => onPick(i)}>
-            {x.term}
-          </button>
+          <span key={x.term} className="gl-chip-wrap">
+            {i > 0 && (
+              <span className="gl-sep" aria-hidden="true">
+                ·
+              </span>
+            )}
+            <button className="gl-chip" aria-pressed={i === pick} onClick={() => onPick(i)}>
+              {x.term}
+            </button>
+          </span>
         ))}
       </div>
       <div className="gl-desc" aria-live="polite">
