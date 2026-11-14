@@ -3,9 +3,9 @@
 :root {
   color-scheme: light dark;
 
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Geist Variable', 'Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', 'Malgun Gothic', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
-  --font-serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-serif: 'Instrument Serif', 'Iowan Old Style', Georgia, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', serif;
 
   --bg: oklch(1 0 0);
   --surface: oklch(0.968 0.004 100);
@@ -811,6 +811,115 @@ button:disabled {
   display: grid;
   grid-template-columns: 5rem 1fr auto;
   gap: 8px;
+}
+
+/* ---------- bet board (팟 옆 베팅 현황) ---------- */
+
+.stage-top {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.stage-main {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.bet-board {
+  /* 높이는 왼쪽(팟 ~ 차례 문구)에 맞추고, 넘치면 안에서 스크롤 */
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 340px;
+  margin-left: auto;
+  align-self: stretch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  contain: size;
+  min-height: 7rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-size: 0.8125rem;
+}
+
+.bet-board:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.bet-board table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.bet-board th,
+.bet-board td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.bet-board thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-weight: 560;
+  font-size: 0.75rem;
+}
+
+.bet-board th:first-child {
+  width: 44%;
+}
+
+.bet-board .num {
+  text-align: right;
+}
+
+.bet-board tbody th {
+  font-weight: 560;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bet-board-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bet-board-you {
+  margin-left: 4px;
+  color: var(--ink-3);
+  font-weight: 400;
+  font-size: 0.6875rem;
+}
+
+.bet-board tr[data-acting] {
+  background: color-mix(in oklch, var(--accent) 35%, transparent);
+}
+
+.bet-board tr[data-dim] {
+  color: var(--ink-3);
+}
+
+.bet-board tbody tr:last-child th,
+.bet-board tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (min-width: 720px) {
+  .bet-board {
+    font-size: 0.9375rem;
+  }
+  .bet-board thead th {
+    font-size: 0.8125rem;
+  }
 }
 
 /* ---------- seats ---------- */

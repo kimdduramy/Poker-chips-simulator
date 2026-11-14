@@ -22,6 +22,8 @@ export interface Player {
   buyIn: number;
   bet: number;
   committed: number;
+  /** Chips added by this player's most recent post (blind, call or raise) this hand. 0 after a check or fold. */
+  lastPaid?: number;
   inHand: boolean;
   folded: boolean;
   allIn: boolean;
@@ -336,12 +338,13 @@ function post(p: Player, amount: number): number {
   p.stack -= a;
   p.bet += a;
   p.committed += a;
+  p.lastPaid = a;
   if (p.stack === 0) p.allIn = true;
   return a;
 }
 
 export function startHand(g0: Game): Game {
-  if (handInProgress(g0)) fail('PHASE', 'A hand is already running');
+  if (handInProgress(g0)) fail('PHASE', '이미 판이 진행 중이에요');
   const g = clone(g0);
   if (g.pendingSettings) {
     g.settings = g.pendingSettings;
@@ -366,6 +369,7 @@ export function startHand(g0: Game): Game {
     Object.assign(p, {
       bet: 0,
       committed: 0,
+      lastPaid: 0,
       inHand: eligibleForHand(p),
       folded: false,
       allIn: false,
@@ -405,12 +409,14 @@ export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: n
     case 'fold':
       if (toCall <= 0) fail('INVALID', '콜할 금액이 없어요. 체크하세요');
       p.folded = true;
+      p.lastPaid = 0;
       g.lastAction = { id, kind: 'fold', amount: 0, allIn: false };
       break;
     case 'check':
       if (toCall > 0) fail('INVALID', '콜하거나 폴드해야 해요');
       p.acted = true;
       p.actedLevel = g.currentBet;
+      p.lastPaid = 0;
       g.lastAction = { id, kind: 'check', amount: 0, allIn: false };
       break;
     case 'call': {
@@ -429,7 +435,7 @@ export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: n
       const target = to as number;
       const inc = target - g.currentBet;
       if (inc < g.minRaise && target !== max) {
-        fail('INVALID', `Minimum is ${g.currentBet + g.minRaise}`);
+        fail('INVALID', `최소 ${g.currentBet + g.minRaise}까지 레이즈해야 해요`);
       }
       post(p, target - p.bet);
       if (inc >= g.minRaise) g.minRaise = inc;
