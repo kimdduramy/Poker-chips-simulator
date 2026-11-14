@@ -104,7 +104,7 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
         </thead>
       </table>
       <ScrollBox className="bet-board-scroll">
-      <table aria-label="플레이어 / 콜 금액 / 직전 베팅">
+      <table aria-label="베팅 현황">
         <BoardCols />
         <tbody>
           {rows.map((p) => {
