@@ -22,6 +22,8 @@ export interface Player {
   buyIn: number;
   bet: number;
   committed: number;
+  /** Chips added by this player's most recent post (blind, call or raise) this hand. 0 after a check or fold. */
+  lastPaid?: number;
   inHand: boolean;
   folded: boolean;
   allIn: boolean;
@@ -122,7 +124,7 @@ export function validateSettings(s: Settings): Settings {
     isInt(s.sb, 0, s.bb) &&
     isInt(s.startingStack, s.bb, LIMITS.maxStack) &&
     isInt(s.buyInPrice, 0, LIMITS.maxPrice);
-  if (!ok) fail('INVALID', '블라인드나 칩 값이 범위를 벗어났어요');
+  if (!ok) fail('INVALID', '블라인드나 스택 값이 범위를 벗어났어요');
   return { sb: s.sb, bb: s.bb, startingStack: s.startingStack, buyInPrice: s.buyInPrice };
 }
 
@@ -214,7 +216,7 @@ export function legalActions(g: Game, id: string): Legal | null {
 
 export function addPlayer(g0: Game, id: string, name: string): Game {
   if (findPlayer(g0, id)) fail('INVALID', '이미 앉아 있어요');
-  if (g0.players.length >= MAX_PLAYERS) fail('INVALID', '자리가 꽉 찼어요');
+  if (g0.players.length >= MAX_PLAYERS) fail('INVALID', '좌석이 꽉 찼어요');
   const g = clone(g0);
   const seat = g.players.reduce((m, p) => Math.max(m, p.seat), -1) + 1;
   const stack = g.settings.startingStack;
@@ -276,7 +278,7 @@ export function renamePlayer(g0: Game, id: string, name: string): Game {
 }
 
 export function setSeatOrder(g0: Game, ids: string[]): Game {
-  if (handInProgress(g0)) fail('PHASE', '자리 순서는 판과 판 사이에만 바꿀 수 있어요');
+  if (handInProgress(g0)) fail('PHASE', '좌석 순서는 핸드와 핸드 사이에만 바꿀 수 있어요');
   const current = g0.players.map((p) => p.id).sort();
   const next = [...ids].sort();
   if (current.length !== next.length || current.some((id, i) => id !== next[i])) {
@@ -302,9 +304,9 @@ export function updateSettings(g0: Game, settings: Settings): Game {
 }
 
 export function setStack(g0: Game, id: string, stack: number): Game {
-  if (!isInt(stack, 0, LIMITS.maxStack)) fail('INVALID', '칩 값이 범위를 벗어났어요');
+  if (!isInt(stack, 0, LIMITS.maxStack)) fail('INVALID', '스택 값이 범위를 벗어났어요');
   const p0 = must(g0, id);
-  if (handInProgress(g0) && p0.inHand) fail('PHASE', '칩은 이번 판이 끝난 뒤에 고칠 수 있어요');
+  if (handInProgress(g0) && p0.inHand) fail('PHASE', '스택은 이번 핸드가 끝난 뒤에 수정할 수 있어요');
   const g = clone(g0);
   const p = must(g, id);
   p.buyIn += stack - p.stack;
@@ -314,7 +316,7 @@ export function setStack(g0: Game, id: string, stack: number): Game {
 
 export function rebuy(g0: Game, id: string): Game {
   const p0 = must(g0, id);
-  if (handInProgress(g0) && p0.inHand) fail('PHASE', '다시 받기는 이번 판이 끝난 뒤에 할 수 있어요');
+  if (handInProgress(g0) && p0.inHand) fail('PHASE', '리바이는 이번 핸드가 끝난 뒤에 할 수 있어요');
   if (p0.stack > 0) fail('INVALID', '아직 칩이 남아 있어요');
   const g = clone(g0);
   const p = must(g, id);
@@ -336,19 +338,20 @@ function post(p: Player, amount: number): number {
   p.stack -= a;
   p.bet += a;
   p.committed += a;
+  p.lastPaid = a;
   if (p.stack === 0) p.allIn = true;
   return a;
 }
 
 export function startHand(g0: Game): Game {
-  if (handInProgress(g0)) fail('PHASE', 'A hand is already running');
+  if (handInProgress(g0)) fail('PHASE', '이미 핸드가 진행 중이에요');
   const g = clone(g0);
   if (g.pendingSettings) {
     g.settings = g.pendingSettings;
     g.pendingSettings = null;
   }
   const elig = bySeat(g).filter(eligibleForHand);
-  if (elig.length < 2) fail('INVALID', '칩 있는 사람이 2명 이상 필요해요');
+  if (elig.length < 2) fail('INVALID', '스택이 있는 플레이어가 2명 이상 필요해요');
 
   let bbP: Player;
   const lastBb = findPlayer(g, g.lastBbId);
@@ -366,6 +369,7 @@ export function startHand(g0: Game): Game {
     Object.assign(p, {
       bet: 0,
       committed: 0,
+      lastPaid: 0,
       inHand: eligibleForHand(p),
       folded: false,
       allIn: false,
@@ -405,12 +409,14 @@ export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: n
     case 'fold':
       if (toCall <= 0) fail('INVALID', '콜할 금액이 없어요. 체크하세요');
       p.folded = true;
+      p.lastPaid = 0;
       g.lastAction = { id, kind: 'fold', amount: 0, allIn: false };
       break;
     case 'check':
       if (toCall > 0) fail('INVALID', '콜하거나 폴드해야 해요');
       p.acted = true;
       p.actedLevel = g.currentBet;
+      p.lastPaid = 0;
       g.lastAction = { id, kind: 'check', amount: 0, allIn: false };
       break;
     case 'call': {
@@ -429,7 +435,7 @@ export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: n
       const target = to as number;
       const inc = target - g.currentBet;
       if (inc < g.minRaise && target !== max) {
-        fail('INVALID', `Minimum is ${g.currentBet + g.minRaise}`);
+        fail('INVALID', `최소 ${g.currentBet + g.minRaise}까지 레이즈해야 해요`);
       }
       post(p, target - p.bet);
       if (inc >= g.minRaise) g.minRaise = inc;

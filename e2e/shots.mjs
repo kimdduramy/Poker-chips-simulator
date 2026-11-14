@@ -33,7 +33,7 @@ const code = ana.url().match(/\/t\/([A-Z]{4})/)[1];
 await ana.getByLabel('내 이름').fill('Ana');
 await shot(ana, '02-join');
 await ana.getByRole('button', { name: '참가하기' }).click();
-await ana.getByText('자리').waitFor();
+await ana.getByText('좌석').waitFor();
 
 const others = [];
 for (const name of ['Ben', 'Cat']) {
@@ -41,14 +41,14 @@ for (const name of ['Ben', 'Cat']) {
   await p.goto(`${BASE}/t/${code}`);
   await p.getByLabel('내 이름').fill(name);
   await p.getByRole('button', { name: '참가하기' }).click();
-  await p.getByText('Ana님이 첫 판을').waitFor();
+  await p.getByText('Ana님이 첫 핸드를').waitFor();
   others.push(p);
 }
 const [ben, cat] = others;
 await shot(ana, '03-lobby-host');
 await shot(ben, '04-lobby-guest');
 
-await ana.getByRole('button', { name: '첫 판 시작' }).click();
+await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
 await ana.getByText('내 차례', { exact: true }).waitFor();
 await shot(ana, '05-your-turn');
 await shot(ben, '06-waiting');
@@ -61,7 +61,7 @@ await ben.getByText('내 차례', { exact: true }).waitFor();
 await ben.getByRole('button', { name: /^콜/ }).click();
 await cat.getByText('내 차례', { exact: true }).waitFor();
 await cat.getByRole('button', { name: /^콜/ }).click();
-await ana.getByText('플랍 3장 까세요').first().waitFor();
+await ana.getByText('플랍 오픈').first().waitFor();
 await shot(ana, '08-flop-waiting');
 
 for (let i = 0; i < 9; i++) {
@@ -79,7 +79,7 @@ await ana.locator('.win-row').filter({ hasText: 'Cat' }).click();
 await ana.locator('.win-row').filter({ hasText: 'Ben' }).click();
 await shot(ana, '09b-chop');
 await ana.locator('.dock-award .btn-primary').click();
-await ana.getByRole('button', { name: /다음 판 시작/ }).waitFor();
+await ana.getByRole('button', { name: /다음 핸드 시작/ }).waitFor();
 await shot(ana, '10-hand-over');
 
 await ana.getByRole('button', { name: '메뉴' }).click();
@@ -99,8 +99,8 @@ const deskPage = await desk.newPage();
 await deskPage.goto(`${BASE}/t/${code}`);
 await deskPage.getByLabel('내 이름').fill('Dee');
 await deskPage.getByRole('button', { name: '참가하기' }).click();
-await deskPage.getByRole('button', { name: /다음 판 시작/ }).waitFor();
-await deskPage.getByRole('button', { name: /다음 판 시작/ }).click();
+await deskPage.getByRole('button', { name: /다음 핸드 시작/ }).waitFor();
+await deskPage.getByRole('button', { name: /다음 핸드 시작/ }).click();
 await deskPage.waitForTimeout(600);
 await shot(deskPage, '14-desktop');
 const turnPage = [ana, ben, cat, deskPage];

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { CODE_LENGTH, normalizeCode } from '../../shared/protocol';
 import { createRoom, roomInfo } from '../lib/api';
 import { unlockAudio } from '../lib/device-features';
+import { GlossaryCard } from '../components/Glossary';
 
 export function Home({ navigate }: { navigate: (to: string) => void }) {
   const [code, setCode] = useState('');
@@ -94,6 +95,8 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
         <li>각자 자기 폰으로 들어와요.</li>
         <li>카드는 진짜로 돌리고, 칩 계산은 앱이 해요.</li>
       </ol>
+
+      <GlossaryCard />
 
     </main>
   );

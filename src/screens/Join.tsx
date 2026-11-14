@@ -23,7 +23,7 @@ export function Join({ onDisplay }: { onDisplay: () => void }) {
       ? room.members.length === 0
         ? '아직 아무도 없어요. 혼자 하는 포커는 그냥 카드놀이예요.'
         : `${room.members.length}명 대기 중`
-      : `${game.handNo}번째 판 진행 중`;
+      : `핸드 #${game.handNo} 진행 중`;
 
   if (pendingClaim) {
     return (
@@ -77,7 +77,7 @@ export function Join({ onDisplay }: { onDisplay: () => void }) {
             autoFocus
           />
           <button className="btn btn-primary btn-xl" disabled={!name.trim() || busy || full}>
-            {full ? '자리가 꽉 찼어요' : '참가하기'}
+            {full ? '좌석이 꽉 찼어요' : '참가하기'}
           </button>
         </form>
 

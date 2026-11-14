@@ -142,6 +142,23 @@ describe('blinds and action order', () => {
 });
 
 describe('bets and raises', () => {
+  it('remembers how many chips each player just added, for the bet board', () => {
+    let g = startHand(table([1000, 1000, 1000]));
+    expect(p(g, g.sbId!).lastPaid).toBe(5);
+    expect(p(g, g.bbId!).lastPaid).toBe(10);
+    const first = g.toActId!;
+    g = raise(g, first, 40);
+    expect(p(g, first).lastPaid).toBe(40);
+    const sb = g.sbId!;
+    g = call(g, sb);
+    expect(p(g, sb).lastPaid).toBe(35);
+    const bb = g.bbId!;
+    g = fold(g, bb);
+    expect(p(g, bb).lastPaid).toBe(0);
+    g = check(g, g.toActId!);
+    expect(p(g, sb).lastPaid).toBe(0);
+  });
+
   it('min bet is the big blind, min raise tracks the last full raise', () => {
     let g = startHand(table([1000, 1000]));
     g = check(call(g, 'p0'), 'p1');

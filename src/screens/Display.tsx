@@ -16,8 +16,8 @@ export function Display({ onExit }: { onExit: () => void }) {
 
   let headline = '';
   if (game.phase === 'lobby') headline = 'QR 찍고 들어오세요';
-  else if (game.phase === 'betting' && actor) headline = freshStreet ? NEXT_CARDS[game.street] : `${actor.name} 차례`;
-  else if (game.phase === 'showdown') headline = game.runout ? '모두 올인. 남은 카드 다 까요.' : '카드 공개!';
+  else if (game.phase === 'betting' && actor) headline = freshStreet ? NEXT_CARDS[game.street] : `${actor.name} 액션`;
+  else if (game.phase === 'showdown') headline = game.runout ? '올인 · 런아웃' : '핸드를 공개하세요';
   else if (game.phase === 'done') {
     headline = outcomeLine(game, nameOf);
   }
@@ -33,8 +33,8 @@ export function Display({ onExit }: { onExit: () => void }) {
           <span aria-hidden="true">{room.code}</span>
         </span>
         <span className="display-phase">
-          {game.handNo > 0 ? `${game.handNo}번째 판 · ` : ''}
-          {game.phase === 'betting' ? STREET_NAMES[game.street] : game.phase === 'lobby' ? '대기실' : game.phase === 'showdown' ? '쇼다운' : '판 종료'}
+          {game.handNo > 0 ? `핸드 #${game.handNo} · ` : ''}
+          {game.phase === 'betting' ? STREET_NAMES[game.street] : game.phase === 'lobby' ? '대기실' : game.phase === 'showdown' ? '쇼다운' : '핸드 종료'}
         </span>
         <button className="link-btn" onClick={onExit}>
           큰 화면 끄기

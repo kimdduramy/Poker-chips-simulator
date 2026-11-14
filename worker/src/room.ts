@@ -315,7 +315,7 @@ export class Room extends DurableObject<Env> {
       case 'join': {
         if (me) deny('INVALID', '이미 앉아 있어요');
         const name = this.uniqueName(msg.name);
-        if (s.members.length >= MAX_MEMBERS) deny('INVALID', '자리가 꽉 찼어요');
+        if (s.members.length >= MAX_MEMBERS) deny('INVALID', '좌석이 꽉 찼어요');
         const member: Member = { id: randomId(), name, tokenHash: att.tokenHash, manual: false, joinedAt: Date.now() };
         s.game = addPlayer(s.game, member.id, name);
         s.members.push(member);
@@ -335,7 +335,7 @@ export class Room extends DurableObject<Env> {
       case 'addSeat': {
         requireHost();
         const name = this.uniqueName(msg.name);
-        if (s.members.length >= MAX_MEMBERS) deny('INVALID', '자리가 꽉 찼어요');
+        if (s.members.length >= MAX_MEMBERS) deny('INVALID', '좌석이 꽉 찼어요');
         const member: Member = { id: randomId(), name, tokenHash: null, manual: true, joinedAt: Date.now() };
         s.game = addPlayer(s.game, member.id, name);
         s.members.push(member);
@@ -399,8 +399,8 @@ export class Room extends DurableObject<Env> {
       case 'next': {
         requireMember();
         checkV(msg.v);
-        if (s.game.phase !== 'done') deny('PHASE', '아직 판이 안 끝났어요');
-        this.mutate('다음 판 시작', (g) => startHand(g));
+        if (s.game.phase !== 'done') deny('PHASE', '아직 핸드가 끝나지 않았어요');
+        this.mutate('다음 핸드 시작', (g) => startHand(g));
         return;
       }
       case 'act': {
@@ -436,13 +436,13 @@ export class Room extends DurableObject<Env> {
       }
       case 'sit': {
         const id = requireControl(msg.playerId);
-        this.mutate(`${nameOf(id)} ${msg.out ? '쉬기' : '다시 참여'}`, (g) => setSittingOut(g, id, msg.out), 'table');
+        this.mutate(`${nameOf(id)} ${msg.out ? '싯아웃' : '싯인'}`, (g) => setSittingOut(g, id, msg.out), 'table');
         return;
       }
       case 'rebuy': {
         const id = requireControl(msg.playerId);
         this.mutate(
-          `${nameOf(id)} ${fmt(s.game.settings.startingStack)} 다시 받음`,
+          `${nameOf(id)} 리바이 ${fmt(s.game.settings.startingStack)}`,
           (g) => rebuy(g, id),
           'table',
         );
@@ -472,7 +472,7 @@ export class Room extends DurableObject<Env> {
         const pending = s.game.phase === 'betting' || s.game.phase === 'showdown';
         const { sb, bb, startingStack } = msg.settings;
         this.mutate(
-          `블라인드 ${fmt(sb)}/${fmt(bb)}, 시작 칩 ${fmt(startingStack)}${pending ? ' (다음 판부터)' : ''}`,
+          `블라인드 ${fmt(sb)}/${fmt(bb)}, 시작 스택 ${fmt(startingStack)}${pending ? ' (다음 핸드부터)' : ''}`,
           (g) => updateSettings(g, msg.settings),
           'table',
         );
@@ -482,7 +482,7 @@ export class Room extends DurableObject<Env> {
         requireHost();
         checkV(msg.v);
         this.mutate(
-          `${nameOf(msg.playerId)} 칩을 ${fmt(msg.stack)}(으)로 수정`,
+          `${nameOf(msg.playerId)} 스택 ${fmt(msg.stack)}(으)로 수정`,
           (g) => setStack(g, msg.playerId, msg.stack),
           'table',
         );
@@ -491,7 +491,7 @@ export class Room extends DurableObject<Env> {
       case 'seatOrder': {
         requireHost();
         checkV(msg.v);
-        this.mutate('자리 순서 변경', (g) => setSeatOrder(g, msg.ids), 'table');
+        this.mutate('좌석 순서 변경', (g) => setSeatOrder(g, msg.ids), 'table');
         return;
       }
       case 'transferHost': {
@@ -534,7 +534,7 @@ export class Room extends DurableObject<Env> {
     const s = this.s as Stored;
     const name = (id: string | null) => findPlayer(after, id)?.name ?? s.members.find((m) => m.id === id)?.name ?? '';
     if (after.handNo !== before.handNo) {
-      this.log('hand', `${after.handNo}번째 판. 딜러: ${name(after.buttonId)}`);
+      this.log('hand', `핸드 #${after.handNo} · 버튼 ${name(after.buttonId)}`);
     } else if (kind !== 'hand') {
       this.log(kind, label);
     }
@@ -542,7 +542,7 @@ export class Room extends DurableObject<Env> {
       this.log('hand', STREETS[after.street]);
     }
     if (after.phase === 'showdown' && before.phase !== 'showdown') {
-      this.log('hand', after.runout ? '모두 올인. 남은 카드 다 까요' : '쇼다운');
+      this.log('hand', after.runout ? '올인 · 런아웃' : '쇼다운');
     }
     if (after.results.length > 0 && after.phase === 'done' && before.phase !== 'done') {
       const totals = new Map<string, number>();

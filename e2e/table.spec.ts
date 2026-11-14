@@ -54,11 +54,11 @@ test('three players play a hand from deal to payout', async ({ browser }) => {
   const ben = await seat(browser, 'Ben', code);
   const cat = await seat(browser, 'Cat', code);
 
-  await expect(ben.getByText('Ana님이 첫 판을 시작하길 기다리는 중')).toBeVisible();
-  await ana.getByRole('button', { name: '첫 판 시작' }).click();
+  await expect(ben.getByText('Ana님이 첫 핸드를 시작하길 기다리는 중')).toBeVisible();
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
 
   await expect(yourTurn(ana)).toBeVisible();
-  await expect(ben.getByText('Ana 차례 · 콜하려면 10')).toBeVisible();
+  await expect(ben.locator('.act-line')).toHaveText(/Ana 액션\s*콜 10/);
   await ana.getByRole('button', { name: '레이즈' }).click();
   await ana.getByLabel('금액').fill('60');
   await ana.getByRole('textbox').fill('60');
@@ -69,13 +69,13 @@ test('three players play a hand from deal to payout', async ({ browser }) => {
   await expect(yourTurn(cat)).toBeVisible();
   await cat.getByRole('button', { name: '폴드' }).click();
 
-  await expect(ana.getByText('플랍 3장 까세요')).toBeVisible();
+  await expect(ana.getByText('플랍 오픈')).toBeVisible();
   await expect(ana.locator('.pot-amount')).toHaveText('130');
 
   for (let i = 0; i < 6; i++) await actWhoeverIsUp([ana, ben], '체크');
   await expect(cat.getByText('누가 이겼나요?')).toBeVisible();
   await cat.locator('.win-row').filter({ hasText: 'Ben' }).click();
-  await cat.getByRole('button', { name: 'Ben에게 130 주기' }).click();
+  await cat.getByRole('button', { name: 'Ben에게 130 지급' }).click();
 
   await expect(ana.locator('.stage-line')).toHaveText('Ben 승리');
   await expect(stackOf(ana, 'Ben')).toHaveText('1,070');
@@ -87,8 +87,8 @@ test('three players play a hand from deal to payout', async ({ browser }) => {
   await expect(ana.getByText('Ana → Ben')).toBeVisible();
   await ana.keyboard.press('Escape');
 
-  await ben.getByRole('button', { name: /다음 판 시작/ }).click();
-  await expect(ana.getByText('2번째 판', { exact: true })).toBeVisible();
+  await ben.getByRole('button', { name: /다음 핸드 시작/ }).click();
+  await expect(ana.getByText('핸드 #2', { exact: true })).toBeVisible();
   for (const p of [ana, ben, cat]) expect((p as Page & { errors: string[] }).errors).toEqual([]);
 });
 
@@ -100,13 +100,13 @@ test('short stack all in creates a side pot that pays the right people', async (
 
   await ana.getByRole('button', { name: '관리' }).click();
   const benRow = ana.locator('.player-row').filter({ hasText: 'Ben' });
-  await benRow.getByRole('button', { name: '칩 수정' }).click();
-  await ana.getByLabel('Ben의 새 칩 수').fill('100');
+  await benRow.getByRole('button', { name: '스택 수정' }).click();
+  await ana.getByLabel('Ben의 새 스택').fill('100');
   await ana.getByRole('button', { name: '적용', exact: true }).click();
   await expect(benRow).toContainText('100');
   await ana.keyboard.press('Escape');
 
-  await ana.getByRole('button', { name: '첫 판 시작' }).click();
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
   await expect(yourTurn(ana)).toBeVisible();
   await ana.getByRole('button', { name: '레이즈' }).click();
   await ana.getByRole('button', { name: '올인', exact: true }).click();
@@ -118,7 +118,7 @@ test('short stack all in creates a side pot that pays the right people', async (
   await cat.getByRole('button', { name: '올인 990' }).click();
 
   await expect(ana.getByText('누가 이겼나요?')).toBeVisible();
-  await expect(ana.locator('.stage-line')).toHaveText('모두 올인. 남은 카드 다 까요.');
+  await expect(ana.locator('.stage-line')).toHaveText('올인 · 런아웃');
   const main = ana.locator('.pot-pick').filter({ hasText: '메인 팟' });
   const side = ana.locator('.pot-pick').filter({ hasText: '사이드 팟 1' });
   await expect(main).toContainText('300');
@@ -127,13 +127,13 @@ test('short stack all in creates a side pot that pays the right people', async (
 
   await main.getByRole('button', { name: 'Ben' }).click();
   await side.getByRole('button', { name: 'Cat' }).click();
-  await ana.getByRole('button', { name: '칩 나눠 주기' }).click();
+  await ana.getByRole('button', { name: '팟 지급' }).click();
 
   await expect(stackOf(ana, 'Ben')).toHaveText('300');
   await expect(stackOf(ana, 'Cat')).toHaveText('1,800');
   await expect(stackOf(ana, 'Ana')).toHaveText('0');
-  await expect(ana.getByRole('button', { name: '1,000 다시 받기' })).toBeVisible();
-  await ana.getByRole('button', { name: '1,000 다시 받기' }).click();
+  await expect(ana.getByRole('button', { name: '리바이 1,000' })).toBeVisible();
+  await ana.getByRole('button', { name: '리바이 1,000' }).click();
   await expect(stackOf(ben, 'Ana')).toHaveText('1,000');
 });
 
@@ -143,7 +143,7 @@ test('two players with the same hand chop the pot', async ({ browser }) => {
   const ben = await seat(browser, 'Ben', code);
   const cat = await seat(browser, 'Cat', code);
 
-  await ana.getByRole('button', { name: '첫 판 시작' }).click();
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
   await expect(yourTurn(ana)).toBeVisible();
   await ana.getByRole('button', { name: /콜/ }).click();
   await expect(yourTurn(ben)).toBeVisible();
@@ -152,21 +152,21 @@ test('two players with the same hand chop the pot', async ({ browser }) => {
   await cat.getByRole('button', { name: '체크' }).click();
   for (let i = 0; i < 9; i++) await actWhoeverIsUp([ana, ben, cat], '체크');
 
-  await expect(ana.getByText('이긴 사람을 모두 누르세요. 두 명 이상이면 나눠 가져요.')).toBeVisible();
+  await expect(ana.getByText('승자를 모두 선택하세요. 2명 이상이면 스플릿돼요.')).toBeVisible();
   const rowFor = (page: Page, name: string) => page.locator('.win-row').filter({ hasText: name });
 
   await rowFor(ana, 'Ana').click();
   await expect(rowFor(ana, 'Ana').locator('.win-take')).toHaveText('+30');
-  await expect(rowFor(ana, 'Ben').locator('.win-take')).toHaveText('나눔');
-  await expect(ana.getByRole('button', { name: 'Ana에게 30 주기' })).toBeVisible();
+  await expect(rowFor(ana, 'Ben').locator('.win-take')).toHaveText('–');
+  await expect(ana.getByRole('button', { name: 'Ana에게 30 지급' })).toBeVisible();
 
   await rowFor(ana, 'Ben').click();
   await expect(rowFor(ana, 'Ana').locator('.win-take')).toHaveText('+15');
   await expect(rowFor(ana, 'Ben').locator('.win-take')).toHaveText('+15');
-  await expect(ana.getByText('2명이 나눠 가져요. 한 명당 15.')).toBeVisible();
+  await expect(ana.getByText('2명 스플릿, 1인당 15.')).toBeVisible();
 
-  await ana.getByRole('button', { name: '30 나눠 갖기 (2명)' }).click();
-  await expect(ben.locator('.stage-line')).toHaveText(/나눠 가짐/);
+  await ana.getByRole('button', { name: '2명 스플릿 · 30' }).click();
+  await expect(ben.locator('.stage-line')).toHaveText(/스플릿/);
   await expect(stackOf(cat, 'Ana')).toHaveText('1,005');
   await expect(stackOf(cat, 'Ben')).toHaveText('1,005');
   await expect(stackOf(cat, 'Cat')).toHaveText('990');
@@ -184,7 +184,7 @@ test('anyone can act for a seat without a phone, and undo rolls it back', async 
   await expect(ana.locator('.player-row').filter({ hasText: 'Gran' })).toBeVisible();
   await ana.keyboard.press('Escape');
 
-  await ana.getByRole('button', { name: '첫 판 시작' }).click();
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
   await expect(yourTurn(ana)).toBeVisible();
   await ana.getByRole('button', { name: '콜 10' }).click();
   await expect(yourTurn(ben)).toBeVisible();
@@ -194,7 +194,7 @@ test('anyone can act for a seat without a phone, and undo rolls it back', async 
   await ben.getByRole('button', { name: 'Gran 대신 하기' }).click();
   await expect(ben.getByText('Gran 대신 하는 중')).toBeVisible();
   await ben.getByRole('button', { name: '체크' }).click();
-  await expect(ana.getByText('플랍 3장 까세요')).toBeVisible();
+  await expect(ana.getByText('플랍 오픈')).toBeVisible();
 
   await ana.getByRole('button', { name: '메뉴' }).click();
   await expect(ana.getByText('Gran 체크 (Ben 대신)')).toBeVisible();
@@ -227,7 +227,7 @@ test('recovers after losing the connection', async ({ browser }) => {
   const ana = await seat(browser, 'Ana');
   const code = codeOf(ana);
   const ben = await seat(browser, 'Ben', code);
-  await ana.getByRole('button', { name: '첫 판 시작' }).click();
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
   await expect(yourTurn(ana)).toBeVisible();
 
   await ben.context().setOffline(true);
@@ -237,13 +237,13 @@ test('recovers after losing the connection', async ({ browser }) => {
   await ben.evaluate(() => window.dispatchEvent(new Event('online')));
   await expect(yourTurn(ben)).toBeVisible({ timeout: 20_000 });
   await ben.getByRole('button', { name: '체크' }).click();
-  await expect(ana.getByText('플랍 3장 까세요')).toBeVisible();
+  await expect(ana.getByText('플랍 오픈')).toBeVisible();
 });
 
 test('desktop keyboard shortcuts drive the action bar', async ({ browser }) => {
   const ana = await seat(browser, 'Ana', undefined, { viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: false });
   const ben = await seat(browser, 'Ben', codeOf(ana));
-  await ana.getByRole('button', { name: '첫 판 시작' }).click();
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
   await expect(yourTurn(ana)).toBeVisible();
   await ana.keyboard.press('r');
   await expect(ana.getByRole('button', { name: '레이즈 20' })).toBeVisible();
@@ -252,9 +252,9 @@ test('desktop keyboard shortcuts drive the action bar', async ({ browser }) => {
   await ana.keyboard.press('Enter');
   await expect(yourTurn(ben)).toBeVisible();
   await ben.getByRole('button', { name: '폴드' }).click();
-  await expect(ana.getByRole('button', { name: /다음 판 시작/ })).toBeVisible();
+  await expect(ana.getByRole('button', { name: /다음 핸드 시작/ })).toBeVisible();
   await ana.keyboard.press('n');
-  await expect(ana.getByText('2번째 판', { exact: true })).toBeVisible();
+  await expect(ana.getByText('핸드 #2', { exact: true })).toBeVisible();
 });
 
 test('no horizontal overflow from small phones to desktops', async ({ browser }) => {
@@ -294,4 +294,30 @@ test('when the host leaves, the old table closes for everyone and a new table st
   await ana.getByRole('button', { name: '테이블 만들기' }).click();
   await ana.waitForURL(/\/t\/[A-Z]{4}$/);
   await expect(ana.getByText('아직 아무도 없어요', { exact: false })).toBeVisible();
+});
+
+test('hand rankings show only while held, glossary opens small, and mid-hand joiners see the hand number', async ({ browser }) => {
+  const ana = await seat(browser, 'Ana');
+  const code = codeOf(ana);
+  await seat(browser, 'Ben', code);
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
+
+  const hold = ana.getByRole('button', { name: /족보 보기/ });
+  const box = (await hold.boundingBox())!;
+  await ana.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await ana.mouse.down();
+  await expect(ana.getByText('로열 플러시')).toBeVisible();
+  await ana.mouse.up();
+  await expect(ana.getByText('로열 플러시')).toBeHidden();
+
+  await ana.getByRole('button', { name: '용어 설명' }).click();
+  await expect(ana.getByRole('dialog', { name: '용어 설명' })).toBeVisible();
+  await ana.keyboard.press('Escape');
+  await expect(ana.getByRole('dialog', { name: '용어 설명' })).toBeHidden();
+
+  const ctx = await browser.newContext(test.info().project.use);
+  contexts.push(ctx);
+  const late = await ctx.newPage();
+  await late.goto(`/t/${code}`);
+  await expect(late.getByText('핸드 #1 진행 중')).toBeVisible();
 });

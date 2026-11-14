@@ -27,11 +27,11 @@ export function GameAnnouncer() {
       const who = actor.id === you.id ? '내 차례예요' : `${actor.name} 차례예요`;
       const toCall = game.currentBet - actor.bet;
       parts.push(
-        `${game.handNo}번째 판, ${street}. ${fresh}${who}${toCall > 0 ? `, 콜하려면 ${fmt(toCall)}` : ''}. 팟 ${fmt(pot)}.`,
+        `핸드 ${game.handNo}, ${street}. ${fresh}${who}${toCall > 0 ? `, 콜 ${fmt(toCall)}` : ''}. 팟 ${fmt(pot)}.`,
       );
     } else if (game.phase === 'showdown') {
       parts.push(
-        `쇼다운. ${game.runout ? '모두 올인, 남은 카드를 다 까요.' : '카드 공개.'} 팟 ${fmt(pot)}. 승자를 모두 고르세요.`,
+        `쇼다운. ${game.runout ? '올인, 런아웃 진행.' : '핸드 공개.'} 팟 ${fmt(pot)}. 승자를 모두 고르세요.`,
       );
     } else if (game.phase === 'done') {
       parts.push(`${outcomeLine(game, nameOf)}. ${fmt(pot)} 지급.`);

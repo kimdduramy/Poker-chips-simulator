@@ -1,5 +1,7 @@
 import { STREET_NAMES } from '../lib/format';
 import { useTable } from '../lib/table';
+import { GlossaryButton } from './Glossary';
+import { HandRanksHold } from './HandRanks';
 import { Icon } from './Icon';
 
 export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () => void }) {
@@ -11,22 +13,26 @@ export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () 
         ? STREET_NAMES[game.street]
         : game.phase === 'showdown'
           ? '쇼다운'
-          : '판 종료';
+          : '핸드 종료';
   const online = conn.status === 'open';
 
   return (
     <header className="topbar">
-      <button className="code-btn" onClick={onInvite} aria-label={`테이블 ${room.code}. 친구 초대`}>
-        <span className="mono">{room.code}</span>
-      </button>
+      <div className="topbar-start">
+        <button className="code-btn" onClick={onInvite} aria-label={`테이블 ${room.code}. 친구 초대`}>
+          <span className="mono">{room.code}</span>
+        </button>
+        <span className="conn" data-online={online} title={online ? '연결됨' : '다시 연결 중'} role="img" aria-label={online ? '연결됨' : '다시 연결 중'} />
+      </div>
       <div className="topbar-phase" aria-live="polite">
-        {game.handNo > 0 && <span className="muted">{game.handNo}번째 판</span>}
+        {game.handNo > 0 && <span className="muted">핸드 #{game.handNo}</span>}
         <span className="phase-name" key={phase}>
           {phase}
         </span>
       </div>
       <div className="topbar-end">
-        <span className="conn" data-online={online} title={online ? '연결됨' : '다시 연결 중'} role="img" aria-label={online ? '연결됨' : '다시 연결 중'} />
+        <HandRanksHold />
+        <GlossaryButton />
         <button className="icon-btn" onClick={onMenu} aria-label="메뉴">
           <Icon name="menu" />
         </button>

@@ -35,7 +35,7 @@ export function Sheet({ open, onClose, title, children }: Props) {
         <div className="sheet-body">
           <header className="sheet-head">
             <h2 id="sheet-title">{title}</h2>
-            <button className="icon-btn" onClick={onClose} aria-label="Close">
+            <button className="icon-btn" onClick={onClose} aria-label="닫기">
               <Icon name="close" />
             </button>
           </header>

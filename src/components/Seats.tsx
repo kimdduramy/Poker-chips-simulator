@@ -10,11 +10,11 @@ export function seatStatus(p: Player, phase: string, away: boolean, manual: bool
   if (inHand && p.folded) return '폴드';
   if (inHand && p.allIn) return '올인';
   if (!inHand && (phase === 'betting' || phase === 'showdown')) {
-    if (p.stack === 0) return '칩 소진';
-    return p.sittingOut ? '쉬는 중' : '다음 판부터';
+    if (p.stack === 0) return '버스트';
+    return p.sittingOut ? '싯아웃' : '다음 핸드부터';
   }
-  if (p.stack === 0 && phase !== 'lobby') return '칩 소진';
-  if (p.sittingOut) return '쉬는 중';
+  if (p.stack === 0 && phase !== 'lobby') return '버스트';
+  if (p.sittingOut) return '싯아웃';
   if (manual) return '폰 없음';
   if (away) return '자리 비움';
   return null;

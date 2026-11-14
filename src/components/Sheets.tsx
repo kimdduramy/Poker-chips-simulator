@@ -68,13 +68,13 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
 
       {me && (
         <ul className="menu-group">
-          {item(me.sittingOut ? '다시 참여' : '쉬기', () => run({ type: 'sit', out: !me.sittingOut }), {
-            note: inHand ? '다음 판부터' : undefined,
+          {item(me.sittingOut ? '싯인' : '싯아웃', () => run({ type: 'sit', out: !me.sittingOut }), {
+            note: inHand ? '다음 핸드부터' : undefined,
           })}
           {me.stack === 0 &&
-            item(`${fmt(game.settings.startingStack)} 다시 받기`, () => run({ type: 'rebuy' }), {
+            item(`$리바이 {fmt(game.settings.startingStack)}`, () => run({ type: 'rebuy' }), {
               disabled: inHand,
-              note: inHand ? '이번 판 끝나고' : undefined,
+              note: inHand ? '이번 핸드 후' : undefined,
             })}
           <li>
             <button
@@ -95,7 +95,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
       {(isHost || hostAway) && (
         <ul className="menu-group">
           {isHost && item('게임 설정', () => setOpen('settings'))}
-          {isHost && item('플레이어·칩 관리', () => setOpen('players'))}
+          {isHost && item('플레이어·스택 관리', () => setOpen('players'))}
           {hostAway && item('방장 넘겨받기', () => run({ type: 'takeHost' }))}
         </ul>
       )}
@@ -104,7 +104,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
         <ul className="menu-group">
           {confirmLeave ? (
             <li className="confirm-row">
-              <span>{isHost ? '방장이 나가면 모두에게 테이블이 닫혀요.' : inHand ? '이번 판은 폴드돼요.' : '테이블에서 나갈까요?'}</span>
+              <span>{isHost ? '방장이 나가면 모두에게 테이블이 닫혀요.' : inHand ? '이번 핸드는 폴드 처리돼요.' : '테이블에서 나갈까요?'}</span>
               <button className="btn btn-quiet btn-sm" onClick={() => setConfirmLeave(false)}>
                 취소
               </button>
@@ -146,7 +146,7 @@ function SettingsForm({ onDone }: { onDone: () => void }) {
       : !Number.isSafeInteger(sbN) || sbN < 0 || sbN > bbN
         ? '스몰 블라인드는 0 이상, 빅 블라인드 이하여야 해요'
         : !Number.isSafeInteger(stackN) || stackN < bbN || stackN > LIMITS.maxStack
-          ? '시작 칩은 빅 블라인드 이상이어야 해요'
+          ? '시작 스택은 빅 블라인드 이상이어야 해요'
           : null;
 
   const submit = async (e: FormEvent) => {
@@ -166,8 +166,8 @@ function SettingsForm({ onDone }: { onDone: () => void }) {
         <NumberField id="sb" label="스몰 블라인드" value={sb} onChange={setSb} />
         <NumberField id="bb" label="빅 블라인드" value={bb} onChange={setBb} />
       </div>
-      <NumberField id="stack" label="시작 칩" value={stack} onChange={setStack} hint="다시 받기(리바이) 금액도 같아요" />
-      {handInProgress(game) && <p className="hint">바꾼 설정은 다음 판부터 적용돼요.</p>}
+      <NumberField id="stack" label="시작 스택" value={stack} onChange={setStack} hint="리바이 금액도 같아요" />
+      {handInProgress(game) && <p className="hint">변경 사항은 다음 핸드부터 적용돼요.</p>}
       {error && (
         <p className="form-error" role="alert">
           {error}
@@ -250,7 +250,7 @@ function Players() {
                     inputMode="numeric"
                     value={stack}
                     autoFocus
-                    aria-label={`${p.name}의 새 칩 수`}
+                    aria-label={`${p.name}의 새 스택`}
                     onChange={(e) => setStack(e.target.value.replace(/\D/g, ''))}
                   />
                   <button className="btn btn-primary btn-sm" disabled={busy || stack === ''}>
@@ -265,16 +265,16 @@ function Players() {
                   <button
                     className="btn btn-quiet btn-sm"
                     disabled={busy || locked}
-                    title={locked ? '이번 판 끝나고' : undefined}
+                    title={locked ? '이번 핸드 후' : undefined}
                     onClick={() => {
                       setEditing(p.id);
                       setStack(String(p.stack));
                     }}
                   >
-                    칩 수정
+                    스택 수정
                   </button>
                   <button className="btn btn-quiet btn-sm" disabled={busy} onClick={() => run({ type: 'sit', out: !p.sittingOut, playerId: p.id })}>
-                    {p.sittingOut ? '참여시키기' : '쉬게 하기'}
+                    {p.sittingOut ? '싯인' : '싯아웃'}
                   </button>
                   {m && !m.manual && room.hostId !== p.id && (
                     <button className="btn btn-quiet btn-sm" disabled={busy} onClick={() => run({ type: 'transferHost', playerId: p.id })}>
@@ -292,7 +292,7 @@ function Players() {
           );
         })}
       </ul>
-      {hand && <p className="hint">지금 판에 참여 중인 사람의 칩은 판이 끝난 뒤에 고칠 수 있어요.</p>}
+      {hand && <p className="hint">핸드에 참여 중인 플레이어의 스택은 핸드가 끝난 뒤에 수정할 수 있어요.</p>}
       <form className="inline-form add-seat" onSubmit={addSeat}>
         <label htmlFor="seat-name" className="field-label">
           폰 없는 사람 추가
@@ -334,10 +334,10 @@ function Settle() {
           <tr>
             <th scope="col">이름</th>
             <th scope="col" className="num">
-              받은 칩
+              바이인
             </th>
             <th scope="col" className="num">
-              현재
+              스택
             </th>
             <th scope="col" className="num">
               손익
