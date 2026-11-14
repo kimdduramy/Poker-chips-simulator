@@ -127,18 +127,21 @@ describe('playing a hand', () => {
     const pot = s.room.game.pots.find((p) => !p.paid)!;
     expect(pot.amount).toBe(120);
 
-    const bad = await ben.request({ type: 'award', v: s.v, winners: { [pot.id]: ['0000000000000000'] } });
+    // 승자 지급은 방장만
+    expect(await ben.request({ type: 'award', v: s.v, winners: { [pot.id]: [idOf(cat)] } })).toMatchObject({ code: 'FORBIDDEN' });
+    const bad = await ana.request({ type: 'award', v: s.v, winners: { [pot.id]: ['0000000000000000'] } });
     expect(bad).toMatchObject({ code: 'INVALID' });
-    await ben.ok({ type: 'award', v: s.v, winners: { [pot.id]: [idOf(cat)] } });
+    await ana.ok({ type: 'award', v: s.v, winners: { [pot.id]: [idOf(cat)] } });
     s = await ana.settle();
     expect(s.room.game.phase).toBe('done');
     expect(s.room.game.players.find((p) => p.id === idOf(cat))?.stack).toBe(1080);
     expect(s.room.log.at(-1)?.text).toBe('Cat 120 획득');
 
     const vDone = s.v;
+    expect(await ben.request({ type: 'next', v: vDone })).toMatchObject({ code: 'FORBIDDEN' });
     const [first, second] = await Promise.all([
-      ben.request({ type: 'next', v: vDone }),
-      cat.request({ type: 'next', v: vDone }),
+      ana.request({ type: 'next', v: vDone }),
+      ana.request({ type: 'next', v: vDone }),
     ]);
     expect([first.type, second.type].sort()).toEqual(['err', 'ok']);
     s = await ana.settle();
@@ -153,7 +156,8 @@ describe('playing a hand', () => {
     let s = await ben.settle();
     expect(s.room.undoLabel).toBe('Ana 레이즈 100');
     const v = s.v;
-    const [a, b] = await Promise.all([ben.request({ type: 'undo', v }), ana.request({ type: 'undo', v })]);
+    expect(await ben.request({ type: 'undo', v })).toMatchObject({ code: 'FORBIDDEN' });
+    const [a, b] = await Promise.all([ana.request({ type: 'undo', v }), ana.request({ type: 'undo', v })]);
     expect([a.type, b.type].sort()).toEqual(['err', 'ok']);
     s = await ana.settle();
     expect(s.room.game.toActId).toBe(idOf(ana));
@@ -188,7 +192,7 @@ describe('playing a hand', () => {
     });
     await ana.ok({ type: 'act', v: ana.state.v, kind: 'fold' });
     await ana.ok({ type: 'setStack', v: ana.state.v, playerId: idOf(ben), stack: 3000 });
-    await ben.ok({ type: 'next', v: ben.state.v });
+    await ana.ok({ type: 'next', v: ana.state.v });
     s = await ana.settle();
     expect(s.room.game.settings).toEqual(settings);
     expect(s.room.game.currentBet).toBe(50);

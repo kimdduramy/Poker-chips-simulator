@@ -300,7 +300,7 @@ export class Room extends DurableObject<Env> {
     const checkV = (v: number) => {
       if (v !== s.v) deny('STALE', '테이블이 바뀌었어요. 다시 시도해 주세요.');
     };
-    const nameOf = (id: string) => s.members.find((m) => m.id === id)?.name ?? findPlayer(s.game, id)?.name ?? 'Someone';
+    const nameOf = (id: string) => s.members.find((m) => m.id === id)?.name ?? findPlayer(s.game, id)?.name ?? '누군가';
     /** Self, the host, or anyone acting for a seat without a present player. */
     const requireControl = (targetId: string | undefined) => {
       const m = requireMember();
@@ -397,7 +397,8 @@ export class Room extends DurableObject<Env> {
         return;
       }
       case 'next': {
-        requireMember();
+        // 핸드 진행(다음 핸드·승자 지급·되돌리기)은 방장만. 방장이 자리를 비우면 takeHost로 넘겨받아요.
+        requireHost();
         checkV(msg.v);
         if (s.game.phase !== 'done') deny('PHASE', '아직 핸드가 끝나지 않았어요');
         this.mutate('다음 핸드 시작', (g) => startHand(g));
@@ -419,13 +420,13 @@ export class Room extends DurableObject<Env> {
         return;
       }
       case 'award': {
-        requireMember();
+        requireHost();
         checkV(msg.v);
         this.mutate('팟 지급', (g) => award(g, msg.winners));
         return;
       }
       case 'undo': {
-        const m = requireMember();
+        const m = requireHost();
         checkV(msg.v);
         const snap = this.undo.pop() ?? deny('INVALID', '되돌릴 게 없어요');
         s.game = this.reconcile(snap.game);
