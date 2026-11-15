@@ -22,7 +22,7 @@ interface Shown {
 }
 
 /**
- * 누가 벳·체크·콜·레이즈·폴드·올인을 하면 화면 가운데에 잠깐 크게 띄우고 효과음을 내요.
+ * 누가 벳·체크·콜·레이즈·폴드·올인을 하면 화면 가운데를 가로지르는 띠로 잠깐 크게 띄우고 효과음을 내요.
  * 모든 폰에서 똑같이 떠요. 화면 읽기 프로그램은 GameAnnouncer가 따로 읽어줘서 여기선 숨겨요.
  */
 export function ActionToast() {
@@ -86,16 +86,15 @@ export function ActionToast() {
   return (
     <div className="action-toast-layer" aria-hidden="true">
       <div className="action-toast" data-kind={shown.kind} key={shown.key}>
-        <svg className="action-toast-chips" viewBox="0 0 120 120">
-          <circle cx="76" cy="44" r="36" className="atc-back" />
-          <circle cx="76" cy="44" r="32" className="atc-edge" strokeDasharray="8.4 8.4" />
-          <circle cx="50" cy="70" r="42" className="atc-front" />
-          <circle cx="50" cy="70" r="38" className="atc-edge" strokeDasharray="9.9 9.9" />
-        </svg>
         <span className="action-toast-word">{LABEL[shown.kind]}</span>
         <span className="action-toast-sub">
-          {shown.who}
-          {shown.amount !== null && <span className="num"> · {fmt(shown.amount)}</span>}
+          <span className="action-toast-who">{shown.who}</span>
+          {shown.amount !== null && (
+            <>
+              <span className="action-toast-dot" />
+              <span className="num">{fmt(shown.amount)}</span>
+            </>
+          )}
         </span>
       </div>
     </div>
