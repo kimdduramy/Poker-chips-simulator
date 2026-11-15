@@ -1,13 +1,23 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { saveName, savedName } from '../lib/device';
 import { unlockAudio } from '../lib/device-features';
 import { useTable } from '../lib/table';
+import { getTest, setTest } from '../lib/testMode';
 
 export function Join({ onDisplay }: { onDisplay: () => void }) {
   const { room, game, you, run, busy, away } = useTable();
   const [name, setName] = useState(savedName);
   const pendingClaim = room.claims.find((c) => c.id === you.claimId);
   const full = room.members.length >= 10;
+
+  // 테스트 판: 만든 사람은 이름 입력 없이 '방장'으로 바로 입장
+  const autoJoined = useRef(false);
+  useEffect(() => {
+    const t = getTest(room.code);
+    if (!t || t.joined || autoJoined.current) return;
+    autoJoined.current = true;
+    void run({ type: 'join', name: '방장' }).then((ok) => ok && setTest(room.code, { ...t, joined: true }));
+  }, [room.code, run]);
 
   const join = async (e: FormEvent) => {
     e.preventDefault();

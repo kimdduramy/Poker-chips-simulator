@@ -363,3 +363,45 @@ test('host undo / redo bar needs a long press, so a quick tap does nothing', asy
   await ana.mouse.up();
   await expect(yourTurn(ben)).toBeVisible();
 });
+
+test('/test sets up a solo table with bots and lets me play their turns', async ({ browser }) => {
+  const ctx = await browser.newContext({ ...test.info().project.use });
+  contexts.push(ctx);
+  const me = await ctx.newPage();
+  const errors: string[] = [];
+  me.on('pageerror', (e) => errors.push(e.message));
+
+  await me.goto('/test');
+  await expect(me.getByRole('heading', { name: '테스트 판 만들기' })).toBeVisible();
+  await me.getByRole('radio', { name: '2' }).click();
+  await me.getByRole('button', { name: '테스트 판 시작' }).click();
+  await me.waitForURL(/\/t\/[A-Z]{4}$/);
+
+  // 이름 입력 없이 '나'로 입장하고 봇 2명이 앉아요
+  await expect(me.getByRole('button', { name: '메뉴' })).toBeVisible();
+  await expect(me.locator('.topbar .test-badge')).toBeVisible();
+  const seats = me.locator('.lobby-seats .lobby-name');
+  await expect(seats).toHaveCount(3);
+  await expect(seats.filter({ hasText: '봇1' })).toHaveCount(1);
+  await expect(seats.filter({ hasText: '봇2' })).toHaveCount(1);
+
+  // 새로고침해도 봇이 또 늘지 않아요
+  await me.reload();
+  await expect(me.getByRole('button', { name: '메뉴' })).toBeVisible();
+  await expect(seats).toHaveCount(3);
+
+  await me.getByRole('button', { name: '첫 핸드 시작' }).click();
+
+  // 봇 차례든 내 차례든 바로 버튼이 나와요: 끝까지 콜/체크
+  const anyTurn = me.locator('.dock-turn');
+  for (let i = 0; i < 40 && !(await me.getByText('누가 이겼나요?').isVisible()); i++) {
+    await expect(anyTurn.or(me.getByText('누가 이겼나요?'))).toBeVisible();
+    if (!(await anyTurn.isVisible())) break;
+    const title = (await anyTurn.locator('.turn-title').textContent()) ?? '';
+    expect(title).toMatch(/^(내 차례|봇\d 차례 \(테스트\))$/);
+    await anyTurn.getByRole('button', { name: /^(체크|콜 \d+)/ }).first().click();
+    await expect(anyTurn.locator('.turn-title')).not.toHaveText(title, { timeout: 3_000 }).catch(() => undefined);
+  }
+  await expect(me.getByText('누가 이겼나요?')).toBeVisible();
+  expect(errors).toEqual([]);
+});

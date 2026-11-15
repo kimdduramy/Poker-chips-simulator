@@ -12,6 +12,7 @@ import {
 } from '../../shared/engine';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
+import { getTest } from '../lib/testMode';
 import { useShake } from '../lib/motion';
 import { Icon } from './Icon';
 import { Num } from './Num';
@@ -30,6 +31,7 @@ export function Dock() {
 function DockBody() {
   const { game, you, me, room, serverNow, away, member } = useTable();
   const [actingFor, setActingFor] = useState<string | null>(null);
+  const testMode = useMemo(() => !!getTest(room.code), [room.code]);
 
   const actorId = game.toActId;
   useEffect(() => setActingFor(null), [actorId, game.phase]);
@@ -44,6 +46,13 @@ function DockBody() {
   const actorMember = member(actorId);
   const waited = room.turnStartedAt ? serverNow - room.turnStartedAt : 0;
   const canActFor = !!actor && !!me && (actorMember?.manual || (away(actorId) && waited >= ACT_FOR_AFTER_MS));
+
+  // 테스트 판: 봇(폰 없는 자리) 차례면 '대신 하기' 없이 바로 그 봇의 버튼을 보여줘요
+  if (testMode && actor && actorMember?.manual) {
+    const legal = legalActions(game, actor.id);
+    if (legal) return <ActionPanel legal={legal} player={actor} actingFor bot />;
+  }
+
 
   if (actingFor && actor && actingFor === actor.id) {
     const legal = legalActions(game, actor.id);
@@ -98,10 +107,12 @@ interface ActionProps {
   legal: Legal;
   player: Player;
   actingFor?: boolean;
+  /** 테스트 판의 봇 차례 */
+  bot?: boolean;
   onCancel?: () => void;
 }
 
-function ActionPanel({ legal, player, actingFor, onCancel }: ActionProps) {
+function ActionPanel({ legal, player, actingFor, bot, onCancel }: ActionProps) {
   const { game, run, busy, v } = useTable();
   const [raising, setRaising] = useState(false);
   const pot = potTotal(game);
@@ -156,10 +167,10 @@ function ActionPanel({ legal, player, actingFor, onCancel }: ActionProps) {
     <div className="dock dock-turn" data-acting-for={actingFor || undefined} role="region" aria-label={actingFor ? `${player.name} 대신 하는 중` : '내 차례'}>
       <div className="turn-head">
         <div>
-          <span className="turn-title">{actingFor ? `${player.name} 대신 하는 중` : '내 차례'}</span>
+          <span className="turn-title">{bot ? `${player.name} 차례 (테스트)` : actingFor ? `${player.name} 대신 하는 중` : '내 차례'}</span>
           <span className="turn-sub">스택 {fmt(player.stack)}</span>
         </div>
-        {actingFor && (
+        {actingFor && onCancel && (
           <button className="icon-btn" onClick={onCancel} aria-label="대신 하기 그만두기">
             <Icon name="close" />
           </button>
