@@ -30,7 +30,6 @@ export function useWakeLock(active: boolean) {
 let audio: AudioContext | null = null;
 
 export function unlockAudio() {
-  primeSpeech();
   if (audio) {
     if (audio.state === 'suspended') void audio.resume();
     return;
@@ -149,8 +148,6 @@ export function actionSound(kind: ActionSound) {
       for (let i = 0; i < 12; i++) clink(ctx, t + i * 0.035 + Math.random() * 0.02, 0.9 + Math.random() * 0.2, 0.8);
       tone(ctx, t, 110, 55, 0.6, 0.25);
       tone(ctx, t + 0.12, 330, 990, 0.45, 0.06, 'triangle');
-      // 칩 소리 뒤에 사람 목소리로 "올인!"
-      setTimeout(() => say('올인!'), 380);
       break;
     case 'fold':
       // 카드를 테이블 위로 쓱
@@ -159,42 +156,3 @@ export function actionSound(kind: ActionSound) {
   }
 }
 
-// ---------------- 목소리 (올인) ----------------
-// 녹음 파일 없이 기기에 들어 있는 한국어 음성(브라우저 음성 합성)으로 말해요.
-// 아이폰 사파리는 처음 한 번은 사용자가 화면을 누를 때 말하기를 시작해야 해서, 터치할 때 빈 문장으로 미리 깨워둬요.
-
-let primed = false;
-function primeSpeech() {
-  if (primed || !('speechSynthesis' in window)) return;
-  primed = true;
-  try {
-    const u = new SpeechSynthesisUtterance(' ');
-    u.volume = 0;
-    window.speechSynthesis.speak(u);
-  } catch {
-    // 음성 합성을 못 쓰는 브라우저면 목소리만 빠져요
-  }
-}
-
-function koreanVoice(): SpeechSynthesisVoice | undefined {
-  const voices = window.speechSynthesis.getVoices();
-  return voices.find((v) => v.lang === 'ko-KR' && /yuna|google|heami|sunhi/i.test(v.name)) ?? voices.find((v) => v.lang.startsWith('ko'));
-}
-
-export function say(text: string) {
-  if (!soundEnabled() || !('speechSynthesis' in window)) return;
-  try {
-    const synth = window.speechSynthesis;
-    synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ko-KR';
-    const voice = koreanVoice();
-    if (voice) u.voice = voice;
-    u.rate = 1.05;
-    u.pitch = 0.9;
-    u.volume = 1;
-    synth.speak(u);
-  } catch {
-    // 무시: 소리만 안 나요
-  }
-}
