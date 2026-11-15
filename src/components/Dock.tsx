@@ -437,7 +437,7 @@ function ResultsPanel() {
   const iAmOut = me && me.stack === 0;
   const rebuy = iAmOut && (
     <button className="btn btn-quiet btn-lg btn-block" disabled={busy} onClick={() => run({ type: 'rebuy' })}>
-      리바이 {fmt(game.settings.startingStack)}
+      은행에서 리바이 {fmt(game.settings.startingStack)} 빌리기
     </button>
   );
 

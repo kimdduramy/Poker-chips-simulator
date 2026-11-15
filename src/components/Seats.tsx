@@ -83,9 +83,9 @@ export function Seats() {
                 )}
                 {p.id === you.id && <span className="seat-you">나</span>}
               </span>
-              {(blind || status) && (
+              {(blind || status || p.loan) && (
                 <span className="seat-meta">
-                  {[blind, status].filter(Boolean).join(' · ')}
+                  {[blind, status, p.loan ? `빚 ${fmt(p.loan)}` : null].filter(Boolean).join(' · ')}
                 </span>
               )}
             </div>

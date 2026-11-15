@@ -1,4 +1,5 @@
 import { bySeat, findPlayer, potTotal } from '../../shared/engine';
+import { ActionToast } from '../components/ActionToast';
 import { Qr } from '../components/Qr';
 import { outcomeLine } from '../components/Stage';
 import { Num } from '../components/Num';
@@ -24,6 +25,7 @@ export function Display({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="display" data-phase={game.phase}>
+      <ActionToast />
       <a className="skip-link" href="#display-main">
         팟으로 바로가기
       </a>

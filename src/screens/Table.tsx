@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Claims } from '../components/Claims';
 import { Dock } from '../components/Dock';
+import { ActionToast } from '../components/ActionToast';
 import { GameAnnouncer } from '../components/GameAnnouncer';
 import { Header } from '../components/Header';
 import { HistoryBar } from '../components/HistoryBar';
@@ -56,6 +57,7 @@ export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: ()
       </a>
       <Header onInvite={() => setSheet('invite')} onMenu={() => setSheet('menu')} />
       <GameAnnouncer />
+      <ActionToast />
       {conn.status === 'reconnecting' && (
         <div className="offline" role="status">
           다시 연결 중…

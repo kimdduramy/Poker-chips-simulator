@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { findPlayer, potTotal } from '../../shared/engine';
+import { dealerTip } from '../lib/dealer';
 import { fmt, STREET_NAMES } from '../lib/format';
 import { useTable } from '../lib/table';
 import { outcomeLine } from './Stage';
@@ -36,6 +37,9 @@ export function GameAnnouncer() {
     } else if (game.phase === 'done') {
       parts.push(`${outcomeLine(game, nameOf)}. ${fmt(pot)} 지급.`);
     }
+
+    const tip = dealerTip(game);
+    if (tip?.now) parts.push(`딜러: ${tip.text}.`);
 
     const last = room.log.at(-1);
     if (last && last.kind !== 'hand' && game.phase === 'betting') {

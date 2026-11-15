@@ -20,6 +20,8 @@ export interface Player {
   stack: number;
   /** Total chips this player has bought in for across the session. */
   buyIn: number;
+  /** 은행 빚: 리바이로 빌리고 아직 안 갚은 칩. 예전 게임 데이터에는 없을 수 있어요. */
+  loan?: number;
   bet: number;
   committed: number;
   /** Chips added by this player's most recent post (blind, call or raise) this hand. 0 after a check or fold. */
@@ -324,6 +326,26 @@ export function rebuy(g0: Game, id: string): Game {
   const p = must(g, id);
   p.stack = g.settings.startingStack;
   p.buyIn += g.settings.startingStack;
+  p.loan = (p.loan ?? 0) + g.settings.startingStack;
+  return g;
+}
+
+/**
+ * 은행에 빚 갚기: 스택에서 amount만큼 빼서 빚을 줄여요.
+ * 받은 칩(buyIn)도 같이 줄어서 손익(스택 - 받은 칩)은 그대로예요.
+ */
+export function repay(g0: Game, id: string, amount: number): Game {
+  const p0 = must(g0, id);
+  const loan = p0.loan ?? 0;
+  if (loan <= 0) fail('INVALID', '갚을 빚이 없어요');
+  if (handInProgress(g0) && p0.inHand) fail('PHASE', '빚은 이번 핸드가 끝난 뒤에 갚을 수 있어요');
+  if (!isInt(amount, 1, loan)) fail('INVALID', `1부터 ${loan}까지 갚을 수 있어요`);
+  if (amount > p0.stack) fail('INVALID', '스택보다 많이 갚을 수 없어요');
+  const g = clone(g0);
+  const p = must(g, id);
+  p.stack -= amount;
+  p.buyIn -= amount;
+  p.loan = loan - amount;
   return g;
 }
 

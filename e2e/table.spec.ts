@@ -69,7 +69,7 @@ test('three players play a hand from deal to payout', async ({ browser }) => {
   await expect(yourTurn(cat)).toBeVisible();
   await cat.getByRole('button', { name: '폴드' }).click();
 
-  await expect(ana.getByText('플랍 오픈')).toBeVisible();
+  await expect(ana.locator('.dealer-tip', { hasText: '1장 버리고 플랍 3장 펼치기' })).toBeVisible();
   await expect(ana.locator('.pot-amount')).toHaveText('130');
 
   for (let i = 0; i < 6; i++) await actWhoeverIsUp([ana, ben], '체크');
@@ -199,7 +199,7 @@ test('anyone can act for a seat without a phone, and undo rolls it back', async 
   await ben.getByRole('button', { name: 'Gran 대신 하기' }).click();
   await expect(ben.getByText('Gran 대신 하는 중')).toBeVisible();
   await ben.getByRole('button', { name: '체크' }).click();
-  await expect(ana.getByText('플랍 오픈')).toBeVisible();
+  await expect(ana.locator('.dealer-tip', { hasText: '1장 버리고 플랍 3장 펼치기' })).toBeVisible();
 
   await ana.getByRole('button', { name: '메뉴' }).click();
   await expect(ana.locator('dialog[open]').getByText('Gran 체크 (Ben 대신)')).toBeVisible();
@@ -242,7 +242,7 @@ test('recovers after losing the connection', async ({ browser }) => {
   await ben.evaluate(() => window.dispatchEvent(new Event('online')));
   await expect(yourTurn(ben)).toBeVisible({ timeout: 20_000 });
   await ben.getByRole('button', { name: '체크' }).click();
-  await expect(ana.getByText('플랍 오픈')).toBeVisible();
+  await expect(ana.locator('.dealer-tip', { hasText: '1장 버리고 플랍 3장 펼치기' })).toBeVisible();
 });
 
 test('desktop keyboard shortcuts drive the action bar', async ({ browser }) => {
@@ -391,6 +391,12 @@ test('/test sets up a solo table with bots and lets me play their turns', async 
   await expect(seats).toHaveCount(3);
 
   await me.getByRole('button', { name: '첫 핸드 시작' }).click();
+  // 딜러 지시: 처음엔 카드 나눠주기
+  await expect(me.locator('.dealer-bar[data-now] .dealer-tip')).toHaveText('2장씩 나눠줘요 · SB부터 한 장씩');
+  // 액션을 하면 화면 가운데에 크게 떠요
+  await me.locator('.dock-turn').getByRole('button', { name: /^(체크|콜 \d+)/ }).first().click();
+  await expect(me.locator('.action-toast')).toBeVisible();
+  await expect(me.locator('.action-toast-word')).toHaveText(/^(체크|콜)$/);
 
   // 봇 차례든 내 차례든 바로 버튼이 나와요: 끝까지 콜/체크
   const anyTurn = me.locator('.dock-turn');

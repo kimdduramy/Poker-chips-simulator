@@ -358,4 +358,18 @@ describe('lifecycle', () => {
     const keys = await runInDurableObject(stub, (_, state) => state.storage.list());
     expect(keys.size).toBe(0);
   });
+
+  it('bank: rebuy is a loan only the borrower can pay back, between hands', async () => {
+    const { clients, idOf } = await table(['Ana', 'Ben']);
+    const [ana, ben] = clients;
+    expect(await ben.request({ type: 'repay', amount: 100 })).toMatchObject({ type: 'err', code: 'INVALID' });
+    await ana.ok({ type: 'setStack', v: ana.state.v, playerId: idOf(ben), stack: 0 });
+    await ben.ok({ type: 'rebuy' });
+    let me = (await ben.settle()).room.game.players.find((p) => p.id === idOf(ben))!;
+    expect(me).toMatchObject({ stack: 1000, loan: 1000 });
+    await ben.ok({ type: 'repay', amount: 400 });
+    me = (await ben.settle()).room.game.players.find((p) => p.id === idOf(ben))!;
+    expect(me).toMatchObject({ stack: 600, loan: 600 });
+    expect((await ana.settle()).room.log.at(-1)?.text).toBe('Ben 은행에 400 갚음');
+  });
 });
