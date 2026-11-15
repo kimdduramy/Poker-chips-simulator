@@ -168,8 +168,8 @@ export const potTotal = (g: Game) => g.players.reduce((sum, p) => sum + p.commit
 /** 지금 테이블에 깔려 있어야 할 공유 카드 수: 프리플랍 0, 플랍 3, 턴 4, 리버 5. 쇼다운까지 가면 5장. */
 export function boardCards(g: Game): number {
   if (g.phase === 'lobby') return 0;
-  if (g.phase === 'showdown') return 5;
-  if (g.phase === 'done' && livePlayers(g).length > 1) return 5;
+  // 쇼다운에 가면 리버까지 다 깔려요. 올인 런아웃은 street가 앞에서 멈춰 있어서 따로 봐요.
+  if (g.phase === 'showdown' || g.runout) return 5;
   return [0, 3, 4, 5][g.street];
 }
 export const eligibleForHand = (p: Player) => !p.sittingOut && !p.leaving && p.stack > 0;

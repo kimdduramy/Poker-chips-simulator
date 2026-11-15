@@ -1787,6 +1787,17 @@ button:disabled {
   min-width: 0;
 }
 
+.seat-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.seat-name > .dealer,
+.seat-name > .seat-you {
+  flex: none;
+}
+
 .seat-name {
   display: flex;
   align-items: baseline;
@@ -3240,4 +3251,18 @@ button:disabled {
   .board-card:nth-child(5) {
     margin-left: 2px;
   }
+}
+
+/* 큰 버튼은 글자가 길면 줄을 바꿔요 (이름이 긴 '○○ 대신 하기' 등이 화면 밖으로 밀려나지 않게) */
+.btn-lg,
+.btn-xl {
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+/* 안전망: 어떤 요소가 넘쳐도 화면이 옆으로 스크롤되지 않게 */
+body {
+  overflow-x: clip;
 }
