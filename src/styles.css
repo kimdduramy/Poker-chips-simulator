@@ -473,7 +473,7 @@ button:disabled {
   white-space: nowrap;
 }
 
-/* '칩' 글자 뒤에 노란 칩 두 개가 겹쳐 있어요 */
+/* 워드마크 앞: 노란 칩 두 개가 겹친 그림 */
 .wm-chip {
   position: relative;
   display: inline-grid;
@@ -481,7 +481,7 @@ button:disabled {
   flex: none;
   width: 1.25em;
   height: 1em;
-  margin-right: 0.3em;
+  margin-right: 0.36em;
 }
 
 .wm-chips {
@@ -493,13 +493,6 @@ button:disabled {
   overflow: visible;
 }
 
-.wm-chip-text {
-  position: relative;
-  font-size: 0.56em;
-  font-weight: 820;
-  letter-spacing: 0;
-  color: var(--on-accent);
-}
 
 .wm-chip-face {
   fill: var(--accent);

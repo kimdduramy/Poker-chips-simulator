@@ -54,7 +54,6 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
           <span className="wm-line" aria-hidden="true">
             <span className="wm-chip">
               <ChipsMark />
-              <span className="wm-chip-text">칩</span>
             </span>
             베팅
           </span>
@@ -106,7 +105,7 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
   );
 }
 
-/** 워드마크의 '칩' 뒤 배경: 노란 칩 두 개가 겹친 모양 */
+/** 워드마크 앞 그림: 노란 칩 두 개가 겹친 모양 */
 function ChipsMark() {
   const chip = (cx: number, cy: number, r: number, cls: string) => (
     <g className={cls}>
