@@ -74,7 +74,7 @@ export function Seats() {
             <span className="seat-mark" aria-hidden="true" />
             <div className="seat-who">
               <span className="seat-name">
-                {p.name}
+                <span className="seat-name-text">{p.name}</span>
                 {hand && game.buttonId === p.id && (
                   <span className="dealer" title="딜러 버튼">
                     <span className="sr-only">딜러</span>

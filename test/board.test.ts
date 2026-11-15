@@ -53,5 +53,8 @@ describe('boardCards: how many shared cards should be on the table', () => {
     expect(g.phase).toBe('showdown');
     expect(g.runout).toBe(true);
     expect(boardCards(g)).toBe(5);
+    g = award(g, Object.fromEntries(g.pots.map((p) => [p.id, ['p0']])));
+    expect(g.phase).toBe('done');
+    expect(boardCards(g)).toBe(5);
   });
 });

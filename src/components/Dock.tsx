@@ -458,9 +458,10 @@ function ResultsPanel() {
   return (
     <div className="dock dock-done">
       {rebuy}
+      {!ready && <p className="dock-wait">칩이 남은 사람이 2명 이상 있어야 다음 핸드를 시작할 수 있어요. 메뉴 → 플레이어·스택 관리에서 스택을 채워 주세요.</p>}
       <div className="done-actions">
         <button className="btn btn-primary btn-xl grow" disabled={!ready || busy} onClick={() => run({ type: 'next', v })}>
-          {ready ? '다음 핸드 시작' : '스택이 있는 플레이어가 2명 이상 필요해요'}
+          다음 핸드 시작
           {ready && <kbd className="kbd">N</kbd>}
         </button>
       </div>
