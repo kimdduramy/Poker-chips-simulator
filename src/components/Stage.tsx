@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { bySeat, findPlayer, potTotal, type Game, type Player } from '../../shared/engine';
+import { boardCards, bySeat, findPlayer, potTotal, type Game, type Player } from '../../shared/engine';
 import { fmt, NEXT_CARDS } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
@@ -17,6 +17,26 @@ export function outcomeLine(game: Game, nameOf: (id: string) => string) {
   const folders = game.players.filter((p) => p.folded).length;
   const walk = game.street === 0 && winners[0] === game.bbId && folders === game.players.length - 1 && game.lastAction?.kind === 'fold';
   return walk ? `${names[0]} 워크 (전원 폴드)` : `${names[0]} 승리`;
+}
+
+/** 팟 옆 작은 카드 5장: 깔린 만큼 켜져요. 막 깔 차례인 카드는 깜빡여요. */
+function BoardCards({ game, dealing }: { game: Game; dealing: boolean }) {
+  if (game.phase === 'lobby') return null;
+  const open = boardCards(game);
+  const fresh = dealing ? [0, 3, 1, 1][game.street] : 0;
+  const label = open === 0 ? '보드 카드 아직 없음 (프리플랍)' : `보드 카드 ${open}장 공개`;
+  return (
+    <span className="board-cards" role="img" aria-label={label}>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <span
+          key={i}
+          className="board-card"
+          data-on={i < open || undefined}
+          data-new={(i < open && i >= open - fresh) || undefined}
+        />
+      ))}
+    </span>
+  );
 }
 
 export function Stage() {
@@ -52,7 +72,10 @@ export function Stage() {
     <section className="stage" aria-label="팟">
       <div className="stage-top">
         <div className="stage-main">
-          <span className="label">{game.phase === 'done' ? '지급됨' : '팟'}</span>
+          <div className="stage-label-row">
+            <span className="label">{game.phase === 'done' ? '지급됨' : '팟'}</span>
+            <BoardCards game={game} dealing={freshStreet} />
+          </div>
           <Num value={pot} className="pot-amount" />
           <div className="stage-line" key={lineKey}>
             {line}

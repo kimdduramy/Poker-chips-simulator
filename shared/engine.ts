@@ -164,6 +164,14 @@ export const canAct = (p: Player) => p.inHand && !p.folded && !p.allIn;
 export const livePlayers = (g: Game) => g.players.filter((p) => p.inHand && !p.folded);
 export const handInProgress = (g: Game) => g.phase === 'betting' || g.phase === 'showdown';
 export const potTotal = (g: Game) => g.players.reduce((sum, p) => sum + p.committed, 0);
+
+/** 지금 테이블에 깔려 있어야 할 공유 카드 수: 프리플랍 0, 플랍 3, 턴 4, 리버 5. 쇼다운까지 가면 5장. */
+export function boardCards(g: Game): number {
+  if (g.phase === 'lobby') return 0;
+  if (g.phase === 'showdown') return 5;
+  if (g.phase === 'done' && livePlayers(g).length > 1) return 5;
+  return [0, 3, 4, 5][g.street];
+}
 export const eligibleForHand = (p: Player) => !p.sittingOut && !p.leaving && p.stack > 0;
 
 /** Players strictly clockwise after `fromSeat`, wrapping around, filtered. */
