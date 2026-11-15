@@ -93,6 +93,12 @@ describe('Pages middleware negotiation', () => {
     expect(await res.text()).toMatch(/home/);
   });
 
+  it('serves the SPA shell for the /test table', async () => {
+    const res = await onRequest(makeContext('/test', 'text/html', site));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toMatch(/home/);
+  });
+
   it('returns 406 when every produced type is rejected', async () => {
     const res = await onRequest(makeContext('/', 'text/html;q=0, text/markdown;q=0', site));
     expect(res.status).toBe(406);

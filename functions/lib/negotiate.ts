@@ -87,8 +87,9 @@ export function markdownPath(pathname: string): string {
   return `${clean}/index.md`;
 }
 
+/** 앱이 직접 그리는 화면: 테이블(/t/XXXX)과 테스트 판(/test) */
 export function isRoomPath(pathname: string): boolean {
-  return /^\/t\/[A-Za-z]{4}\/?$/i.test(pathname);
+  return /^\/t\/[A-Za-z]{4}\/?$/i.test(pathname) || /^\/test\/?$/i.test(pathname);
 }
 
 export function isStaticAssetPath(pathname: string): boolean {

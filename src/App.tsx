@@ -13,13 +13,15 @@ function parse(url: string) {
   return null;
 }
 
+const isTestPath = (path: string) => /^\/test\/?$/i.test(path.split('?')[0]);
+
 export function App() {
   const [href, setHref] = useState(() => location.pathname + location.search);
 
   useEffect(() => {
     const onPop = () => setHref(location.pathname + location.search);
     window.addEventListener('popstate', onPop);
-    if (location.pathname !== '/' && location.pathname !== '/test' && !parse(location.href)) history.replaceState(null, '', '/');
+    if (location.pathname !== '/' && !isTestPath(location.pathname) && !parse(location.href)) history.replaceState(null, '', '/');
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
@@ -35,7 +37,7 @@ export function App() {
     <>
       {route ? (
         <Room key={route.code} code={route.code} display={route.display} navigate={navigate} />
-      ) : href.split('?')[0] === '/test' ? (
+      ) : isTestPath(href) ? (
         <TestSetup navigate={navigate} />
       ) : (
         <Home navigate={navigate} />
