@@ -2952,3 +2952,57 @@ button:disabled {
     display: none;
   }
 }
+
+/* ---------------- 기록 ---------------- */
+.game-log {
+  display: grid;
+  gap: 18px;
+}
+.game-log-note {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 0.8125rem;
+}
+.game-log-group {
+  display: grid;
+  gap: 6px;
+}
+.game-log-head {
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.game-log-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+.game-log-row {
+  display: grid;
+  grid-template-columns: 3.2em minmax(0, 1fr);
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.game-log-time {
+  color: var(--ink-3);
+  font-size: 0.75rem;
+  padding-top: 2px;
+}
+.game-log-row[data-kind='hand'] .game-log-text {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.game-log-row[data-kind='win'] .game-log-text {
+  color: var(--good);
+  font-weight: 700;
+}
+.game-log-row[data-kind='undo'] .game-log-text,
+.game-log-row[data-kind='table'] .game-log-text {
+  color: var(--ink-3);
+}

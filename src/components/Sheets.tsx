@@ -4,11 +4,12 @@ import { ledger, netsInCents, settleUp } from '../../shared/settle';
 import { setSoundEnabled, soundEnabled } from '../lib/device';
 import { fmt, money, signed, signedMoney } from '../lib/format';
 import { useTable } from '../lib/table';
+import { GameLog } from './GameLog';
 import { Icon } from './Icon';
 import { Invite } from './Invite';
 import { Sheet } from './Sheet';
 
-export type SheetName = 'menu' | 'invite' | 'settings' | 'players' | 'settle' | null;
+export type SheetName = 'menu' | 'invite' | 'settings' | 'players' | 'settle' | 'log' | null;
 
 interface Props {
   open: SheetName;
@@ -37,6 +38,9 @@ export function Sheets({ open, setOpen, onDisplay, onLeft }: Props) {
       <Sheet open={open === 'settle'} onClose={close} title="정산">
         <Settle />
       </Sheet>
+      <Sheet open={open === 'log'} onClose={close} title="기록">
+        <GameLog />
+      </Sheet>
     </>
   );
 }
@@ -62,6 +66,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
       <ul className="menu-group">
         {isHost && room.undoLabel && item('되돌리기', () => run({ type: 'undo', v }).then((ok) => ok && setOpen(null)), { note: room.undoLabel })}
         {item('친구 초대', () => setOpen('invite'), { note: room.code })}
+        {item('기록', () => setOpen('log'), { note: '누가 뭘 했는지' })}
         {item('정산', () => setOpen('settle'))}
         {item('큰 화면 모드', onDisplay, { note: '테이블 가운데 두는 화면' })}
       </ul>
@@ -72,7 +77,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
             note: inHand ? '다음 핸드부터' : undefined,
           })}
           {me.stack === 0 &&
-            item(`$리바이 {fmt(game.settings.startingStack)}`, () => run({ type: 'rebuy' }), {
+            item(`리바이 ${fmt(game.settings.startingStack)}`, () => run({ type: 'rebuy' }), {
               disabled: inHand,
               note: inHand ? '이번 핸드 후' : undefined,
             })}

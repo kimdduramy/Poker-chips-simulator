@@ -405,3 +405,16 @@ test('/test sets up a solo table with bots and lets me play their turns', async 
   await expect(me.getByText('누가 이겼나요?')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('menu has a game log that shows who did what', async ({ browser }) => {
+  const ana = await seat(browser, 'Ana');
+  const ben = await seat(browser, 'Ben', codeOf(ana));
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
+  await actWhoeverIsUp([ana, ben], /^(체크|콜 \d+)/);
+
+  await ben.getByRole('button', { name: '메뉴' }).click();
+  await ben.getByRole('button', { name: /기록/ }).click();
+  const log = ben.locator('dialog[open] .game-log');
+  await expect(log.getByRole('heading', { name: /핸드 #1/ })).toBeVisible();
+  await expect(log.locator('.game-log-row').filter({ hasText: /콜|체크/ }).first()).toBeVisible();
+});
