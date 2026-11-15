@@ -418,3 +418,24 @@ test('menu has a game log that shows who did what', async ({ browser }) => {
   await expect(log.getByRole('heading', { name: /핸드 #1/ })).toBeVisible();
   await expect(log.locator('.game-log-row').filter({ hasText: /콜|체크/ }).first()).toBeVisible();
 });
+
+test('home help opens in a window with how-to, terms and hand ranks tabs', async ({ browser }) => {
+  const ctx = await browser.newContext({ ...test.info().project.use });
+  contexts.push(ctx);
+  const page = await ctx.newPage();
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: '칩 베팅 시뮬레이터' })).toBeVisible();
+  await page.getByRole('button', { name: '도움말' }).click();
+  const help = page.getByRole('dialog', { name: '도움말' });
+  await expect(help).toBeVisible();
+  await expect(help.getByRole('tab', { name: '진행 방법' })).toHaveAttribute('aria-selected', 'true');
+  await expect(help.getByText(/첫 핸드 시작/)).toBeVisible();
+  await help.getByRole('tab', { name: '용어' }).click();
+  await help.getByRole('button', { name: '프리플랍' }).click();
+  await expect(help.getByText(/개인 카드 2장만/)).toBeVisible();
+  await help.getByRole('tab', { name: '족보' }).click();
+  await expect(help.getByText('로열 플러시')).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await help.getByRole('button', { name: '닫기' }).click();
+  await expect(help).toBeHidden();
+});

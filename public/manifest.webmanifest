@@ -1,6 +1,6 @@
 {
-  "name": "칩 포커",
-  "short_name": "칩 포커",
+  "name": "칩 베팅 시뮬레이터",
+  "short_name": "칩 베팅",
   "description": "칩은 폰으로, 카드는 테이블에서. 친구들과 쓰는 실시간 포커 칩 계산기.",
   "start_url": "/",
   "scope": "/",

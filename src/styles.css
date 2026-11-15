@@ -446,6 +446,7 @@ button:disabled {
 /* ---------- home ---------- */
 
 .home {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 40px;
@@ -456,21 +457,265 @@ button:disabled {
 }
 
 .wordmark {
-  /* 한글 워드마크: 세리프 이탤릭 대신 또렷한 고딕 */
+  /* 한글 워드마크: 또렷한 고딕, 두 줄 (칩 베팅 / 시뮬레이터) */
+  display: grid;
+  gap: 0.06em;
   font-family: var(--font-sans);
   font-weight: 760;
-  font-size: clamp(3.5rem, 17vw, 5rem);
-  line-height: 0.95;
+  font-size: clamp(2.6rem, 12.5vw, 3.6rem);
+  line-height: 1.05;
   letter-spacing: -0.02em;
 }
 
-.wordmark mark {
-  padding: 0 0.1em;
-  margin-left: -0.1em;
-  border-radius: 0.1em;
-  background-color: var(--accent);
+.wm-line {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* '칩' 글자 뒤에 노란 칩 두 개가 겹쳐 있어요 */
+.wm-chip {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.25em;
+  height: 1em;
+  margin-right: 0.3em;
+}
+
+.wm-chips {
+  position: absolute;
+  left: 0;
+  top: -0.375em;
+  width: 1.5em;
+  height: 1.5em;
+  overflow: visible;
+}
+
+.wm-chip-text {
+  position: relative;
+  font-size: 0.56em;
+  font-weight: 820;
+  letter-spacing: 0;
   color: var(--on-accent);
-  animation: swipe 520ms var(--ease-out) 80ms both;
+}
+
+.wm-chip-face {
+  fill: var(--accent);
+}
+
+.wm-chip-back .wm-chip-face {
+  fill: color-mix(in oklch, var(--accent) 80%, var(--on-accent));
+}
+
+.wm-chip-front .wm-chip-face {
+  stroke: var(--bg);
+  stroke-width: 4;
+}
+
+.wm-chip-edge {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 6;
+  opacity: 0.85;
+}
+
+.wm-chip-ring {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 1.5;
+  opacity: 0.22;
+}
+
+.wm-chip-back,
+.wm-chip-front {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: chip-drop 420ms var(--ease-out) both;
+}
+
+.wm-chip-back {
+  animation-delay: 40ms;
+}
+
+.wm-chip-front {
+  animation-delay: 150ms;
+}
+
+.home-top {
+  position: absolute;
+  top: calc(var(--safe-top) + 14px);
+  right: 16px;
+}
+
+/* 메인 화면 '도움말' 작은 버튼 */
+.help-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--glass-glossary);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 560;
+}
+
+.help-btn:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+/* 도움말 창: 페이지 이동 없이 가운데에 떠요 */
+.help-dialog {
+  width: min(440px, calc(100% - 24px));
+  max-width: none;
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  overscroll-behavior: contain;
+}
+
+.help-dialog[open] {
+  animation: fade-up 200ms var(--ease-out);
+}
+
+.help-dialog::backdrop {
+  background: var(--backdrop);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: fade 160ms var(--ease-out);
+}
+
+.help-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: min(78dvh, 640px);
+  padding: 12px 14px 0;
+}
+
+.help-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.help-title {
+  padding-bottom: 6px;
+  font-size: 1.0625rem;
+  font-weight: 680;
+  white-space: nowrap;
+}
+
+.help-tabs {
+  flex: 1;
+  gap: 16px;
+}
+
+.help-tabs .gl-tab {
+  height: 32px;
+  font-size: 0.875rem;
+}
+
+.help-head .gl-close {
+  align-self: flex-start;
+  width: 30px;
+  height: 30px;
+}
+
+.help-scroll {
+  flex: 1;
+  margin: 0 -14px;
+}
+
+.help-view {
+  padding: 2px 26px 18px 14px;
+}
+
+.help-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.help-steps li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  counter-increment: step;
+}
+
+.help-steps li::before {
+  content: counter(step);
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+}
+
+/* 도움말의 '용어' 탭: 게임 중 작은 창(C-4)과 같은 모양을 조금 크게 */
+.help-terms {
+  display: grid;
+  gap: 10px;
+}
+
+.help-terms .gl-tab {
+  height: 28px;
+  font-size: 0.8125rem;
+}
+
+.help-terms .gl-compact {
+  padding: 0;
+}
+
+.help-terms .gl-chip,
+.help-terms .gl-chip-wrap::before {
+  font-size: 0.875rem;
+}
+
+.help-terms .gl-chips {
+  row-gap: 6px;
+  margin-left: -13px;
+}
+
+.help-terms .gl-chip-wrap {
+  padding-left: 13px;
+}
+
+.help-terms .gl-desc {
+  gap: 4px;
+  padding-top: 10px;
+}
+
+.help-terms .gl-desc-name {
+  font-size: 1rem;
+}
+
+.help-terms .gl-desc-text {
+  font-size: 0.9375rem;
+}
+
+.help-ranks .ranks-row {
+  min-height: 40px;
+}
+
+.help-ranks .ranks-foot {
+  font-size: 0.8125rem;
 }
 
 .home-tagline {
@@ -557,66 +802,11 @@ button:disabled {
   font-weight: 620;
 }
 
-.glossary-card-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.glossary-groups {
-  display: grid;
-  gap: 18px;
-}
-
-.glossary-group-title {
-  margin: 0 0 6px;
-  padding: 4px 0;
-  font-size: 0.75rem;
-  font-weight: 620;
-  letter-spacing: 0.04em;
-  color: var(--ink-3);
-}
-
-.glossary-list {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-}
-
-.glossary-item dt {
-  font-weight: 620;
-}
-
 .glossary-en {
   margin-left: 4px;
   font-weight: 400;
   font-size: 0.8em;
   color: var(--ink-3);
-}
-
-.glossary-item dd {
-  margin: 2px 0 0;
-  color: var(--ink-2);
-  line-height: 1.45;
-}
-
-/* 메인 화면: 홈 열 너비에 맞춘 큰 카드 */
-.glossary-card {
-  display: grid;
-  gap: 12px;
-  padding: 18px 18px 0;
-}
-
-.glossary-card .glossary-scroll {
-  max-height: min(420px, 55dvh);
-  margin: 0 -18px;
-}
-
-.glossary-card .glossary-body {
-  padding: 0 26px 18px 18px;
-  font-size: 0.9375rem;
 }
 
 /* 게임 중: 상단바 버튼으로 여는 작은 창 (탭 → 칩 → 설명 한 개) */
@@ -764,22 +954,6 @@ button:disabled {
   flex: none;
   font-size: 0.8125rem;
   white-space: nowrap;
-}
-
-.glossary-pop .glossary-scroll {
-  min-height: 0;
-}
-
-.glossary-pop .glossary-body {
-  padding: 8px 22px 14px 14px;
-}
-
-.glossary-pop .glossary-groups {
-  gap: 14px;
-}
-
-.glossary-pop .glossary-list {
-  gap: 8px;
 }
 
 /* ---------- custom scrollbar (네모 스크롤 막대) ---------- */
@@ -2678,6 +2852,13 @@ button:disabled {
   from {
     opacity: 0;
     transform: translateY(-10px);
+  }
+}
+
+@keyframes chip-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-14%) scale(0.86);
   }
 }
 

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { CODE_LENGTH, normalizeCode } from '../../shared/protocol';
 import { createRoom, roomInfo } from '../lib/api';
 import { unlockAudio } from '../lib/device-features';
-import { GlossaryCard } from '../components/Glossary';
+import { HelpButton } from '../components/Help';
 
 export function Home({ navigate }: { navigate: (to: string) => void }) {
   const [code, setCode] = useState('');
@@ -46,9 +46,21 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
       <a className="skip-link" href="#home-actions">
         바로가기
       </a>
+      <header className="home-top">
+        <HelpButton />
+      </header>
       <section className="home-hero">
-        <h1 className="wordmark">
-          <mark>칩</mark> 포커
+        <h1 className="wordmark" aria-label="칩 베팅 시뮬레이터">
+          <span className="wm-line" aria-hidden="true">
+            <span className="wm-chip">
+              <ChipsMark />
+              <span className="wm-chip-text">칩</span>
+            </span>
+            베팅
+          </span>
+          <span className="wm-line" aria-hidden="true">
+            시뮬레이터
+          </span>
         </h1>
         <p className="home-tagline">칩은 폰으로, 카드는 테이블에서.</p>
       </section>
@@ -90,14 +102,23 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
         )}
       </section>
 
-      <ol className="home-how">
-        <li>테이블을 만들고 코드를 공유해요.</li>
-        <li>각자 자기 폰으로 들어와요.</li>
-        <li>카드는 진짜로 돌리고, 칩 계산은 앱이 해요.</li>
-      </ol>
-
-      <GlossaryCard />
-
     </main>
+  );
+}
+
+/** 워드마크의 '칩' 뒤 배경: 노란 칩 두 개가 겹친 모양 */
+function ChipsMark() {
+  const chip = (cx: number, cy: number, r: number, cls: string) => (
+    <g className={cls}>
+      <circle cx={cx} cy={cy} r={r} className="wm-chip-face" />
+      <circle cx={cx} cy={cy} r={r - 4} className="wm-chip-edge" strokeDasharray={`${(Math.PI * 2 * (r - 4)) / 24} ${(Math.PI * 2 * (r - 4)) / 24}`} />
+      <circle cx={cx} cy={cy} r={r * 0.7} className="wm-chip-ring" />
+    </g>
+  );
+  return (
+    <svg className="wm-chips" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+      {chip(76, 44, 36, 'wm-chip-back')}
+      {chip(50, 70, 42, 'wm-chip-front')}
+    </svg>
   );
 }

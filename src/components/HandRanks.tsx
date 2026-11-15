@@ -27,11 +27,37 @@ function Mini({ card: [rank, suit, key] }: { card: Card }) {
   );
 }
 
+/** 족보 표: 높은 순. 족보 창(누르고 있기)과 도움말 창에서 같이 써요. */
+export function RanksList() {
+  return (
+    <>
+      <ol className="ranks-list">
+        {RANKS.map((r, i) => (
+          <li key={r.name} className="ranks-row">
+            <span className="ranks-no num">{i + 1}</span>
+            <span className="ranks-cards" aria-hidden="true">
+              {r.cards.map((c, j) => (
+                <Mini key={j} card={c} />
+              ))}
+            </span>
+            <span className="ranks-text">
+              <span className="ranks-name">
+                {r.name} <span className="ranks-en">{r.en}</span>
+              </span>
+              <span className="ranks-desc">{r.desc}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="ranks-foot">내 카드 2장 + 공유 카드 5장 중 가장 좋은 5장으로 겨뤄요. 같은 족보면 더 높은 숫자가 이겨요.</p>
+    </>
+  );
+}
+
 /**
  * "족보" 버튼: 누르고 있는 동안만 족보 창이 떠요. 손을 떼면 바로 닫혀요.
- * variant="icon"은 게임 상단바용 작은 버튼, "pill"은 메인 화면용.
  */
-export function HandRanksHold({ variant = 'icon' }: { variant?: 'icon' | 'pill' }) {
+export function HandRanksHold() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -51,7 +77,7 @@ export function HandRanksHold({ variant = 'icon' }: { variant?: 'icon' | 'pill' 
     <>
       <button
         type="button"
-        className={variant === 'icon' ? 'hold-pill hold-btn' : 'btn btn-quiet btn-sm hold-btn'}
+        className="hold-pill hold-btn"
         aria-label="족보 보기 (누르고 있는 동안 표시)"
         aria-pressed={open}
         onPointerDown={(e) => {
@@ -68,17 +94,11 @@ export function HandRanksHold({ variant = 'icon' }: { variant?: 'icon' | 'pill' 
         onKeyUp={(e) => (e.key === ' ' || e.key === 'Enter') && setOpen(false)}
         onBlur={() => setOpen(false)}
       >
-        {variant === 'icon' ? (
-          <>
-            <svg className="hold-pill-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="6" width="11" height="15" rx="2" />
-              <path d="M9 3.5 18.6 5a2 2 0 0 1 1.7 2.3l-1.8 11.5" />
-            </svg>
-            족보
-          </>
-        ) : (
-          '족보 보기 · 누르고 있기'
-        )}
+        <svg className="hold-pill-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="6" width="11" height="15" rx="2" />
+          <path d="M9 3.5 18.6 5a2 2 0 0 1 1.7 2.3l-1.8 11.5" />
+        </svg>
+        족보
       </button>
       {open &&
         createPortal(
@@ -88,25 +108,7 @@ export function HandRanksHold({ variant = 'icon' }: { variant?: 'icon' | 'pill' 
               <span className="ranks-title">족보</span>
               <span className="ranks-sub">위가 더 높아요</span>
             </div>
-            <ol className="ranks-list">
-              {RANKS.map((r, i) => (
-                <li key={r.name} className="ranks-row">
-                  <span className="ranks-no num">{i + 1}</span>
-                  <span className="ranks-cards" aria-hidden="true">
-                    {r.cards.map((c, j) => (
-                      <Mini key={j} card={c} />
-                    ))}
-                  </span>
-                  <span className="ranks-text">
-                    <span className="ranks-name">
-                      {r.name} <span className="ranks-en">{r.en}</span>
-                    </span>
-                    <span className="ranks-desc">{r.desc}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-            <p className="ranks-foot">내 카드 2장 + 공유 카드 5장 중 가장 좋은 5장으로 겨뤄요. 같은 족보면 더 높은 숫자가 이겨요.</p>
+            <RanksList />
           </div>
         </div>,
           // 반투명 창(backdrop-filter) 안에서 열려도 화면 전체에 뜨도록 body에 그려요
