@@ -71,7 +71,7 @@ React 19, Vite, TypeScript, Cloudflare Pages · Workers · Durable Objects (SQLi
 
 ## 효과음
 
-`public/sounds/`의 칩·카드 소리는 [Pixabay](https://pixabay.com/sound-effects/) 무료 효과음(OxidVideos, freesound_community)을 잘라서 쓴 거예요. Pixabay 콘텐츠 라이선스라 출처 표기 없이 쓸 수 있어요. 체크 소리는 코드로 합성해요.
+`public/sounds/`의 칩·카드 소리는 [Pixabay](https://pixabay.com/sound-effects/) 무료 효과음(OxidVideos, freesound_community)을 잘라서 쓴 거예요. Pixabay 콘텐츠 라이선스라 출처 표기 없이 쓸 수 있어요. 팟을 가져갈 때 나는 동전 소리(`win.mp3`)는 [Mixkit](https://mixkit.co/free-sound-effects/casino/) 무료 효과음(Clinking coins)이에요. 체크 소리는 코드로 합성해요.
 
 ## 라이선스
 

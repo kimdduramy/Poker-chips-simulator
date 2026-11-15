@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { findPlayer } from '../../shared/engine';
 import { dealerTip } from '../lib/dealer';
-import { actionSound, dealSound, type ActionSound } from '../lib/device-features';
+import { actionSound, dealSound, winSound, type ActionSound } from '../lib/device-features';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 
@@ -40,21 +40,27 @@ export function ActionToast() {
       return;
     }
     if (last.id <= seen.current) return;
+    // 한 번에 여러 줄이 올 수 있어요: 마지막 콜 뒤에 '턴' 줄, 마지막 폴드 뒤에 '획득' 줄 등
+    const fresh = room.log.filter((e) => e.id > (seen.current ?? 0));
     seen.current = last.id;
-    if (last.kind !== 'action') return;
+    const action = fresh.findLast((e) => e.kind === 'action');
+    const won = fresh.some((e) => e.kind === 'win');
+
     const la = game.lastAction;
-    if (!la || la.kind === 'sb' || la.kind === 'bb') return;
+    if (action && la && la.kind !== 'sb' && la.kind !== 'bb') {
+      let kind: ActionSound;
+      if (la.kind === 'raise') kind = la.allIn ? 'allin' : / 벳 /.test(` ${action.text} `) ? 'bet' : 'raise';
+      else if (la.kind === 'call') kind = la.allIn ? 'allin' : 'call';
+      else kind = la.kind;
 
-    let kind: ActionSound;
-    if (la.kind === 'raise') kind = la.allIn ? 'allin' : / 벳 /.test(` ${last.text} `) ? 'bet' : 'raise';
-    else if (la.kind === 'call') kind = la.allIn ? 'allin' : 'call';
-    else kind = la.kind;
-
-    const p = findPlayer(game, la.id);
-    const who = la.id === you.id ? '나' : (p?.name ?? nameOf(la.id));
-    setShown({ key: last.id, kind, who, amount: kind === 'check' || kind === 'fold' ? null : la.amount });
-    actionSound(kind);
-  }, [last, game, you.id, nameOf]);
+      const p = findPlayer(game, la.id);
+      const who = la.id === you.id ? '나' : (p?.name ?? nameOf(la.id));
+      setShown({ key: action.id, kind, who, amount: kind === 'check' || kind === 'fold' ? null : la.amount });
+      actionSound(kind);
+    }
+    // 팟이 지급되면 동전 소리 (액션 소리와 겹치지 않게 조금 뒤에)
+    if (won) setTimeout(() => winSound(), action ? 380 : 0);
+  }, [last, room.log, game, you.id, nameOf]);
 
   // 딜러가 카드를 깔 순간(노란 딜러 줄)에 카드 '착' 소리: 플랍 3번, 턴·리버 1번, 새 핸드 2번
   const tip = dealerTip(game);

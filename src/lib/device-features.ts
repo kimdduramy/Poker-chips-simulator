@@ -50,6 +50,7 @@ const SAMPLE_FILES = {
   cardPlace: '/sounds/card-place.mp3',
   cardTakeA: '/sounds/card-take-a.mp3',
   cardTakeB: '/sounds/card-take-b.mp3',
+  win: '/sounds/win.mp3',
 } as const;
 type Sample = keyof typeof SAMPLE_FILES;
 const samples = new Map<Sample, AudioBuffer>();
@@ -79,6 +80,14 @@ function play(ctx: AudioContext, name: Sample, t: number, gain = 1, rate = 1): b
   src.connect(g).connect(ctx.destination);
   src.start(t);
   return true;
+}
+
+/** 팟을 가져갈 때: 동전 짤랑 (Mixkit 무료) */
+export function winSound() {
+  if (!soundEnabled() || !audio || audio.state !== 'running') return;
+  if (play(audio, 'win', audio.currentTime + 0.01, 0.6)) return;
+  // 아직 못 받았으면 짧은 합성 '띠링'
+  tone(audio, audio.currentTime + 0.01, 880, 1320, 0.25, 0.08, 'triangle');
 }
 
 /** 딜러가 카드를 깔 순간: 카드 장수만큼 '착' 소리 */
