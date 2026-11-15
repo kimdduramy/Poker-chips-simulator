@@ -40,16 +40,30 @@ const seat = (name, tag, stack, acting) => `
     <div style="font-size:24px;font-weight:560;font-variant-numeric:tabular-nums">${stack}</div>
   </div>`;
 
+const chipSvg = (cx, cy, r, face) => {
+  const e = r - 4;
+  const dash = (Math.PI * 2 * e) / 24;
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${face}" stroke="#0a0a0a" stroke-width="4"/>
+    <circle cx="${cx}" cy="${cy}" r="${e}" fill="none" stroke="#191606" stroke-width="6" stroke-dasharray="${dash} ${dash}" opacity=".85"/>
+    <circle cx="${cx}" cy="${cy}" r="${r * 0.7}" fill="none" stroke="#191606" stroke-width="1.5" opacity=".22"/>`;
+};
 const ko = "Geist, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans CJK KR', 'Malgun Gothic', sans-serif";
 
 await render(
   `<div style="position:relative;width:1200px;height:630px;background:#0a0a0a;color:#f2f1ed;font-family:${ko};overflow:hidden">
-    <div style="position:absolute;left:84px;top:150px">
-      <div style="font-size:132px;font-weight:800;line-height:1;letter-spacing:-4px">
-        <span style="background:#f5db2b;color:#191606;padding:0 18px;margin-left:-18px;border-radius:16px">칩</span> 포커
+    <div style="position:absolute;left:84px;top:118px">
+      <div style="font-size:104px;font-weight:800;line-height:1.08;letter-spacing:-3px">
+        <div style="display:flex;align-items:center">
+          <span style="position:relative;display:inline-grid;place-items:center;width:130px;height:104px;margin-right:30px">
+            <svg viewBox="0 0 120 120" style="position:absolute;left:0;top:-39px;width:156px;height:156px;overflow:visible">
+              ${chipSvg(76, 44, 36, '#d2b726')}${chipSvg(50, 70, 42, '#f5db2b')}
+            </svg>
+          </span>포커 베팅
+        </div>
+        <div>시뮬레이터</div>
       </div>
-      <div style="margin-top:40px;font-size:40px;line-height:1.35;color:#bdbcb7;letter-spacing:-1px">칩은 폰으로,<br/>카드는 테이블에서.</div>
-      <div style="margin-top:44px;font-size:24px;color:#8d8c87">chip-poker.pages.dev</div>
+      <div style="margin-top:34px;font-size:38px;line-height:1.35;color:#bdbcb7;letter-spacing:-1px">칩은 폰으로, 카드는 테이블에서.</div>
+      <div style="margin-top:34px;font-size:24px;color:#8d8c87">chip-poker.pages.dev</div>
     </div>
     <div style="position:absolute;right:90px;top:70px;width:340px;height:640px;border-radius:52px;background:#141414;box-shadow:0 0 0 10px #232323, 0 40px 80px rgba(0,0,0,.6);overflow:hidden">
       <div style="padding:40px 30px 0">

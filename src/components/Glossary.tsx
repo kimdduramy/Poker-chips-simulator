@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { HandRanksHold } from './HandRanks';
 import { Icon } from './Icon';
-import { ScrollBox } from './ScrollBox';
 
 interface Term {
   term: string;
@@ -64,45 +62,6 @@ const GROUPS: { title: string; terms: Term[] }[] = [
   },
 ];
 
-function TermList() {
-  return (
-    <div className="glossary-groups">
-      {GROUPS.map((g) => (
-        <section key={g.title} className="glossary-group" aria-label={g.title}>
-          <h3 className="glossary-group-title">{g.title}</h3>
-          <dl className="glossary-list">
-            {g.terms.map((t) => (
-              <div key={t.term} className="glossary-item">
-                <dt>
-                  {t.term} <span className="glossary-en">{t.en}</span>
-                </dt>
-                <dd>{t.desc}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-/** 메인 화면용: 화면 폭에 맞춘 큰 카드, 안에서 스크롤. */
-export function GlossaryCard() {
-  return (
-    <section className="glossary glossary-card" aria-labelledby="glossary-title">
-      <div className="glossary-card-head">
-        <h2 id="glossary-title" className="glossary-title">
-          홀덤 용어 설명
-        </h2>
-        <HandRanksHold variant="pill" />
-      </div>
-      <ScrollBox className="glossary-scroll" viewportClassName="glossary-body" label="홀덤 용어 목록">
-        <TermList />
-      </ScrollBox>
-    </section>
-  );
-}
-
 /** 게임 중 작은 창의 제목 줄 탭: 용어 설명 [진행|액션|칩과 팟|상황] */
 function GroupTabs({ group, onPick }: { group: number; onPick: (i: number) => void }) {
   return (
@@ -140,6 +99,24 @@ function CompactGlossary({ group, pick, onPick }: { group: number; pick: number;
         </span>
         <span className="gl-desc-text">{t.desc}</span>
       </div>
+    </div>
+  );
+}
+
+/** 도움말 창의 '용어' 탭: [진행|액션|칩과 팟|상황] 밑줄 탭 + 용어 글자 목록 + 설명 */
+export function TermsPanel() {
+  const [group, setGroup] = useState(0);
+  const [pick, setPick] = useState(0);
+  return (
+    <div className="help-terms">
+      <GroupTabs
+        group={group}
+        onPick={(i) => {
+          setGroup(i);
+          setPick(0);
+        }}
+      />
+      <CompactGlossary group={group} pick={pick} onPick={setPick} />
     </div>
   );
 }
