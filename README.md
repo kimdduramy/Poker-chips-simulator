@@ -1,151 +1,74 @@
-# Piss Poker
+# 칩 포커
 
-**Chips on your phone. Cards on the table.** A realtime chip tracker for live home poker: deal real cards, and everyone bets, raises and scoops pots from their own phone.
+**칩은 폰으로, 카드는 테이블에서.** 친구들이랑 실제 카드로 홀덤을 칠 때, 칩 대신 각자 폰으로 베팅·콜·레이즈하고 팟을 나눠 갖는 실시간 칩 관리 앱이에요.
 
-[![CI](https://github.com/KarthikSubramanian07/Piss-Poker/actions/workflows/ci.yml/badge.svg)](https://github.com/KarthikSubramanian07/Piss-Poker/actions/workflows/ci.yml)
-![License: MIT](https://img.shields.io/badge/license-MIT-f5db2b)
-![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages%20%2B%20Durable%20Objects-f38020?logo=cloudflare&logoColor=white)
-![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
-
-`poker` `home-game` `chip-tracker` `texas-holdem` `realtime` `websockets` `durable-objects` `cloudflare-pages` `react` `pwa`
-
-**Play it:** [piss-poker.pages.dev](https://piss-poker.pages.dev)
+**바로 쓰기:** [chip-poker.pages.dev](https://chip-poker.pages.dev)
 
 <p>
-  <img src="docs/your-turn-light.png" width="240" alt="Your turn: the action bar floods yellow with Fold, Call and Raise" />
-  <img src="docs/waiting-dark.png" width="240" alt="Dark mode while waiting: the pot, a Deal the flop prompt and the seat list" />
-  <img src="docs/showdown-dark.png" width="240" alt="Showdown: two winners ticked, each share shown before paying out" />
+  <img src="docs/ko-your-turn.png" width="200" alt="내 차례: 아래쪽이 노랗게 바뀌고 폴드, 콜, 레이즈 버튼이 나온 화면" />
+  <img src="docs/ko-waiting.png" width="200" alt="다른 사람 차례: 팟 옆에 플레이어별 콜 금액과 직전 베팅 표" />
+  <img src="docs/ko-showdown.png" width="200" alt="쇼다운: 방장이 승자를 고르는 화면" />
+  <img src="docs/ko-log.png" width="200" alt="메뉴의 기록 화면: 핸드별로 누가 무엇을 했는지 최신순 목록" />
 </p>
 
----
+## 쓰는 법
 
-## Why this exists
+1. 한 명이 **테이블 만들기**를 누르고 4글자 코드, QR, 링크 중 하나로 친구들을 불러요. 계정 없이 이름만 넣으면 돼요.
+2. 방을 만든 사람이 **방장**이에요. 방장이 핸드를 시작하면 블라인드와 순서는 자동이에요.
+3. 각자 자기 차례에 폴드 / 체크·콜 / 레이즈를 눌러요. 카드는 실제로 돌려요.
+4. 쇼다운에서 카드를 깐 뒤 방장이 **승자를 고르면** 팟이 지급돼요. 여러 명을 고르면 나눠 가져요.
 
-Somebody always forgets the chips. Somebody else "borrows" a stack. Side pots turn into a group negotiation. So the cards stay physical (shuffling is half the fun) and the chips moved into everyone's pocket.
+## 주요 기능
 
-Before writing a line, we read the code of 22 open source chip trackers and put 9 betting engines through scripted side pot and all-in scenarios. Every tracker had real rule bugs (short all-ins reopening betting, the big blind posted twice when the table shrinks, kicks deleting chips, clients trusted to say who they are), and none of the engines passed every scenario. So this one was built from scratch around a small, heavily tested rules engine and a server that owns the truth.
+- **노리밋 홀덤 규칙**: 블라인드 자동, 순서 강제, 최소 레이즈, 짧은 올인, 사이드 팟까지 계산해요.
+- **베팅 현황표**: 팟 옆에 [플레이어 | 콜 금액 | 직전 베팅]이 보여요.
+- **용어 설명·족보**: 한국어 홀덤 용어집, 누르고 있는 동안만 보이는 족보 그림표가 있어요.
+- **방장 전용 조작**: 승자 지정, 다음 핸드, 되돌리기 / 다시 하기는 방장만 할 수 있어요. 되돌리기는 꾹 눌러야 돼서 실수로 눌리지 않아요.
+- **폰 없는 사람 자리**: 메뉴에서 자리를 추가하고 다른 사람이 대신 눌러줄 수 있어요.
+- **기록**: 메뉴 → 기록에서 핸드별로 누가 언제 무엇을 했는지 최근 100개까지 볼 수 있어요.
+- **테스트 판**: [`/test`](https://chip-poker.pages.dev/test)로 들어가면 봇 1~7명이 앉은 판이 바로 차려져요. 봇 차례에는 봇의 버튼이 바로 떠서 혼자서도 끝까지 돌려볼 수 있어요.
+- **정산**: 바이인·리바이·최종 손익과 최소 송금 횟수를 계산해요.
+- **큰 화면 모드**: 아이패드나 노트북을 테이블 가운데 두고 팟, 차례, 스택을 크게 보여줘요.
 
-## What it does
+## 원작에서 바뀐 점
 
-- **One phone per player, zero accounts.** Start a table, share a four-letter code, QR code or link. Names are the only sign up.
-- **Real no-limit hold'em rules.** Blinds post themselves, turn order is enforced, and the big blind keeps its option. Minimum raises follow the last full raise, and short all-ins only reopen betting when they add up to a full raise (TDA rule 47).
-- **Side pots without arguments.** Pots are built in layers from what each player put in, uncalled chips go back automatically, and folded chips stay in as dead money.
-- **Chops take one tap per winner.** Same hand as somebody else? Tap both names. Every pot lists its players with a checkbox, each share appears the moment you pick, and the odd chip goes clockwise from the dealer with a line saying so.
-- **Your turn is impossible to miss.** The action bar floods yellow, a soft two-note chime plays, and Android phones buzz. The screen stays awake while a table is open.
-- **Deal prompts for the dealer.** "Deal the flop", "Run out the board", "Who won?". The app tells the table what the cards should be doing.
-- **Built for real tables.** Anyone can undo, seats can be added for players without a phone, and anyone can act for someone who is away. A phone can hand its seat to a new device (with the table's approval), and dropped connections reconnect by themselves.
-- **Settle up.** Buy-ins, rebuys and net results, plus the fewest payments needed to square up in chips or cash.
-- **Table display mode.** Prop an iPad or laptop in the middle for a big-type view of the pot, whose turn it is and every stack, with a QR code to join.
-- **Phone first, fine everywhere.** Thumb-zone controls on phones, a two-column layout with keyboard shortcuts (`F` fold, `C` check or call, `R` raise, arrows to size, `Enter` to confirm, `N` next hand) on iPad and desktop. Light and dark follow the device setting.
+이 저장소는 [KarthikSubramanian07/Piss-Poker](https://github.com/KarthikSubramanian07/Piss-Poker)를 포크해서 고친 버전이에요.
 
-## Architecture
+- 전체 한국어화 (한국 홀덤 용어 기준)
+- 방장이 나가면 테이블이 닫히도록 수정 (예전 방에 친구가 방장으로 남던 문제)
+- 베팅 현황표, 용어 설명, 족보 그림표 추가
+- 승자 지정·되돌리기·다음 핸드를 방장 전용으로, 꾹 누르는 되돌리기 / 다시 하기 버튼 추가
+- 테스트 판(`/test`), 기록 화면 추가
 
-```
- phones, iPads, laptops                    Cloudflare
-┌──────────────────────┐   HTTPS   ┌─────────────────────────────────────────────┐
-│ React 19 SPA (Vite)  │──────────▶│ Pages: static app + /api/* Pages Function    │
-│  shared/engine.ts    │           │                 │ service binding            │
-│  (legal moves, UI)   │   WSS     │                 ▼                            │
-│                      │◀─────────▶│ Worker "piss-poker-api"                      │
-└──────────────────────┘           │  POST /api/rooms         create a table      │
-                                   │  GET  /api/rooms/:code   peek at a table     │
-                                   │  GET  /api/rooms/:code/ws  WebSocket upgrade │
-                                   │                 │ idFromName(code)           │
-                                   │                 ▼                            │
-                                   │ Durable Object "Room" (one per table)        │
-                                   │  shared/engine.ts  (authoritative rules)     │
-                                   │  hibernating WebSockets, SQLite storage      │
-                                   │  undo history, presence, claims, alarms      │
-                                   └─────────────────────────────────────────────┘
-```
-
-**The server owns the truth.** Phones send intentions (`act`, `award`, `undo`); the room's Durable Object validates them against the rules engine and broadcasts the new state to everyone. A client cannot move chips, act out of turn or pretend to be someone else.
-
-**Every change is versioned.** Each state carries a version `v`, and every action names the version it was decided on. Double taps, two people pressing "Deal next hand" at once, and actions taken from a stale screen are rejected with `STALE`. The sender gets the fresh state back.
-
-**Identity is a device secret.** Each device generates a random 256-bit token. The room stores only a SHA-256 hash of it (salted with the table code) and never broadcasts it. Taking over a seat from a new device needs approval from someone at the table, unless nobody else is around.
-
-**Undo rewinds the game, not the guest list.** The last 30 game states are kept. Membership lives outside that history, so undoing never removes someone who just sat down or brings back someone who was removed.
-
-**Resilient on real phones.** iOS freezes sockets when a phone locks, so clients ping every 10 seconds (answered by the runtime without waking the object), reconnect on focus, visibility and network changes, and back off with jitter. Rooms hibernate when idle and delete themselves after 12 quiet hours.
-
-### Repository map
-
-| Path | What lives there |
-| --- | --- |
-| `shared/engine.ts` | Pure betting engine: blinds, turn order, raises, side pots, payouts. No dependencies. |
-| `shared/protocol.ts` | Wire message types and strict validation of everything a client sends. |
-| `shared/settle.ts` | Ledger, cents conversion that always sums to zero, minimal transfers. |
-| `shared/names.ts` | Name cleanup: Unicode normalization, invisible and bidi characters stripped, grapheme limits. |
-| `worker/src/room.ts` | The `Room` Durable Object: sockets, permissions, undo, presence, rate limits, expiry. |
-| `worker/src/index.ts` | API router, origin allowlist, room creation with per-address rate limiting. |
-| `functions/api/[[path]].ts` | Pages Function forwarding `/api/*` to the worker. |
-| `functions/_middleware.ts` | Accept negotiation (`text/markdown`), real 404s, SPA rewrite for `/t/*`. |
-| `public/` | Trust pages, `llms.txt`, markdown mirrors, `404.html`, SEO assets. |
-| `src/` | The React app: screens, the action dock, sheets, table display. |
-| `test/` | Engine scenarios, a seeded fuzzer, protocol and settlement tests. |
-| `worker/test/` | Durable Object integration tests running inside workerd. |
-| `e2e/` | Playwright suite with several simulated devices, plus a screenshot walkthrough. |
-
-## Testing
-
-```bash
-npm run test:unit     # engine scenarios + 1,500 fuzzed games + protocol + settle-up
-npm run test:worker   # Durable Object and WebSocket protocol inside workerd
-npm run test:e2e      # Playwright: full hands across simulated phones, iPad and desktop
-FUZZ_GAMES=25000 npm run test:unit   # the long fuzz run
-```
-
-- **Scenario tests** cover every rule bug found while auditing other projects:
-  - short and cumulative all-ins
-  - the big blind on a short stack, and a heads-up small blind all in for less than the big blind
-  - the table dropping from three to two players
-  - dead money, three-way ties with odd chips
-  - leaving on your own turn, and leaving at showdown
-- **The fuzzer** plays random games of 2 to 9 players with short, mixed and deep stacks, random leaves and deliberate illegal moves. After every action it checks:
-  - chips are conserved
-  - somebody legal is always due to act
-  - pots add up, eligibility is nested, and each player can win exactly what they matched
-  - rejected moves never change state
-  - nobody posts the big blind twice in a row
-
-  25,000 games pass clean.
-- **Integration tests** cover stale versions, concurrent `next` and `undo`, seat claims, kicks, host handoff, oversized and malformed messages, rate limits and room expiry.
-- **End-to-end tests** cover:
-  - a complete hand across three phones
-  - two players chopping a pot, shares previewed before the payout
-  - a real side pot
-  - acting for a seat without a phone, plus undo
-  - moving a seat to a new device
-  - going offline mid-hand
-  - desktop keyboard shortcuts
-  - no horizontal overflow from 320 to 1440 pixels
-
-## Local development
+## 개발
 
 ```bash
 npm install
-npm run dev          # worker on :8787 and Vite on :5173 with /api proxied
+npm run dev          # 워커(:8787) + Vite(:5173), /api는 프록시
 ```
 
-Open two browser windows (or a normal and a private window) at `http://localhost:5173` to play against yourself.
+`http://localhost:5173`을 창 두 개(일반 + 시크릿)로 열면 혼자서 두 명으로 칠 수 있어요. 혼자 여러 명을 테스트하려면 `http://localhost:5173/test`를 쓰면 돼요.
 
-Other scripts: `npm run typecheck`, `npm run build`, `npm run shots` (screenshots of every screen in `/tmp/pp-shots`), `npm run assets` (regenerates icons and the OpenGraph image).
+```bash
+npm run typecheck    # 타입 검사
+npm run test         # 단위 테스트 + 워커 테스트
+npx playwright test  # 폰 여러 대를 흉내 낸 e2e 테스트
+npm run shots        # 모든 화면 스크린샷 (/tmp/pp-shots)
+```
 
-## Deployment
+## 배포
 
-Pushes to `main` ship automatically once typecheck, unit, worker and end-to-end tests pass:
+Cloudflare에 GitHub를 연결해 두어서, **`main`에 머지하면 자동으로 배포돼요.**
 
-1. **Frontend and Pages Function:** the `deploy-web` job calls a Cloudflare Pages deploy hook (repository secret `PAGES_DEPLOY_HOOK`). Pages then builds (`npm run test:unit && npm run build`) and serves `piss-poker.pages.dev`.
-2. **API worker:** the `deploy-api` job runs `wrangler deploy`. It needs a `CLOUDFLARE_API_TOKEN` secret with *Workers Scripts: Edit* permission (`CLOUDFLARE_ACCOUNT_ID` is already set). The worker rarely changes, so without the token it is skipped and can be shipped with `npm run deploy:api`.
+- **서버 (Worker `chip-poker-api`)**: Workers Builds, 루트 폴더 `worker`
+- **사이트 (Pages `chip-poker`)**: 빌드 `npm run build`, 출력 `dist`, `NODE_VERSION=22`
 
-Manual deploy from a logged-in machine: `npm run deploy`.
+변경은 브랜치에서 작업하고 PR로 올린 뒤 Merge해요.
 
-## Tech
+## 기술 스택
 
-React 19, Vite 8, TypeScript 5.9, Cloudflare Pages, Workers, Durable Objects (SQLite-backed, WebSocket hibernation), Vitest 4 with `@cloudflare/vitest-pool-workers`, Playwright, Geist and Instrument Serif, `uqr` for QR codes.
+React 19, Vite, TypeScript, Cloudflare Pages · Workers · Durable Objects (SQLite, WebSocket), Vitest, Playwright.
 
-## License
+## 라이선스
 
-[MIT](LICENSE) © Karthik Subramanian
+[MIT](LICENSE). 원작 © Karthik Subramanian. 원작의 저작권 표시는 [LICENSE](LICENSE)에 그대로 유지해요.
