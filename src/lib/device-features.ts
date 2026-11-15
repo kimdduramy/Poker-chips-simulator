@@ -35,7 +35,58 @@ export function unlockAudio() {
     return;
   }
   const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (Ctx) audio = new Ctx();
+  if (Ctx) {
+    audio = new Ctx();
+    void loadSamples(audio);
+  }
+}
+
+// ---------------- 녹음된 효과음 (public/sounds) ----------------
+// Pixabay 무료 효과음(출처 표기 필요 없음)을 잘라서 넣었어요. 처음 터치할 때 한 번 받아두고 Web Audio로 재생해요.
+const SAMPLE_FILES = {
+  allin: '/sounds/allin.mp3',
+  chipsA: '/sounds/chips-a.mp3',
+  chipsB: '/sounds/chips-b.mp3',
+  cardPlace: '/sounds/card-place.mp3',
+  cardTakeA: '/sounds/card-take-a.mp3',
+  cardTakeB: '/sounds/card-take-b.mp3',
+} as const;
+type Sample = keyof typeof SAMPLE_FILES;
+const samples = new Map<Sample, AudioBuffer>();
+
+async function loadSamples(ctx: AudioContext) {
+  await Promise.all(
+    (Object.keys(SAMPLE_FILES) as Sample[]).map(async (name) => {
+      try {
+        const res = await fetch(SAMPLE_FILES[name]);
+        samples.set(name, await ctx.decodeAudioData(await res.arrayBuffer()));
+      } catch {
+        // 못 받으면 그 소리는 합성음으로 대신해요
+      }
+    }),
+  );
+}
+
+/** 녹음 소리를 재생. 아직 못 받았으면 false */
+function play(ctx: AudioContext, name: Sample, t: number, gain = 1, rate = 1): boolean {
+  const buffer = samples.get(name);
+  if (!buffer) return false;
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.playbackRate.value = rate;
+  const g = ctx.createGain();
+  g.gain.value = gain;
+  src.connect(g).connect(ctx.destination);
+  src.start(t);
+  return true;
+}
+
+/** 딜러가 카드를 깔 순간: 카드 장수만큼 '착' 소리 */
+export function dealSound(cards: number) {
+  if (!soundEnabled() || !audio || audio.state !== 'running') return;
+  const ctx = audio;
+  const t = ctx.currentTime + 0.02;
+  for (let i = 0; i < cards; i++) play(ctx, i % 2 ? 'cardTakeB' : 'cardTakeA', t + i * 0.13, 0.9, 0.97 + i * 0.03);
 }
 
 /** Two soft rising tones, plus a vibration on devices that support it. */
@@ -127,6 +178,30 @@ export function actionSound(kind: ActionSound) {
   if (!soundEnabled() || !audio || audio.state !== 'running') return;
   const ctx = audio;
   const t = ctx.currentTime + 0.01;
+  // 녹음된 소리 우선 (체크는 녹음이 없어서 합성한 테이블 톡톡)
+  switch (kind) {
+    case 'call':
+      if (play(ctx, 'chipsB', t, 0.55)) return;
+      break;
+    case 'bet':
+      if (play(ctx, 'chipsA', t, 0.55)) return;
+      break;
+    case 'raise':
+      if (play(ctx, 'chipsA', t, 0.55)) {
+        play(ctx, 'chipsB', t + 0.13, 0.5, 1.06);
+        return;
+      }
+      break;
+    case 'allin':
+      if (play(ctx, 'allin', t, 0.8)) {
+        tone(ctx, t + 0.05, 120, 55, 0.5, 0.18);
+        return;
+      }
+      break;
+    case 'fold':
+      if (play(ctx, 'cardPlace', t, 0.95)) return;
+      break;
+  }
   switch (kind) {
     case 'check':
       // 손가락으로 테이블 톡톡

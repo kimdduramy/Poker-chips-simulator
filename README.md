@@ -69,6 +69,10 @@ Cloudflare에 GitHub를 연결해 두어서, **`main`에 머지하면 자동으�
 
 React 19, Vite, TypeScript, Cloudflare Pages · Workers · Durable Objects (SQLite, WebSocket), Vitest, Playwright.
 
+## 효과음
+
+`public/sounds/`의 칩·카드 소리는 [Pixabay](https://pixabay.com/sound-effects/) 무료 효과음(OxidVideos, freesound_community)을 잘라서 쓴 거예요. Pixabay 콘텐츠 라이선스라 출처 표기 없이 쓸 수 있어요. 체크 소리는 코드로 합성해요.
+
 ## 라이선스
 
 [MIT](LICENSE). 원작 © Karthik Subramanian. 원작의 저작권 표시는 [LICENSE](LICENSE)에 그대로 유지해요.

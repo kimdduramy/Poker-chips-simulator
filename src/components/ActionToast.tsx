@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { findPlayer } from '../../shared/engine';
-import { actionSound, type ActionSound } from '../lib/device-features';
+import { dealerTip } from '../lib/dealer';
+import { actionSound, dealSound, type ActionSound } from '../lib/device-features';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 
@@ -54,6 +55,20 @@ export function ActionToast() {
     setShown({ key: last.id, kind, who, amount: kind === 'check' || kind === 'fold' ? null : la.amount });
     actionSound(kind);
   }, [last, game, you.id, nameOf]);
+
+  // 딜러가 카드를 깔 순간(노란 딜러 줄)에 카드 '착' 소리: 플랍 3번, 턴·리버 1번, 새 핸드 2번
+  const tip = dealerTip(game);
+  const dealKey = tip?.now ? `${game.handNo}-${game.phase}-${game.street}-${tip.text}` : null;
+  const lastDeal = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const first = lastDeal.current === undefined;
+    if (dealKey === lastDeal.current) return;
+    lastDeal.current = dealKey;
+    if (first || !dealKey || (game.phase === 'showdown' && !game.runout)) return;
+    const cards = game.phase === 'showdown' ? 2 : [2, 3, 1, 1][game.street];
+    // 방금 낸 칩 소리와 겹치지 않게 조금 뒤에
+    setTimeout(() => dealSound(cards), 450);
+  }, [dealKey, game.phase, game.runout, game.street]);
 
   useEffect(() => {
     if (!shown) return;
