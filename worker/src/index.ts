@@ -41,7 +41,7 @@ export function originAllowed(origin: string | null, env: Env, requestHost?: str
   if (protocol !== 'https:') return false;
   // 같은 사이트에서 온 요청은 허용 (내 Cloudflare Pages 주소가 뭐든 그대로 동작)
   if (requestHost && host === requestHost) return true;
-  if (hostname === 'piss-poker.pages.dev' || hostname.endsWith('.piss-poker.pages.dev')) return true;
+  if (hostname === 'chip-poker.pages.dev' || hostname.endsWith('.chip-poker.pages.dev')) return true;
   return (env.ALLOWED_ORIGINS ?? '')
     .split(',')
     .map((o) => o.trim())

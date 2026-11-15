@@ -271,12 +271,6 @@ export function removePlayer(g0: Game, id: string): Game {
   return g;
 }
 
-export function renamePlayer(g0: Game, id: string, name: string): Game {
-  const g = clone(g0);
-  must(g, id).name = name;
-  return g;
-}
-
 export function setSeatOrder(g0: Game, ids: string[]): Game {
   if (handInProgress(g0)) fail('PHASE', '좌석 순서는 핸드와 핸드 사이에만 바꿀 수 있어요');
   const current = g0.players.map((p) => p.id).sort();

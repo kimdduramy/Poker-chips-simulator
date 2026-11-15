@@ -542,24 +542,6 @@ button:disabled {
   color: var(--ink-3);
 }
 
-.home-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  margin-top: 8px;
-  font-size: 0.875rem;
-  color: var(--ink-3);
-}
-
-.home-links a {
-  color: inherit;
-  text-underline-offset: 0.15em;
-}
-
-.home-links a:hover {
-  color: var(--ink-2);
-}
-
 /* ---------- glossary (용어 설명) ---------- */
 
 .glossary {
@@ -800,11 +782,6 @@ button:disabled {
   gap: 8px;
 }
 
-.icon-btn-sm {
-  width: 36px;
-  height: 36px;
-}
-
 /* ---------- custom scrollbar (네모 스크롤 막대) ---------- */
 
 .scrollbox {
@@ -900,13 +877,6 @@ button:disabled {
 .hold-pill[aria-pressed='true'] {
   background: var(--ink);
   color: var(--bg);
-}
-
-.hold-btn-text {
-  white-space: nowrap;
-  font-size: 0.8125rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
 }
 
 .btn.hold-btn[aria-pressed='true'] {
@@ -1204,19 +1174,6 @@ button:disabled {
   display: inline-block;
   font-weight: 620;
   animation: fade-up 240ms var(--ease-out);
-}
-
-.nice {
-  display: inline-block;
-  padding: 0 6px;
-  border-radius: 6px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-size: 0.9375rem;
-  transform: rotate(-6deg);
-  animation: pop 300ms var(--ease-out);
 }
 
 .topbar-end {

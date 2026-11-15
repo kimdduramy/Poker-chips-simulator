@@ -28,14 +28,14 @@ describe('http api', () => {
     const res = await api(`/api/rooms/${code}/ws`, { headers: { Upgrade: 'websocket', Origin: 'https://evil.example' } });
     expect(res.status).toBe(403);
     expect((await api(`/api/rooms/${code}/ws`)).status).toBe(426);
-    expect(originAllowed('https://piss-poker.pages.dev', {} as never)).toBe(true);
-    expect(originAllowed('https://feat-x.piss-poker.pages.dev', {} as never)).toBe(true);
+    expect(originAllowed('https://chip-poker.pages.dev', {} as never)).toBe(true);
+    expect(originAllowed('https://feat-x.chip-poker.pages.dev', {} as never)).toBe(true);
     expect(originAllowed('http://localhost:5173', {} as never)).toBe(true);
-    expect(originAllowed('https://piss-poker.pages.dev.evil.com', {} as never)).toBe(false);
-    expect(originAllowed('http://piss-poker.pages.dev', {} as never)).toBe(false);
+    expect(originAllowed('https://chip-poker.pages.dev.evil.com', {} as never)).toBe(false);
+    expect(originAllowed('http://chip-poker.pages.dev', {} as never)).toBe(false);
     // 내 배포 주소(같은 사이트)에서 온 요청은 허용, 다른 사이트는 거절
-    expect(originAllowed('https://chip-poker.pages.dev', {} as never, 'chip-poker.pages.dev')).toBe(true);
-    expect(originAllowed('https://evil.example', {} as never, 'chip-poker.pages.dev')).toBe(false);
+    expect(originAllowed('https://my-poker.example.com', {} as never, 'my-poker.example.com')).toBe(true);
+    expect(originAllowed('https://evil.example', {} as never, 'my-poker.example.com')).toBe(false);
   });
 
   it('rate limits table creation per address', async () => {
