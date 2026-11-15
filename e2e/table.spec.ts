@@ -424,7 +424,7 @@ test('home help opens in a window with how-to, terms and hand ranks tabs', async
   contexts.push(ctx);
   const page = await ctx.newPage();
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: '칩 베팅 시뮬레이터' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '포커 베팅 시뮬레이터' })).toBeVisible();
   await page.getByRole('button', { name: '도움말' }).click();
   const help = page.getByRole('dialog', { name: '도움말' });
   await expect(help).toBeVisible();

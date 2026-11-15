@@ -58,7 +58,7 @@ await render(
             <svg viewBox="0 0 120 120" style="position:absolute;left:0;top:-39px;width:156px;height:156px;overflow:visible">
               ${chipSvg(76, 44, 36, '#d2b726')}${chipSvg(50, 70, 42, '#f5db2b')}
             </svg>
-          </span>베팅
+          </span>포커 베팅
         </div>
         <div>시뮬레이터</div>
       </div>

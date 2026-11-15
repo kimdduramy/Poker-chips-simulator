@@ -50,12 +50,12 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
         <HelpButton />
       </header>
       <section className="home-hero">
-        <h1 className="wordmark" aria-label="칩 베팅 시뮬레이터">
+        <h1 className="wordmark" aria-label="포커 베팅 시뮬레이터">
           <span className="wm-line" aria-hidden="true">
             <span className="wm-chip">
               <ChipsMark />
             </span>
-            베팅
+            포커 베팅
           </span>
           <span className="wm-line" aria-hidden="true">
             시뮬레이터

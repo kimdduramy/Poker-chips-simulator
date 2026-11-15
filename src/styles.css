@@ -457,7 +457,7 @@ button:disabled {
 }
 
 .wordmark {
-  /* 한글 워드마크: 또렷한 고딕, 두 줄 (칩 베팅 / 시뮬레이터) */
+  /* 한글 워드마크: 또렷한 고딕, 두 줄 (칩 그림 + 포커 베팅 / 시뮬레이터) */
   display: grid;
   gap: 0.06em;
   font-family: var(--font-sans);
