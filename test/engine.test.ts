@@ -3,6 +3,7 @@ import {
   act,
   addPlayer,
   award,
+  createGame,
   chipsInPlay,
   findPlayer,
   legalActions,
@@ -386,6 +387,25 @@ describe('table changes', () => {
     g = fold(g, 'p0');
     g = startHand(g);
     expect(p(g, 'p9').inHand).toBe(true);
+  });
+
+  it('changing the starting stack before the first hand resets seated stacks', () => {
+    let g = createGame({ sb: 5, bb: 10, startingStack: 1000, buyInPrice: 0 });
+    g = addPlayer(addPlayer(addPlayer(g, 'a', 'A'), 'b', 'B'), 'c', 'C');
+    g = setStack(g, 'c', 700);
+    g = updateSettings(g, { sb: 1, bb: 2, startingStack: 200, buyInPrice: 0 });
+    expect(p(g, 'a').stack).toBe(200);
+    expect(p(g, 'a').buyIn).toBe(200);
+    expect(p(g, 'b').stack).toBe(200);
+    expect(p(g, 'c').stack).toBe(700);
+    g = addPlayer(g, 'd', 'D');
+    expect(p(g, 'd').stack).toBe(200);
+    // 첫 핸드가 시작된 뒤엔 스택을 건드리지 않아요
+    g = startHand(g);
+    for (let i = 0; i < 3; i++) g = fold(g, g.toActId!);
+    const before = g.players.map((q) => q.stack);
+    g = updateSettings(g, { sb: 1, bb: 2, startingStack: 500, buyInPrice: 0 });
+    expect(g.players.map((q) => q.stack)).toEqual(before);
   });
 
   it('settings changed mid hand apply from the next hand', () => {
