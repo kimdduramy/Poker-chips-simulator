@@ -3137,3 +3137,77 @@ button:disabled {
 .game-log-row[data-kind='table'] .game-log-text {
   color: var(--ink-3);
 }
+
+/* ---------- 보드 카드 표시: 팟 옆 작은 카드 5장 (깔린 만큼 켜짐) ---------- */
+
+.stage-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-cards {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* 플랍 3장 | 턴 | 리버: 실제 테이블처럼 사이를 살짝 띄움 */
+.board-card:nth-child(4),
+.board-card:nth-child(5) {
+  margin-left: 3px;
+}
+
+.board-card {
+  width: 11px;
+  height: 15px;
+  border-radius: 2.5px;
+  border: 1.25px dashed var(--line-strong);
+  box-sizing: border-box;
+  transition:
+    background-color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
+}
+
+.board-card[data-on] {
+  /* 깔린 카드: 흰색 (밝은 화면에서는 테두리로 구분) */
+  border: 1.25px solid var(--ink-3);
+  background: #fff;
+}
+
+/* 지금 깔 차례인 카드: 흰색 + 노란 테두리로 반짝 */
+.board-card[data-new] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent);
+  animation: board-card-in 900ms var(--ease-out) 2;
+}
+
+@keyframes board-card-in {
+  0% {
+    transform: translateY(-3px) scale(1.15);
+  }
+  60% {
+    transform: none;
+  }
+}
+
+@media (max-width: 374px) {
+  .stage-label-row {
+    gap: 6px;
+  }
+
+  .board-cards {
+    gap: 2px;
+  }
+
+  .board-card {
+    width: 8px;
+    height: 11px;
+    border-radius: 2px;
+  }
+
+  .board-card:nth-child(4),
+  .board-card:nth-child(5) {
+    margin-left: 2px;
+  }
+}
