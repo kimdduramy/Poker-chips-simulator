@@ -5,24 +5,28 @@ import { actionSound, dealSound, winSound, type ActionSound } from '../lib/devic
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 
-const LABEL: Record<ActionSound, string> = {
+type Kind = ActionSound | 'win';
+
+const LABEL: Record<Kind, string> = {
   check: '체크',
   call: '콜',
   bet: '벳',
   raise: '레이즈',
   allin: '올인',
   fold: '폴드',
+  win: '승리',
 };
 
 interface Shown {
   key: number;
-  kind: ActionSound;
-  who: string;
-  amount: number | null;
+  kind: Kind;
+  /** 이름과 금액 (승리는 나눠 가지면 여러 명) */
+  rows: { who: string; amount: number | null }[];
 }
 
 /**
- * 누가 벳·체크·콜·레이즈·폴드·올인을 하면 화면 가운데에 잠깐 크게 띄우고 효과음을 내요.
+ * 누가 벳·체크·콜·레이즈·폴드·올인을 하거나 팟을 가져가면
+ * 화면 가운데를 가로지르는 띠로 잠깐 크게 띄우고 효과음을 내요.
  * 모든 폰에서 똑같이 떠요. 화면 읽기 프로그램은 GameAnnouncer가 따로 읽어줘서 여기선 숨겨요.
  */
 export function ActionToast() {
@@ -47,16 +51,26 @@ export function ActionToast() {
     const won = fresh.some((e) => e.kind === 'win');
 
     const la = game.lastAction;
+    let actionKind: ActionSound | null = null;
     if (action && la && la.kind !== 'sb' && la.kind !== 'bb') {
-      let kind: ActionSound;
-      if (la.kind === 'raise') kind = la.allIn ? 'allin' : / 벳 /.test(` ${action.text} `) ? 'bet' : 'raise';
-      else if (la.kind === 'call') kind = la.allIn ? 'allin' : 'call';
-      else kind = la.kind;
+      if (la.kind === 'raise') actionKind = la.allIn ? 'allin' : / 벳 /.test(` ${action.text} `) ? 'bet' : 'raise';
+      else if (la.kind === 'call') actionKind = la.allIn ? 'allin' : 'call';
+      else actionKind = la.kind;
+      actionSound(actionKind);
+    }
 
-      const p = findPlayer(game, la.id);
-      const who = la.id === you.id ? '나' : (p?.name ?? nameOf(la.id));
-      setShown({ key: action.id, kind, who, amount: kind === 'check' || kind === 'fold' ? null : la.amount });
-      actionSound(kind);
+    const label = (id: string) => (id === you.id ? '나' : (findPlayer(game, id)?.name ?? nameOf(id)));
+
+    if (won && game.results.length > 0) {
+      // 팟을 가져가면 마지막 액션(대개 폴드) 대신 승리를 띄워요. 사이드 팟은 사람별로 합쳐요.
+      const totals = new Map<string, number>();
+      for (const r of game.results) totals.set(r.id, (totals.get(r.id) ?? 0) + r.amount);
+      const rows = [...totals].map(([id, amount]) => ({ who: label(id), amount }));
+      const key = fresh.findLast((e) => e.kind === 'win')?.id ?? last.id;
+      setShown({ key, kind: 'win', rows });
+    } else if (action && la && actionKind) {
+      const amount = actionKind === 'check' || actionKind === 'fold' ? null : la.amount;
+      setShown({ key: action.id, kind: actionKind, rows: [{ who: label(la.id), amount }] });
     }
     // 팟이 지급되면 동전 소리 (액션 소리와 겹치지 않게 조금 뒤에)
     if (won) setTimeout(() => winSound(), action ? 380 : 0);
@@ -78,7 +92,7 @@ export function ActionToast() {
 
   useEffect(() => {
     if (!shown) return;
-    const timer = setTimeout(() => setShown(null), 1400);
+    const timer = setTimeout(() => setShown(null), shown.kind === 'win' ? 2000 : 1400);
     return () => clearTimeout(timer);
   }, [shown]);
 
@@ -86,16 +100,15 @@ export function ActionToast() {
   return (
     <div className="action-toast-layer" aria-hidden="true">
       <div className="action-toast" data-kind={shown.kind} key={shown.key}>
-        <svg className="action-toast-chips" viewBox="0 0 120 120">
-          <circle cx="76" cy="44" r="36" className="atc-back" />
-          <circle cx="76" cy="44" r="32" className="atc-edge" strokeDasharray="8.4 8.4" />
-          <circle cx="50" cy="70" r="42" className="atc-front" />
-          <circle cx="50" cy="70" r="38" className="atc-edge" strokeDasharray="9.9 9.9" />
-        </svg>
         <span className="action-toast-word">{LABEL[shown.kind]}</span>
         <span className="action-toast-sub">
-          {shown.who}
-          {shown.amount !== null && <span className="num"> · {fmt(shown.amount)}</span>}
+          {shown.rows.map((r, i) => (
+            <span className="action-toast-who" key={i}>
+              {i > 0 && <span className="action-toast-dot" aria-hidden="true" />}
+              {r.who}
+              {r.amount !== null && <span className="num">{shown.kind === 'win' ? `+${fmt(r.amount)}` : fmt(r.amount)}</span>}
+            </span>
+          ))}
         </span>
       </div>
     </div>

@@ -3308,164 +3308,173 @@ body {
   }
 }
 
-/* ---------- 액션 알림: 화면 가운데에 잠깐 크게 ---------- */
+/* ---------- 액션 알림: 화면 가운데를 가로지르는 띠 ---------- */
 
 .action-toast-layer {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--z-toast);
   display: grid;
   place-items: center;
   padding-bottom: 12vh;
+  overflow: hidden;
   pointer-events: none;
 }
 
 .action-toast {
-  --kind: oklch(0.6 0.05 250);
-  --kind-ink: #fff;
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  min-width: 190px;
-  padding: 20px 34px 18px;
-  overflow: hidden;
-  border-radius: 22px;
-  background:
-    radial-gradient(120% 90% at 20% 0%, color-mix(in oklch, var(--kind) 70%, #fff) 0%, transparent 60%),
-    linear-gradient(150deg, var(--kind), color-mix(in oklch, var(--kind) 72%, #000));
-  color: var(--kind-ink);
-  box-shadow:
-    0 18px 50px -12px color-mix(in oklch, var(--kind) 70%, #000),
-    inset 0 0 0 1px color-mix(in oklch, #fff 22%, transparent);
-  animation: action-toast 1400ms var(--ease-out) both;
+  --kind: oklch(0.7 0.06 250);
+  width: 100vw;
+  padding: 16px var(--gutter) 15px;
+  text-align: center;
+  color: var(--ink);
+  background: color-mix(in oklch, color-mix(in oklch, var(--kind) 12%, var(--surface)) 92%, transparent);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  border-block: 1px solid color-mix(in oklch, var(--kind) 70%, transparent);
+  box-shadow: 0 14px 40px -18px rgb(0 0 0 / 0.45);
+  animation: action-band 1400ms var(--ease-out) both;
 }
 
 .action-toast[data-kind='check'] {
-  --kind: oklch(0.58 0.06 245);
+  --kind: oklch(0.68 0.1 245);
 }
 
 .action-toast[data-kind='call'] {
-  --kind: oklch(0.6 0.14 150);
+  --kind: oklch(0.68 0.15 150);
 }
 
 .action-toast[data-kind='bet'] {
-  --kind: oklch(0.86 0.16 95);
-  --kind-ink: #191606;
+  --kind: oklch(0.8 0.16 95);
 }
 
 .action-toast[data-kind='raise'] {
   --kind: oklch(0.7 0.17 55);
-  --kind-ink: #1d1004;
 }
 
 .action-toast[data-kind='allin'] {
-  --kind: oklch(0.57 0.21 25);
-  animation-name: action-toast-allin;
+  --kind: oklch(0.62 0.22 25);
+  border-block-width: 2px;
 }
 
 .action-toast[data-kind='fold'] {
-  --kind: oklch(0.42 0.01 260);
+  --kind: oklch(0.6 0.01 260);
 }
 
-/* 뒤에 겹친 칩 두 개 (메인 화면 로고와 같은 모양) */
-.action-toast-chips {
-  position: absolute;
-  right: -22px;
-  top: -26px;
-  width: 104px;
-  height: 104px;
-  opacity: 0.28;
-}
-
-.atc-back,
-.atc-front {
-  fill: color-mix(in oklch, var(--kind-ink) 85%, transparent);
-}
-
-.atc-front {
-  stroke: var(--kind);
-  stroke-width: 4;
-}
-
-.atc-edge {
-  fill: none;
-  stroke: var(--kind);
-  stroke-width: 6;
+.action-toast[data-kind='win'] {
+  --kind: oklch(0.78 0.14 80);
+  border-block-width: 2px;
+  animation-duration: 2000ms;
 }
 
 .action-toast-word {
-  position: relative;
-  font-size: 2.75rem;
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 2.25rem;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  animation: action-rise 1400ms var(--ease-out) both;
+}
+
+/* 액션 색을 알려주는 작은 점 */
+.action-toast-word::before {
+  content: '';
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--kind);
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--kind) 25%, transparent);
 }
 
 .action-toast-sub {
-  position: relative;
-  max-width: 70vw;
-  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  max-width: 88vw;
+  margin: 6px auto 0;
   font-size: 0.9375rem;
-  font-weight: 560;
+  font-weight: 540;
+  color: var(--ink-2);
+  animation: action-rise 1400ms var(--ease-out) 60ms both;
+}
+
+.action-toast-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 60vw;
+  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  opacity: 0.88;
 }
 
-@keyframes action-toast {
+.action-toast-sub .num {
+  font-weight: 620;
+  color: var(--ink);
+}
+
+.action-toast-dot {
+  flex: none;
+  width: 3px;
+  height: 3px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.action-toast[data-kind='win'] .action-toast-word,
+.action-toast[data-kind='win'] .action-toast-sub {
+  animation-duration: 2000ms;
+}
+
+/* 띠: 가운데에서 양옆으로 펼쳐졌다가 조용히 사라짐 */
+@keyframes action-band {
   0% {
+    clip-path: inset(0 50% 0 50%);
     opacity: 0;
-    transform: translateY(10px) scale(0.82);
   }
-  14% {
+  16% {
+    clip-path: inset(0 0 0 0);
     opacity: 1;
-    transform: scale(1.05);
   }
-  24% {
-    transform: none;
+  82% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
   }
-  78% {
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 0;
+  }
+}
+
+/* 글자: 살짝 아래에서 올라오며 나타남 */
+@keyframes action-rise {
+  0%,
+  8% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  24%,
+  82% {
     opacity: 1;
     transform: none;
   }
   100% {
     opacity: 0;
-    transform: translateY(-10px) scale(0.96);
+    transform: none;
   }
 }
 
-@keyframes action-toast-allin {
-  0% {
-    opacity: 0;
-    transform: scale(0.6) rotate(-4deg);
-  }
-  12% {
-    opacity: 1;
-    transform: scale(1.12) rotate(2deg);
-  }
-  18% {
-    transform: scale(1) rotate(-1.5deg);
-  }
-  24% {
-    transform: scale(1.02) rotate(1deg);
-  }
-  30% {
-    transform: none;
-  }
-  80% {
-    opacity: 1;
-    transform: none;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.04);
-  }
-}
-
-/* 움직임 줄이기 설정: 튀는 효과 없이 잠깐 보였다가 사라짐 */
+/* 움직임 줄이기 설정: 효과 없이 잠깐 보였다가 사라짐 */
 @media (prefers-reduced-motion: reduce) {
-  .action-toast {
+  .action-toast,
+  .action-toast-word,
+  .action-toast-sub {
     animation: none !important;
   }
 }
