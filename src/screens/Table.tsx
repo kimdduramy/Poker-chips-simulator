@@ -11,15 +11,31 @@ import { Stage } from '../components/Stage';
 import { turnAlert, unlockAudio, useWakeLock } from '../lib/device-features';
 import { useTable } from '../lib/table';
 import { APP_NAME } from '../lib/format';
+import { BOT_NAMES, getTest, setTest } from '../lib/testMode';
 
 export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: () => void }) {
-  const { game, you, conn } = useTable();
+  const { room, game, you, conn, isHost, run } = useTable();
   const [sheet, setSheet] = useState<SheetName>(null);
   const myTurn = !!you.legal;
   const wasMyTurn = useRef(false);
   const dockRef = useRef<HTMLElement>(null);
 
   useWakeLock(true);
+
+  // 테스트 판: 방장으로 들어오면 봇 자리를 한 번만 채워요
+  const seeding = useRef(false);
+  useEffect(() => {
+    const t = getTest(room.code);
+    if (!t || t.seeded || !isHost || game.phase !== 'lobby' || seeding.current) return;
+    seeding.current = true;
+    setTest(room.code, { ...t, seeded: true });
+    void (async () => {
+      const taken = new Set(room.members.map((m) => m.name));
+      for (const name of BOT_NAMES.filter((n) => !taken.has(n)).slice(0, t.bots)) {
+        if (!(await run({ type: 'addSeat', name }))) break;
+      }
+    })();
+  }, [room.code, room.members, isHost, game.phase, run]);
 
   useEffect(() => {
     if (myTurn && !wasMyTurn.current) {

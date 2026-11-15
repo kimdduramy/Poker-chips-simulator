@@ -1,5 +1,6 @@
 import { STREET_NAMES } from '../lib/format';
 import { useTable } from '../lib/table';
+import { getTest } from '../lib/testMode';
 import { GlossaryButton } from './Glossary';
 import { HandRanksHold } from './HandRanks';
 import { Icon } from './Icon';
@@ -22,6 +23,7 @@ export function Header({ onInvite, onMenu }: { onInvite: () => void; onMenu: () 
         <button className="code-btn" onClick={onInvite} aria-label={`테이블 ${room.code}. 친구 초대`}>
           <span className="mono">{room.code}</span>
         </button>
+ {getTest(room.code) && <span className="test-badge test-badge-sm">테스트</span>}
         <span className="conn" data-online={online} title={online ? '연결됨' : '다시 연결 중'} role="img" aria-label={online ? '연결됨' : '다시 연결 중'} />
       </div>
       <div className="topbar-phase" aria-live="polite">

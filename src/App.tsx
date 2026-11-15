@@ -3,6 +3,7 @@ import { isRoomCode } from '../shared/protocol';
 import { Toaster } from './components/Toast';
 import { Home } from './screens/Home';
 import { Room } from './screens/Room';
+import { TestSetup } from './screens/TestSetup';
 
 function parse(url: string) {
   const { pathname, searchParams } = new URL(url, location.origin);
@@ -18,7 +19,7 @@ export function App() {
   useEffect(() => {
     const onPop = () => setHref(location.pathname + location.search);
     window.addEventListener('popstate', onPop);
-    if (location.pathname !== '/' && !parse(location.href)) history.replaceState(null, '', '/');
+    if (location.pathname !== '/' && location.pathname !== '/test' && !parse(location.href)) history.replaceState(null, '', '/');
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
@@ -32,7 +33,13 @@ export function App() {
 
   return (
     <>
-      {route ? <Room key={route.code} code={route.code} display={route.display} navigate={navigate} /> : <Home navigate={navigate} />}
+      {route ? (
+        <Room key={route.code} code={route.code} display={route.display} navigate={navigate} />
+      ) : href.split('?')[0] === '/test' ? (
+        <TestSetup navigate={navigate} />
+      ) : (
+        <Home navigate={navigate} />
+      )}
       <Toaster />
     </>
   );
