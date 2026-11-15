@@ -300,6 +300,18 @@ export function updateSettings(g0: Game, settings: Settings): Game {
   const g = clone(g0);
   if (handInProgress(g)) g.pendingSettings = s;
   else {
+    // 첫 핸드 전이면 이미 앉은 사람 스택도 새 시작 스택으로 맞춰요.
+    // (방을 만들면 기본값 1000으로 먼저 앉기 때문에, 안 그러면 로비에서 바꿔도 1000으로 시작해요)
+    // 직접 스택을 고친 사람은 그대로 둬요.
+    if (g.handNo === 0) {
+      const old = g.settings.startingStack;
+      for (const p of g.players) {
+        if (p.stack === old && p.buyIn === old) {
+          p.stack = s.startingStack;
+          p.buyIn = s.startingStack;
+        }
+      }
+    }
     g.settings = s;
     g.pendingSettings = null;
     g.minRaise = s.bb;
