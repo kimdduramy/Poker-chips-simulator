@@ -1412,6 +1412,9 @@ button:disabled {
 }
 
 .stage-line {
+  /* 폭 계산에서 빠지고(width 0) 실제로는 팟 영역 너비만큼 씀 → 긴 이름이 표를 밀어내지 않음 */
+  width: 0;
+  min-width: 100%;
   animation: fade-up 220ms var(--ease-out);
   display: flex;
   flex-wrap: wrap;
@@ -1424,7 +1427,22 @@ button:disabled {
 
 .act-line {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.act-who {
+  display: flex;
+  min-width: 0;
+  gap: 0.3em;
+}
+
+.act-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .act-call {
@@ -1434,6 +1452,7 @@ button:disabled {
 
 .deal-hint {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   height: 30px;
   padding: 0 12px;
@@ -1476,15 +1495,17 @@ button:disabled {
 }
 
 .stage-main {
-  flex: 0 1 auto;
-  min-width: 0;
+  /* 팟 숫자 폭만큼은 지키고, 남는 자리를 채움. 이름이 긴 '○○ 액션' 줄은 폭을 늘리지 않음.
+     '플랍 오픈' 안내가 한 줄에 들어갈 만큼은 항상 확보 */
+  flex: 1 1 auto;
+  min-width: 6.75rem;
 }
 
 .bet-board {
   /* 높이는 왼쪽(팟 ~ 차례 문구)에 맞추고, 넘치면 안에서 스크롤 */
   position: relative;
   /* 가로 폭은 좁게: 내용(이름·숫자 2칸)에 맞춘 정도 */
-  flex: 0 1 220px;
+  flex: 0 1 210px;
   min-width: 0;
   max-width: 220px;
   margin-left: auto;
@@ -3009,10 +3030,6 @@ button:disabled {
 }
 
 /* 팟·액션 글자는 줄바꿈 없이 자리를 먼저 차지하고, 베팅 현황 표가 남은 폭을 써요 */
-.stage-main {
-  flex: 0 0 auto;
-}
-
 .act-line > span {
   white-space: nowrap;
 }
@@ -3169,17 +3186,30 @@ button:disabled {
     border-color 200ms var(--ease-out);
 }
 
-.board-card[data-on] {
-  /* 깔린 카드: 흰색 (밝은 화면에서는 테두리로 구분) */
+/* 깔린 카드: 흰색 (밝은 화면에서는 테두리로 구분) */
+.board-card[data-state='open'],
+.board-card[data-state='deal'] {
   border: 1.25px solid var(--ink-3);
   background: #fff;
 }
 
-/* 지금 깔 차례인 카드: 흰색 + 노란 테두리로 반짝 */
-.board-card[data-new] {
+/* 지금 깔 카드: 흰색 + 노란 테두리로 반짝 */
+.board-card[data-state='deal'] {
   border-color: var(--accent);
   box-shadow: 0 0 0 1.5px var(--accent);
   animation: board-card-in 900ms var(--ease-out) 2;
+}
+
+/* 이번 베팅이 끝나면 깔릴 카드: 반투명 */
+.board-card[data-state='next'] {
+  border: 1.25px solid color-mix(in oklch, var(--ink-3) 55%, transparent);
+  background: color-mix(in oklch, var(--ink) 14%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .board-card[data-state='next'] {
+    background: color-mix(in oklch, #fff 30%, transparent);
+  }
 }
 
 @keyframes board-card-in {

@@ -19,21 +19,27 @@ export function outcomeLine(game: Game, nameOf: (id: string) => string) {
   return walk ? `${names[0]} 워크 (전원 폴드)` : `${names[0]} 승리`;
 }
 
-/** 팟 옆 작은 카드 5장: 깔린 만큼 켜져요. 막 깔 차례인 카드는 깜빡여요. */
+/**
+ * 팟 옆 작은 카드 5장
+ * - open: 이미 깔린 카드 (흰색)
+ * - deal: 지금 깔 카드 (흰색 + 노란 테두리) — '플랍 오픈' 같은 안내가 뜬 순간, 또는 올인 런아웃
+ * - next: 이번 베팅이 끝나면 깔릴 카드 (반투명)
+ * - off: 아직 먼 카드 (점선)
+ */
 function BoardCards({ game, dealing }: { game: Game; dealing: boolean }) {
   if (game.phase === 'lobby') return null;
   const open = boardCards(game);
-  const fresh = dealing ? [0, 3, 1, 1][game.street] : 0;
-  const label = open === 0 ? '보드 카드 아직 없음 (프리플랍)' : `보드 카드 ${open}장 공개`;
+  const before = [0, 0, 3, 4][game.street];
+  const atStreet = [0, 3, 4, 5][game.street];
+  const dealFrom = dealing ? before : game.phase === 'showdown' && game.runout ? atStreet : open;
+  const next = game.phase === 'betting' && !dealing && game.street < 3 ? [3, 4, 5][game.street] : open;
+  const state = (i: number) => (i < dealFrom ? 'open' : i < open ? 'deal' : i < next ? 'next' : 'off');
+  const label =
+    open === 0 ? '보드 카드 아직 없음 (프리플랍)' : `보드 카드 ${open}장${dealFrom < open ? `, 지금 ${open - dealFrom}장 깔 차례` : ''}`;
   return (
     <span className="board-cards" role="img" aria-label={label}>
       {[0, 1, 2, 3, 4].map((i) => (
-        <span
-          key={i}
-          className="board-card"
-          data-on={i < open || undefined}
-          data-new={(i < open && i >= open - fresh) || undefined}
-        />
+        <span key={i} className="board-card" data-state={state(i)} />
       ))}
     </span>
   );
@@ -55,7 +61,9 @@ export function Stage() {
       <>
         {freshStreet && <span className="deal-hint">{NEXT_CARDS[game.street]}</span>}
         <span className="act-line">
-          <span>{actor.id === you.id ? '내' : actor.name} 액션</span>
+          <span className="act-who">
+            <span className="act-name">{actor.id === you.id ? '내' : actor.name}</span> 액션
+          </span>
           {toCall > 0 && <span className="act-call">콜 {fmt(toCall)}</span>}
         </span>
       </>
