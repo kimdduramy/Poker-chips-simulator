@@ -40,31 +40,33 @@ const seat = (name, tag, stack, acting) => `
     <div style="font-size:24px;font-weight:560;font-variant-numeric:tabular-nums">${stack}</div>
   </div>`;
 
+const ko = "Geist, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans CJK KR', 'Malgun Gothic', sans-serif";
+
 await render(
-  `<div style="position:relative;width:1200px;height:630px;background:#0a0a0a;color:#f2f1ed;font-family:Geist;overflow:hidden">
+  `<div style="position:relative;width:1200px;height:630px;background:#0a0a0a;color:#f2f1ed;font-family:${ko};overflow:hidden">
     <div style="position:absolute;left:84px;top:150px">
-      <div style="font-family:Serif;font-style:italic;font-size:150px;line-height:.95;letter-spacing:-2px">
-        <span style="background:#f5db2b;color:#191606;padding:0 14px;margin-left:-14px;border-radius:14px">Piss</span> Poker
+      <div style="font-size:132px;font-weight:800;line-height:1;letter-spacing:-4px">
+        <span style="background:#f5db2b;color:#191606;padding:0 18px;margin-left:-18px;border-radius:16px">칩</span> 포커
       </div>
-      <div style="margin-top:36px;font-size:40px;color:#bdbcb7;letter-spacing:-.5px">Chips on your phone.<br/>Cards on the table.</div>
-      <div style="margin-top:44px;font-size:24px;color:#8d8c87">piss-poker.pages.dev</div>
+      <div style="margin-top:40px;font-size:40px;line-height:1.35;color:#bdbcb7;letter-spacing:-1px">칩은 폰으로,<br/>카드는 테이블에서.</div>
+      <div style="margin-top:44px;font-size:24px;color:#8d8c87">chip-poker.pages.dev</div>
     </div>
     <div style="position:absolute;right:90px;top:70px;width:340px;height:640px;border-radius:52px;background:#141414;box-shadow:0 0 0 10px #232323, 0 40px 80px rgba(0,0,0,.6);overflow:hidden">
       <div style="padding:40px 30px 0">
-        <div style="font-size:15px;color:#a9a8a3">Pot</div>
+        <div style="font-size:15px;color:#a9a8a3">팟</div>
         <div style="font-size:84px;font-weight:560;letter-spacing:-4px;line-height:1">1,240</div>
         <div style="margin-top:14px;display:flex;gap:10px;align-items:center;font-size:17px;color:#bdbcb7">
-          <span style="background:#f5db2b;color:#191606;font-weight:650;padding:5px 12px;border-radius:99px">Deal the turn</span> You to act
+          <span style="background:#f5db2b;color:#191606;font-weight:650;padding:5px 12px;border-radius:99px">턴 오픈</span> 내 액션
         </div>
-        <div style="margin-top:22px">${seat('Karthik', 'D · to act', '3,420', true)}${seat('Sam', 'SB', '1,875', false)}</div>
+        <div style="margin-top:22px">${seat('지훈', 'D · 액션', '3,420', true)}${seat('민수', 'SB', '1,875', false)}</div>
       </div>
       <div style="position:absolute;left:0;right:0;bottom:0;height:200px;background:#f5db2b;color:#191606;padding:22px 26px">
-        <div style="font-size:28px;font-weight:700;letter-spacing:-.5px">Your turn</div>
-        <div style="font-size:16px;opacity:.8">620 to call</div>
+        <div style="font-size:28px;font-weight:700;letter-spacing:-.5px">내 차례</div>
+        <div style="font-size:16px;opacity:.8">콜 620</div>
         <div style="display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;margin-top:16px">
-          <div style="border:2px solid rgba(25,22,6,.5);border-radius:14px;height:54px;display:grid;place-items:center;font-weight:650;font-size:18px">Fold</div>
-          <div style="background:#191606;color:#f5db2b;border-radius:14px;height:54px;display:grid;place-items:center;font-weight:650;font-size:18px">Call 620</div>
-          <div style="border:2px solid rgba(25,22,6,.5);border-radius:14px;height:54px;display:grid;place-items:center;font-weight:650;font-size:18px">Raise</div>
+          <div style="border:2px solid rgba(25,22,6,.5);border-radius:14px;height:54px;display:grid;place-items:center;font-weight:650;font-size:18px">폴드</div>
+          <div style="background:#191606;color:#f5db2b;border-radius:14px;height:54px;display:grid;place-items:center;font-weight:650;font-size:18px">콜 620</div>
+          <div style="border:2px solid rgba(25,22,6,.5);border-radius:14px;height:54px;display:grid;place-items:center;font-weight:650;font-size:18px">레이즈</div>
         </div>
       </div>
     </div>

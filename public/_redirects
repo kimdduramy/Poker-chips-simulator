@@ -1,4 +1,4 @@
-# Live tables are client-routed. Middleware also rewrites these; this covers deploys without Functions.
+# 테이블(/t/XXXX)과 테스트 판(/test)은 앱이 직접 그리는 화면이라 index.html로 보내요.
 /t/*  /index.html  200
 /test  /index.html  200
 /test/  /index.html  200
