@@ -3170,14 +3170,15 @@ button:disabled {
 }
 
 .board-card[data-on] {
-  border: 1.25px solid var(--ink);
-  background: var(--ink);
+  /* 깔린 카드: 흰색 (밝은 화면에서는 테두리로 구분) */
+  border: 1.25px solid var(--ink-3);
+  background: #fff;
 }
 
-/* 지금 깔 차례인 카드: 노란색으로 반짝 */
+/* 지금 깔 차례인 카드: 흰색 + 노란 테두리로 반짝 */
 .board-card[data-new] {
   border-color: var(--accent);
-  background: var(--accent);
+  box-shadow: 0 0 0 1.5px var(--accent);
   animation: board-card-in 900ms var(--ease-out) 2;
 }
 
