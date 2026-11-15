@@ -47,6 +47,9 @@ describe('path helpers', () => {
     expect(isRoomPath('/t/abcd/')).toBe(true);
     expect(isRoomPath('/t/ABC')).toBe(false);
     expect(isRoomPath('/about/')).toBe(false);
+    expect(isRoomPath('/test')).toBe(true);
+    expect(isRoomPath('/test/')).toBe(true);
+    expect(isRoomPath('/testing')).toBe(false);
   });
 
   it('appends Vary: Accept without duplicating', () => {
