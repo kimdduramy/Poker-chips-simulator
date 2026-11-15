@@ -213,9 +213,16 @@ export function actionSound(kind: ActionSound) {
   }
   switch (kind) {
     case 'check':
-      // 손가락으로 테이블 톡톡
-      burst(ctx, t, { freq: 420, q: 2.5, dur: 0.09, gain: 0.5, type: 'lowpass' });
-      burst(ctx, t + 0.14, { freq: 420, q: 2.5, dur: 0.09, gain: 0.42, type: 'lowpass' });
+      // 손가락으로 테이블 톡톡. 폰 스피커는 저음이 거의 안 나와서
+      // 중음 '톡'(1.1kHz)과 짧은 나무 울림을 더해 콜 소리에 가까운 크기로 맞췄어요.
+      for (const [d, l] of [
+        [0, 1],
+        [0.14, 0.85],
+      ]) {
+        burst(ctx, t + d, { freq: 1100, q: 1.6, dur: 0.07, gain: 1.6 * l });
+        burst(ctx, t + d, { freq: 500, q: 2, dur: 0.1, gain: 1.4 * l, type: 'lowpass' });
+        tone(ctx, t + d, 620, 380, 0.08, 0.6 * l, 'triangle');
+      }
       break;
     case 'call':
       clink(ctx, t, 1);
