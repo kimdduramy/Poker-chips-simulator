@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { boardCards, bySeat, findPlayer, potTotal, type Game, type Player } from '../../shared/engine';
-import { fmt, NEXT_CARDS } from '../lib/format';
+import { dealerTip } from '../lib/dealer';
+import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
 import { ScrollBox } from './ScrollBox';
@@ -59,7 +60,6 @@ export function Stage() {
     lineKey = `${game.street}-${actor.id}`;
     line = (
       <>
-        {freshStreet && <span className="deal-hint">{NEXT_CARDS[game.street]}</span>}
         <span className="act-line">
           <span className="act-who">
             <span className="act-name">{actor.id === you.id ? '내' : actor.name}</span> 액션
@@ -84,7 +84,10 @@ export function Stage() {
             <span className="label">{game.phase === 'done' ? '지급됨' : '팟'}</span>
             <BoardCards game={game} dealing={freshStreet} />
           </div>
-          <Num value={pot} className="pot-amount" />
+          {/* 자리 수가 많아지면 글자를 줄여서 오른쪽 표 크기가 변하지 않게 */}
+          <span className="pot-fit" style={{ '--pot-chars': Math.max(3, fmt(pot).length) } as CSSProperties}>
+            <Num value={pot} className="pot-amount" />
+          </span>
           <div className="stage-line" key={lineKey}>
             {line}
           </div>
@@ -102,12 +105,27 @@ export function Stage() {
           ))}
         </ul>
       )}
-      {game.phase === 'betting' && last && last.kind !== 'hand' && (
-        <p className="last-action" key={last.id}>
-          {last.text}
+      <DealerBar game={game} youId={you.id} />
+      {/* 베팅 중에는 줄을 항상 차지해서, 문구가 생기고 사라질 때 아래가 들썩이지 않게 */}
+      {game.phase === 'betting' && (
+        <p className="last-action" key={last && last.kind !== 'hand' ? last.id : 'none'}>
+          {last && last.kind !== 'hand' ? last.text : '\u00a0'}
         </p>
       )}
     </section>
+  );
+}
+
+function DealerBar({ game, youId }: { game: Game; youId: string | null }) {
+  const tip = dealerTip(game);
+  if (!tip) return null;
+  const dealer = findPlayer(game, game.buttonId);
+  const who = dealer ? (dealer.id === youId ? '딜러 (나)' : `딜러 ${dealer.name}`) : '딜러';
+  return (
+    <p className="dealer-bar" data-now={tip.now || undefined} key={tip.text}>
+      <span className="dealer-who">{who}</span>
+      <span className="dealer-tip">{tip.text}</span>
+    </p>
   );
 }
 
@@ -130,8 +148,12 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
         <thead>
           <tr>
             <th>플레이어</th>
-            <th className="num">콜 금액</th>
-            <th className="num">직전 베팅</th>
+            <th className="num">
+              콜<span className="wide-only"> 금액</span>
+            </th>
+            <th className="num">
+              직전<span className="wide-only"> 베팅</span>
+            </th>
           </tr>
         </thead>
       </table>

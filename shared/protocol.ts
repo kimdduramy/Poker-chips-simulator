@@ -32,6 +32,7 @@ export type ClientMessage =
   | { type: 'redo'; v: number }
   | { type: 'sit'; out: boolean; playerId?: string }
   | { type: 'rebuy'; playerId?: string }
+  | { type: 'repay'; amount: number }
   | { type: 'leave' }
   | { type: 'settings'; v: number; settings: Settings }
   | { type: 'setStack'; v: number; playerId: string; stack: number }
@@ -164,6 +165,8 @@ export function parseClientMessage(raw: string): Envelope | null {
       return optId(m.playerId)
         ? out(m.playerId === undefined ? { type: 'rebuy' } : { type: 'rebuy', playerId: m.playerId as string })
         : null;
+    case 'repay':
+      return isNum(m.amount) && m.amount > 0 ? out({ type: 'repay', amount: m.amount }) : null;
     case 'settings': {
       const s = m.settings;
       if (!isNum(v) || !isObj(s)) return null;

@@ -16,6 +16,7 @@ describe('parseClientMessage', () => {
       winners: { 0: ['abcdef01', 'abcdef02'] },
     });
     expect(parse({ type: 'settings', v: 1, settings: { sb: 5, bb: 10, startingStack: 1000, buyInPrice: 2000 } })).toBeTruthy();
+    expect(parse({ type: 'repay', amount: 500 })).toEqual({ type: 'repay', amount: 500 });
   });
 
   it('rejects malformed input', () => {
@@ -34,6 +35,9 @@ describe('parseClientMessage', () => {
       { type: 'settings', v: 1, settings: { sb: '5', bb: 10, startingStack: 1000, buyInPrice: 0 } },
       { type: 'seatOrder', v: 1, ids: Array.from({ length: 11 }, (_, i) => `abcdefg${i}`) },
       { type: 'join', name: 42 },
+      { type: 'repay', amount: 0 },
+      { type: 'repay', amount: 1.5 },
+      { type: 'repay', amount: '100' },
       { type: 'start', seq: 'x', v: 1 },
       [1, 2, 3],
       null,

@@ -61,7 +61,7 @@ await ben.getByText('내 차례', { exact: true }).waitFor();
 await ben.getByRole('button', { name: /^콜/ }).click();
 await cat.getByText('내 차례', { exact: true }).waitFor();
 await cat.getByRole('button', { name: /^콜/ }).click();
-await ana.getByText('플랍 오픈').first().waitFor();
+await ana.locator('.dealer-tip', { hasText: '1장 버리고 플랍 3장 펼치기' }).first().waitFor();
 await shot(ana, '08-flop-waiting');
 
 for (let i = 0; i < 9; i++) {

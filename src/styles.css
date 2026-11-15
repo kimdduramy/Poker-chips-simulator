@@ -1405,10 +1405,12 @@ button:disabled {
 .pot-amount {
   display: block;
   margin-top: 2px;
-  font-size: clamp(3rem, 15vw, 4rem);
+  /* 기본 크기, 단 자리 수가 많으면 영역 폭에 맞게 줄임 (숫자 한 칸 ≈ 0.58em) */
+  font-size: min(clamp(3rem, 15vw, 4rem), calc(100cqi / (var(--pot-chars, 3) * 0.58)));
   font-weight: 560;
   line-height: 1;
   letter-spacing: -0.05em;
+  white-space: nowrap;
 }
 
 .stage-line {
@@ -1450,22 +1452,50 @@ button:disabled {
   color: var(--ink-3);
 }
 
-.deal-hint {
-  display: inline-flex;
+.dealer-bar {
+  /* 딜러 지시사항: 두 줄(누가 / 할 일) 고정 높이라 문구가 바뀌어도 아래가 들썩이지 않음 */
+  display: grid;
+  gap: 1px;
+  margin-top: 12px;
+  padding: 7px 12px;
+  border-radius: var(--r-sm);
+  background: color-mix(in oklch, var(--ink) 4%, transparent);
+  color: var(--ink-2);
+}
+
+.dealer-who {
+  overflow: hidden;
+  font-size: 0.71875rem;
+  font-weight: 600;
+  color: var(--ink-3);
   white-space: nowrap;
-  align-items: center;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 999px;
+  text-overflow: ellipsis;
+}
+
+.dealer-tip {
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 560;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 지금 카드를 나눠주거나 깔 순간: 노란색으로 */
+.dealer-bar[data-now] {
   background: var(--accent);
   color: var(--on-accent);
-  font-weight: 620;
-  font-size: 0.9375rem;
   animation: pop 320ms var(--ease-out);
+}
+
+.dealer-bar[data-now] .dealer-who {
+  color: color-mix(in oklch, var(--on-accent) 70%, transparent);
 }
 
 .last-action {
   margin-top: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: 0.875rem;
   color: var(--ink-3);
   animation: fade 240ms var(--ease-out);
@@ -1494,22 +1524,26 @@ button:disabled {
   gap: 14px;
 }
 
+/* 베팅 중에는 위쪽 높이를 표 높이만큼 확보해서 아래 좌석 목록이 들썩이지 않게 */
+.stage-top:has(.bet-board) {
+  min-height: 9.5rem;
+}
+
 .stage-main {
-  /* 팟 숫자 폭만큼은 지키고, 남는 자리를 채움. 이름이 긴 '○○ 액션' 줄은 폭을 늘리지 않음.
-     '플랍 오픈' 안내가 한 줄에 들어갈 만큼은 항상 확보 */
-  flex: 1 1 auto;
-  min-width: 6.75rem;
+  /* 오른쪽 표 폭은 고정, 남는 자리를 씀. 팟 숫자는 이 폭에 맞춰 줄어듦 (container 단위) */
+  flex: 1 1 0;
+  min-width: 0;
+  container-type: inline-size;
 }
 
 .bet-board {
   /* 높이는 왼쪽(팟 ~ 차례 문구)에 맞추고, 넘치면 안에서 스크롤 */
   position: relative;
-  /* 가로 폭은 좁게: 내용(이름·숫자 2칸)에 맞춘 정도 */
-  flex: 0 1 210px;
-  min-width: 0;
-  max-width: 220px;
+  /* 크기 고정: 폭은 화면 폭에 맞춘 한 값, 높이도 고정 (내용이 바뀌어도 늘었다 줄었다 하지 않게) */
+  flex: 0 0 clamp(150px, 48%, 210px);
+  height: 9.5rem;
   margin-left: auto;
-  align-self: stretch;
+  align-self: flex-start;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3265,4 +3299,224 @@ button:disabled {
 /* 안전망: 어떤 요소가 넘쳐도 화면이 옆으로 스크롤되지 않게 */
 body {
   overflow-x: clip;
+}
+
+/* 아주 좁은 폰: 베팅 현황표 머리줄을 짧게 ('콜', '직전') */
+@media (max-width: 374px) {
+  .wide-only {
+    display: none;
+  }
+}
+
+/* ---------- 액션 알림: 화면 가운데에 잠깐 크게 ---------- */
+
+.action-toast-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding-bottom: 12vh;
+  pointer-events: none;
+}
+
+.action-toast {
+  --kind: oklch(0.6 0.05 250);
+  --kind-ink: #fff;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 190px;
+  padding: 20px 34px 18px;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    radial-gradient(120% 90% at 20% 0%, color-mix(in oklch, var(--kind) 70%, #fff) 0%, transparent 60%),
+    linear-gradient(150deg, var(--kind), color-mix(in oklch, var(--kind) 72%, #000));
+  color: var(--kind-ink);
+  box-shadow:
+    0 18px 50px -12px color-mix(in oklch, var(--kind) 70%, #000),
+    inset 0 0 0 1px color-mix(in oklch, #fff 22%, transparent);
+  animation: action-toast 1400ms var(--ease-out) both;
+}
+
+.action-toast[data-kind='check'] {
+  --kind: oklch(0.58 0.06 245);
+}
+
+.action-toast[data-kind='call'] {
+  --kind: oklch(0.6 0.14 150);
+}
+
+.action-toast[data-kind='bet'] {
+  --kind: oklch(0.86 0.16 95);
+  --kind-ink: #191606;
+}
+
+.action-toast[data-kind='raise'] {
+  --kind: oklch(0.7 0.17 55);
+  --kind-ink: #1d1004;
+}
+
+.action-toast[data-kind='allin'] {
+  --kind: oklch(0.57 0.21 25);
+  animation-name: action-toast-allin;
+}
+
+.action-toast[data-kind='fold'] {
+  --kind: oklch(0.42 0.01 260);
+}
+
+/* 뒤에 겹친 칩 두 개 (메인 화면 로고와 같은 모양) */
+.action-toast-chips {
+  position: absolute;
+  right: -22px;
+  top: -26px;
+  width: 104px;
+  height: 104px;
+  opacity: 0.28;
+}
+
+.atc-back,
+.atc-front {
+  fill: color-mix(in oklch, var(--kind-ink) 85%, transparent);
+}
+
+.atc-front {
+  stroke: var(--kind);
+  stroke-width: 4;
+}
+
+.atc-edge {
+  fill: none;
+  stroke: var(--kind);
+  stroke-width: 6;
+}
+
+.action-toast-word {
+  position: relative;
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.action-toast-sub {
+  position: relative;
+  max-width: 70vw;
+  overflow: hidden;
+  font-size: 0.9375rem;
+  font-weight: 560;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.88;
+}
+
+@keyframes action-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.82);
+  }
+  14% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  24% {
+    transform: none;
+  }
+  78% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+}
+
+@keyframes action-toast-allin {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-4deg);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.12) rotate(2deg);
+  }
+  18% {
+    transform: scale(1) rotate(-1.5deg);
+  }
+  24% {
+    transform: scale(1.02) rotate(1deg);
+  }
+  30% {
+    transform: none;
+  }
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+/* 움직임 줄이기 설정: 튀는 효과 없이 잠깐 보였다가 사라짐 */
+@media (prefers-reduced-motion: reduce) {
+  .action-toast {
+    animation: none !important;
+  }
+}
+
+/* ---------- 은행 ---------- */
+
+.bank {
+  display: grid;
+  gap: 16px;
+}
+
+.bank-mine {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bank-stat {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: color-mix(in oklch, var(--ink) 4%, transparent);
+}
+
+.bank-big {
+  font-size: 1.75rem;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+.bank-pay {
+  display: grid;
+  gap: 10px;
+}
+
+.bank-presets {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.bank-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bank-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9375rem;
 }

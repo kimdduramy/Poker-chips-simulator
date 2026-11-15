@@ -3,6 +3,7 @@ import {
   act,
   addPlayer,
   award,
+  repay,
   createGame,
   findPlayer,
   legalActions,
@@ -467,6 +468,12 @@ export class Room extends DurableObject<Env> {
           (g) => rebuy(g, id),
           'table',
         );
+        return;
+      }
+      case 'repay': {
+        // 빚은 본인만 갚을 수 있어요
+        const m = requireMember();
+        this.mutate(`${m.name} 은행에 ${fmt(msg.amount)} 갚음`, (g) => repay(g, m.id, msg.amount), 'table');
         return;
       }
       case 'leave': {

@@ -9,7 +9,7 @@ import { Icon } from './Icon';
 import { Invite } from './Invite';
 import { Sheet } from './Sheet';
 
-export type SheetName = 'menu' | 'invite' | 'settings' | 'players' | 'settle' | 'log' | null;
+export type SheetName = 'menu' | 'invite' | 'settings' | 'players' | 'settle' | 'log' | 'bank' | null;
 
 interface Props {
   open: SheetName;
@@ -41,6 +41,9 @@ export function Sheets({ open, setOpen, onDisplay, onLeft }: Props) {
       <Sheet open={open === 'log'} onClose={close} title="기록">
         <GameLog />
       </Sheet>
+      <Sheet open={open === 'bank'} onClose={close} title="은행">
+        <Bank />
+      </Sheet>
     </>
   );
 }
@@ -67,6 +70,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
         {isHost && room.undoLabel && item('되돌리기', () => run({ type: 'undo', v }).then((ok) => ok && setOpen(null)), { note: room.undoLabel })}
         {item('친구 초대', () => setOpen('invite'), { note: room.code })}
         {item('기록', () => setOpen('log'), { note: '누가 뭘 했는지' })}
+        {item('은행', () => setOpen('bank'), { note: me?.loan ? `빚 ${fmt(me.loan)}` : '리바이·빚 갚기' })}
         {item('정산', () => setOpen('settle'))}
         {item('큰 화면 모드', onDisplay, { note: '테이블 가운데 두는 화면' })}
       </ul>
@@ -378,6 +382,96 @@ function Settle() {
         </ul>
       )}
       {handInProgress(game) && <p className="hint">지금 팟에 들어간 칩은 낸 사람 몫으로 계산해요.</p>}
+    </div>
+  );
+}
+
+/** 은행: 리바이는 은행에서 빌리는 것. 빚은 본인만, 핸드 사이에 갚을 수 있어요. */
+function Bank() {
+  const { game, me, run, busy } = useTable();
+  const [text, setText] = useState('');
+  const loan = me?.loan ?? 0;
+  const max = me ? Math.min(loan, me.stack) : 0;
+  const amount = Number(text);
+  const valid = Number.isSafeInteger(amount) && amount >= 1 && amount <= max;
+  const blocked = !!me?.inHand && handInProgress(game);
+  const debtors = game.players.filter((p) => (p.loan ?? 0) > 0);
+
+  const pay = async () => {
+    if (!valid || busy || blocked) return;
+    if (await run({ type: 'repay', amount })) setText('');
+  };
+
+  return (
+    <div className="bank">
+      <p className="hint">
+        리바이하면 은행에서 시작 스택만큼 빌려요. 갚으면 스택과 빚이 같이 줄어서 손익은 그대로예요. 안 갚은 빚은 정산에
+        그대로 들어가요.
+      </p>
+
+      {me && (
+        <div className="bank-mine">
+          <div className="bank-stat">
+            <span className="label">내 빚</span>
+            <span className="num bank-big">{fmt(loan)}</span>
+          </div>
+          <div className="bank-stat">
+            <span className="label">내 스택</span>
+            <span className="num bank-big">{fmt(me.stack)}</span>
+          </div>
+        </div>
+      )}
+
+      {me && loan > 0 && (
+        <div className="bank-pay">
+          <label className="field-label" htmlFor="repay-amount">
+            갚을 금액 (최대 {fmt(max)})
+          </label>
+          <div className="presets bank-presets">
+            {[
+              { label: '절반', value: Math.max(1, Math.floor(max / 2)) },
+              { label: '전부', value: max },
+            ].map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                className="preset"
+                data-on={amount === p.value || undefined}
+                disabled={max === 0}
+                onClick={() => setText(String(p.value))}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <input
+            id="repay-amount"
+            className="text-input num"
+            inputMode="numeric"
+            value={text}
+            placeholder={String(max)}
+            onChange={(e) => setText(e.target.value.replace(/[^0-9]/g, ''))}
+          />
+          {blocked && <p className="hint">이번 핸드가 끝난 뒤에 갚을 수 있어요.</p>}
+          <button className="btn btn-primary btn-lg btn-block" disabled={!valid || busy || blocked} onClick={pay}>
+            {valid ? `${fmt(amount)} 갚기` : '갚기'}
+          </button>
+        </div>
+      )}
+
+      <h3 className="settle-title">빚 있는 사람</h3>
+      {debtors.length === 0 ? (
+        <p className="muted">아무도 없어요.</p>
+      ) : (
+        <ul className="bank-list">
+          {debtors.map((p) => (
+            <li key={p.id}>
+              <span>{p.name}</span>
+              <span className="num">{fmt(p.loan ?? 0)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
