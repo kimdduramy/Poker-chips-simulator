@@ -1,4 +1,4 @@
-# 테이블(/t/XXXX)과 테스트 판(/test)은 앱이 직접 그리는 화면이라 index.html로 보내요.
+# 테이블(/t/XXXX)은 앱이 직접 그리는 화면이라 index.html로 보내요.
+# /test 같은 다른 주소는 Cloudflare Pages의 SPA 기본 동작(없는 주소 → index.html)으로 열려요.
+# /test를 여기에 넣으면 Pages가 메인(/)으로 리다이렉트해 버려서 넣지 않아요.
 /t/*  /index.html  200
-/test  /index.html  200
-/test/  /index.html  200
