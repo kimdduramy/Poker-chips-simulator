@@ -64,6 +64,7 @@ function DockBody() {
 
   return (
     <div className="dock">
+      <WaitingForDealer />
       <MyStatus />
       {canActFor && actor && (
         <button className="btn btn-quiet btn-lg btn-block" onClick={() => setActingFor(actor.id)}>
@@ -195,8 +196,19 @@ function ActionPanel({ legal, player, actingFor, bot, onCancel }: ActionProps) {
   );
 }
 
-/** 딜러가 카드를 까는 동안 버튼 위에 뜨는 줄: 남은 초와 줄어드는 막대 */
-function DealWait({ left, text }: { left: number; text: string }) {
+/** 차례가 아닌 사람에게도 같은 대기 창을 띄워요: 누가 다음인지 함께 */
+function WaitingForDealer() {
+  const { game, room, nameOf } = useTable();
+  const dealLeft = useDealLeft();
+  if (game.phase !== 'betting' || dealLeft <= 0 || !room.dealUntil) return null;
+  const next = game.toActId ? nameOf(game.toActId) : null;
+  return (
+    <DealWait key={room.dealUntil} left={dealLeft} text={dealingText(game)} sub={next ? `다음 차례: ${next}` : undefined} />
+  );
+}
+
+/** 딜러가 카드를 까는 동안 뜨는 창: 남은 초와 줄어드는 막대 (모두에게) */
+function DealWait({ left, text, sub }: { left: number; text: string; sub?: string }) {
   // 막대 길이는 처음 받은 남은 시간으로 한 번만 정해요 (다시 그릴 때마다 바꾸면 막대가 튀어요)
   const [total] = useState(left);
   return (
@@ -206,6 +218,7 @@ function DealWait({ left, text }: { left: number; text: string }) {
         <span className="num">{Math.ceil(left / 1000)}</span>
       </span>
       <span className="deal-wait-bar" style={{ animationDuration: `${total}ms` }} aria-hidden="true" />
+      {sub && <span className="deal-wait-sub">{sub}</span>}
     </div>
   );
 }
