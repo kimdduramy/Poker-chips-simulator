@@ -3340,7 +3340,7 @@ body {
   overflow-x: clip;
 }
 
-/* 아주 좁은 폰: 베팅 현황표 머리줄을 짧게 ('콜', '직전') */
+/* 아주 좁은 폰: 베팅 현황표 머리줄을 짧게 ('콜') */
 @media (max-width: 374px) {
   .wide-only {
     display: none;

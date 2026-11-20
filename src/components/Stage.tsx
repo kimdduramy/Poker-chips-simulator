@@ -137,7 +137,7 @@ function owes(game: Game, p: Player): string {
   return fmt(Math.min(Math.max(0, game.currentBet - p.bet), p.stack));
 }
 
-/** 팟 옆 표: 참가자별로 지금 내야 할 칩과 방금 추가로 넣은 칩. 내용이 많으면 안에서 스크롤돼요. */
+/** 팟 옆 표: 참가자별로 지금 내야 할 칩과 이번 판에 낸 칩. 내용이 많으면 안에서 스크롤돼요. */
 function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
   const rows = bySeat(game).filter((p) => p.inHand || p.committed > 0);
   return (
@@ -152,7 +152,7 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
               콜<span className="wide-only"> 금액</span>
             </th>
             <th className="num">
-              직전<span className="wide-only"> 베팅</span>
+              이번 판
             </th>
           </tr>
         </thead>
@@ -162,7 +162,8 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
         <BoardCols />
         <tbody>
           {rows.map((p) => {
-            const added = p.lastPaid ?? 0;
+            // 이번 핸드에 지금까지 낸 칩 전부 (블라인드 포함)
+            const total = p.committed;
             return (
               <tr key={p.id} data-acting={game.toActId === p.id || undefined} data-dim={p.folded || !p.inHand || undefined}>
                 <th scope="row">
@@ -170,7 +171,7 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
                   {p.id === youId && <span className="bet-board-you">나</span>}
                 </th>
                 <td className="num">{owes(game, p)}</td>
-                <td className="num">{added > 0 ? `+${fmt(added)}` : '–'}</td>
+                <td className="num">{total > 0 ? fmt(total) : '–'}</td>
               </tr>
             );
           })}
