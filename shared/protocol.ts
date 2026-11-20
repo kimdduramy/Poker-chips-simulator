@@ -74,8 +74,10 @@ export interface ShownHand {
   cards: Card[];
   /** 족보 이름, 예: '플러시 (A 하이)' */
   label: string;
-  /** 족보를 만든 5장 */
+  /** 비교에 쓴 5장 (키커 포함) */
   best: Card[];
+  /** 족보를 이루는 카드만 (키커 제외) */
+  made: Card[];
 }
 
 export interface RoomView {

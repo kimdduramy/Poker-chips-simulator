@@ -58,8 +58,10 @@ export interface HandValue {
   category: number;
   /** 클수록 센 패. 같은 값이면 무승부(스플릿). */
   score: number;
-  /** 족보를 만든 5장 */
+  /** 비교에 쓰는 5장 (족보 카드 + 키커) */
   best: Card[];
+  /** 그중 족보를 이루는 카드만 (원페어면 2장, 투페어면 4장, 하이카드면 1장). 키커는 빠져요. */
+  made: Card[];
   /** 예: '플러시', '원페어 (K)', '풀하우스 (Q, 7)' */
   label: string;
 }
@@ -160,7 +162,27 @@ export function evaluate(cards: Card[]): HandValue {
     // 스트레이트는 높은 숫자부터 (A-2-3-4-5에서는 A를 맨 뒤로)
     best.sort((a, b) => straightRank(b, t.tiebreak[0]) - straightRank(a, t.tiebreak[0]));
   }
-  return { category: t.category, score: t.score, best, label: describe(t.category, t.tiebreak) };
+  return { category: t.category, score: t.score, best, made: madeCards(t.category, t.tiebreak, best), label: describe(t.category, t.tiebreak) };
+}
+
+/** 족보를 이루는 카드: 5장이 다 쓰이는 족보는 5장, 아니면 같은 숫자 묶음만 */
+function madeCards(category: number, tiebreak: number[], best: Card[]): Card[] {
+  const keep = (n: number) => {
+    const ranks = new Set(tiebreak.slice(0, n));
+    return best.filter((c) => ranks.has(rankOf(c)));
+  };
+  switch (category) {
+    case 7: // 포카드
+    case 3: // 트리플
+    case 1: // 원페어
+      return keep(1);
+    case 2: // 투페어
+      return keep(2);
+    case 0: // 하이카드: 가장 높은 1장
+      return best.slice(0, 1);
+    default: // 스트레이트, 플러시, 풀하우스, 스트레이트 플러시
+      return best;
+  }
 }
 
 const straightRank = (c: Card, high: number) => (high === 5 && rankOf(c) === 14 ? 1 : rankOf(c));

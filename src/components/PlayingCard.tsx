@@ -45,16 +45,22 @@ export function PlayingCard({
 
 export const cardsSpeech = (cards: Card[]) => cards.map(cardSpeech).join(', ');
 
-/** 같은 묶음 안에서 카드 사이 간격, 플랍→턴→리버 사이 간격 (ms) */
+/** 같은 묶음 안에서 카드 사이 간격, 플랍→턴→리버 사이 간격, 한 장이 들어오는 시간 (ms) */
 const STAGGER = 140;
 const STREET_GAP = 650;
+const DEAL_MS = 420;
+
+/** 보드 카드가 다 깔리는 시각 (performance.now 기준). 승리 띠와 공개 패는 이 뒤에 나와요. */
+let boardSettlesAt = 0;
+/** 지금부터 보드 카드가 다 깔릴 때까지 남은 시간 (ms) */
+export const boardSettleDelay = () => Math.max(0, boardSettlesAt - performance.now());
 
 /**
  * 새로 나타난 카드마다 등장 애니메이션 시작 시각을 한 번만 정해요.
  * 처음 화면을 열었을 때 이미 있던 카드는 움직이지 않아요 (새로고침할 때마다 다시 깔리면 어색해요).
  * 올인 런아웃처럼 여러 장이 한 번에 열리면 플랍, 턴, 리버 순서로 차례차례 나와요.
  */
-function useFlipDelays(cards: Card[], resetKey: unknown, streetBreaks: number[] = []) {
+function useFlipDelays(cards: Card[], resetKey: unknown, streetBreaks: number[] = [], onDealt?: (lastDelay: number) => void) {
   const state = useRef<{ key: unknown; delays: Map<Card, number | null> } | null>(null);
   if (!state.current) {
     state.current = { key: resetKey, delays: new Map(cards.map((c) => [c, null])) };
@@ -70,6 +76,7 @@ function useFlipDelays(cards: Card[], resetKey: unknown, streetBreaks: number[] 
     first = false;
     delays.set(c, t);
   });
+  if (!first) onDealt?.(t);
   return (c: Card) => delays.get(c) ?? null;
 }
 
@@ -77,10 +84,12 @@ function useFlipDelays(cards: Card[], resetKey: unknown, streetBreaks: number[] 
 export function useFocusedBest(room: RoomView): { id: string | null; best: Set<Card> } {
   const focus = useHandFocus();
   const shown = room.shown;
+  // 족보를 이루는 카드만 (키커 제외). 예전 서버는 made가 없어서 best로 대신해요.
+  const made = (s: (typeof shown)[number]) => s.made ?? s.best;
   const held = focus ? shown.find((s) => s.id === focus) : undefined;
-  if (held) return { id: held.id, best: new Set(held.best) };
+  if (held) return { id: held.id, best: new Set(made(held)) };
   const winners = new Set(room.game.results.map((r) => r.id));
-  return { id: null, best: new Set(shown.filter((s) => winners.has(s.id)).flatMap((s) => s.best)) };
+  return { id: null, best: new Set(shown.filter((s) => winners.has(s.id)).flatMap(made)) };
 }
 
 /** 카드 모드 보드: 깔린 카드 + 아직 안 깐 자리 */
@@ -88,7 +97,9 @@ export function BoardRow({ size = 'md' }: { size?: 'md' | 'lg' }) {
   const { room, game } = useTable();
   const focus = useFocusedBest(room);
   const board = room.board;
-  const delay = useFlipDelays(board, game.handNo, [3, 4]);
+  const delay = useFlipDelays(board, game.handNo, [3, 4], (last) => {
+    boardSettlesAt = performance.now() + last + DEAL_MS;
+  });
   if (!room.cardMode || game.phase === 'lobby') return null;
   const showing = room.shown.length > 0;
   const label = board.length === 0 ? '보드 카드 아직 없음' : `보드 카드: ${cardsSpeech(board)}`;
@@ -114,14 +125,16 @@ export function MyHand() {
   const folded = !!me?.folded;
   const all = [...hole, ...room.board];
   const value = all.length >= 5 ? evaluate(all) : null;
-  const best = new Set(value?.best ?? []);
+  const best = new Set(value?.made ?? []);
   const held = focus !== null && focus === you.id;
+  // 핸드 중에는 내 카드를 흐리게 하지 않아요 (폴드한 것처럼 보여서). 결과가 나온 뒤에만 족보 밖 카드를 흐리게.
+  const ended = room.shown.length > 0;
   const label = value ? value.label : hole[0][0] === hole[1][0] ? `포켓 페어 (${cardRankText(hole[0])})` : '프리플랍';
   return (
     <div className="my-hand" data-folded={folded || undefined}>
       <span className="my-hand-cards" role="img" aria-label={`내 카드: ${cardsSpeech(hole)}`}>
         {hole.map((c) => (
-          <PlayingCard key={c} card={c} size="lg" glow={value && !best.has(c) ? 'dim' : held ? 'hl' : undefined} flipDelay={delay(c)} />
+          <PlayingCard key={c} card={c} size="lg" glow={ended && value && !best.has(c) ? 'dim' : held ? 'hl' : undefined} flipDelay={delay(c)} />
         ))}
       </span>
       <span className="my-hand-text">

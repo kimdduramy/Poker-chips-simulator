@@ -4,6 +4,7 @@ import { dealerTip } from '../lib/dealer';
 import { actionSound, dealSound, winSound, type ActionSound } from '../lib/device-features';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
+import { boardSettleDelay } from './PlayingCard';
 
 type Kind = ActionSound | 'win';
 
@@ -35,8 +36,15 @@ export function ActionToast() {
   const [shown, setShown] = useState<Shown | null>(null);
 
   const last = room.log.at(-1);
+  // 카드 모드: 이번 변화로 보드 카드가 새로 깔렸는지
+  const boardKey = `${game.handNo}:${room.board.length}`;
+  const prevBoard = useRef(boardKey);
+  const later = useRef<number | undefined>(undefined);
+  useEffect(() => () => clearTimeout(later.current), []);
 
   useEffect(() => {
+    const dealt = room.cardMode && room.board.length > 0 && boardKey !== prevBoard.current;
+    prevBoard.current = boardKey;
     if (!last) return;
     // 처음 열었을 때나 다시 연결됐을 때 지난 액션을 다시 띄우지 않아요
     if (seen.current === null) {
@@ -67,14 +75,24 @@ export function ActionToast() {
       for (const r of game.results) totals.set(r.id, (totals.get(r.id) ?? 0) + r.amount);
       const rows = [...totals].map(([id, amount]) => ({ who: label(id), amount }));
       const key = fresh.findLast((e) => e.kind === 'win')?.id ?? last.id;
-      setShown({ key, kind: 'win', rows });
+      // 카드 모드에서 보드가 막 깔리는 중이면, 카드가 다 들어온 뒤에 승리 띠를 띄워요 (띠가 카드를 가리지 않게)
+      const wait = room.cardMode ? boardSettleDelay() : 0;
+      clearTimeout(later.current);
+      if (wait > 0) {
+        setShown(null);
+        later.current = window.setTimeout(() => setShown({ key, kind: 'win', rows }), wait);
+      } else setShown({ key, kind: 'win', rows });
+    } else if (dealt) {
+      // 카드 모드: 스트리트를 끝낸 행동의 띠는 건너뛰어요. 새로 깔리는 카드가 가려지지 않게요. (소리는 나요)
+      clearTimeout(later.current);
+      setShown(null);
     } else if (action && la && actionKind) {
       const amount = actionKind === 'check' || actionKind === 'fold' ? null : la.amount;
       setShown({ key: action.id, kind: actionKind, rows: [{ who: label(la.id), amount }] });
     }
     // 팟이 지급되면 동전 소리 (액션 소리와 겹치지 않게 조금 뒤에)
-    if (won) setTimeout(() => winSound(), action ? 380 : 0);
-  }, [last, room.log, game, you.id, nameOf]);
+    if (won) setTimeout(() => winSound(), Math.max(action ? 380 : 0, room.cardMode ? boardSettleDelay() : 0));
+  }, [last, room.log, room.cardMode, room.board.length, boardKey, game, you.id, nameOf]);
 
   // 딜러가 카드를 깔 순간(노란 딜러 줄)에 카드 '착' 소리: 플랍 3번, 턴·리버 1번, 새 핸드 2번
   const tip = dealerTip(game);
