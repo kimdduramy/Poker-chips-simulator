@@ -8,7 +8,7 @@ type Glow = 'hl' | 'dim' | undefined;
 
 /**
  * 카드 한 장. card가 없으면 빈 자리(점선), hidden이면 뒷면.
- * flipDelay가 있으면 뒷면에서 앞면으로 뒤집히며 나타나요 (ms 뒤에 시작).
+ * flipDelay가 있으면 옆에서 미끄러져 들어오며 나타나요 (ms 뒤에 시작).
  */
 export function PlayingCard({
   card,
@@ -50,9 +50,9 @@ const STAGGER = 140;
 const STREET_GAP = 650;
 
 /**
- * 새로 나타난 카드마다 뒤집기 시작 시각을 한 번만 정해요.
- * 처음 화면을 열었을 때 이미 있던 카드는 뒤집지 않아요 (새로고침할 때마다 다시 깔리면 어색해요).
- * 올인 런아웃처럼 여러 장이 한 번에 열리면 플랍, 턴, 리버 순서로 차례차례 뒤집어요.
+ * 새로 나타난 카드마다 등장 애니메이션 시작 시각을 한 번만 정해요.
+ * 처음 화면을 열었을 때 이미 있던 카드는 움직이지 않아요 (새로고침할 때마다 다시 깔리면 어색해요).
+ * 올인 런아웃처럼 여러 장이 한 번에 열리면 플랍, 턴, 리버 순서로 차례차례 나와요.
  */
 function useFlipDelays(cards: Card[], resetKey: unknown, streetBreaks: number[] = []) {
   const state = useRef<{ key: unknown; delays: Map<Card, number | null> } | null>(null);
