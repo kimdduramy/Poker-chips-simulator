@@ -9,5 +9,14 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# 화면(HTML)은 항상 새 버전인지 확인해요. 예전 화면이 남아 있으면
+# 배포 뒤 없어진 예전 CSS·JS를 찾다가 스타일이 깨져요.
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
 /t/*
   X-Robots-Tag: noindex
+  Cache-Control: no-cache
