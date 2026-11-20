@@ -166,7 +166,7 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
               콜<span className="wide-only"> 금액</span>
             </th>
             <th className="num">
-              이번 판
+              총 베팅
             </th>
           </tr>
         </thead>
