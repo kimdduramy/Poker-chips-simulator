@@ -229,6 +229,29 @@ describe('playing a hand', () => {
 });
 
 describe('seats and devices', () => {
+  it('nobody can act while the dealer is still dealing', async () => {
+    const { code, clients } = await table(['Ana', 'Ben']);
+    const [ana, ben] = clients;
+    await ana.ok({ type: 'start', v: ana.state.v });
+    await ben.settle();
+    // 테스트에선 대기 시간이 꺼져 있어서, 딜러가 까는 중인 상태를 직접 만들어요
+    const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
+    await runInDurableObject(stub, async (room) => {
+      const r = room as unknown as { s: { dealUntil: number | null } };
+      r.s.dealUntil = Date.now() + 5000;
+    });
+    const t = ana.state.room.game.toActId!;
+    const c = clients.find((x) => x.state.you.id === t)!;
+    const legal = c.state.you.legal!;
+    expect(await c.request({ type: 'act', v: c.state.v, kind: legal.canCheck ? 'check' : 'call' })).toMatchObject({
+      code: 'PHASE',
+    });
+    await runInDurableObject(stub, async (room) => {
+      (room as unknown as { s: { dealUntil: number | null } }).s.dealUntil = Date.now() - 1000;
+    });
+    await c.ok({ type: 'act', v: c.state.v, kind: legal.canCheck ? 'check' : 'call' });
+  });
+
   it('acting for someone is only allowed when they are away or have no phone', async () => {
     const { clients, idOf } = await table(['Ana', 'Ben']);
     const [ana, ben] = clients;

@@ -12,6 +12,7 @@ import {
 } from '../../shared/engine';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
+import { dealingText, useDealLeft } from '../lib/dealer';
 import { getTest } from '../lib/testMode';
 import { useShake } from '../lib/motion';
 import { Icon } from './Icon';
@@ -113,8 +114,11 @@ interface ActionProps {
 }
 
 function ActionPanel({ legal, player, actingFor, bot, onCancel }: ActionProps) {
-  const { game, run, busy, v } = useTable();
+  const { game, run, busy, v, room } = useTable();
   const [raising, setRaising] = useState(false);
+  // 딜러가 카드를 까는 동안은 버튼이 잠겨요 (서버도 막아요)
+  const dealLeft = useDealLeft();
+  const locked = dealLeft > 0;
   const pot = potTotal(game);
   const opening = game.currentBet === 0;
   const openLabel = opening ? '벳' : '레이즈';
@@ -125,7 +129,7 @@ function ActionPanel({ legal, player, actingFor, bot, onCancel }: ActionProps) {
   useEffect(() => setRaising(false), [v]);
 
   useEffect(() => {
-    if (raising) return;
+    if (raising || locked) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement)?.closest('input, textarea, dialog[open]')) return;
       const k = e.key.toLowerCase();
@@ -167,7 +171,9 @@ function ActionPanel({ legal, player, actingFor, bot, onCancel }: ActionProps) {
     <div className="dock dock-turn" data-acting-for={actingFor || undefined} role="region" aria-label={actingFor ? `${player.name} 대신 하는 중` : '내 차례'}>
       <div className="turn-head">
         <div>
-          <span className="turn-title">{bot ? `${player.name} 차례 (테스트)` : actingFor ? `${player.name} 대신 하는 중` : '내 차례'}</span>
+          <span className="turn-title">
+            {bot ? `${player.name} 차례 (테스트)` : actingFor ? `${player.name} 대신 하는 중` : locked ? '곧 내 차례' : '내 차례'}
+          </span>
           <span className="turn-sub">스택 {fmt(player.stack)}</span>
         </div>
         {actingFor && onCancel && (
@@ -176,14 +182,30 @@ function ActionPanel({ legal, player, actingFor, bot, onCancel }: ActionProps) {
           </button>
         )}
       </div>
+      {locked && room.dealUntil && <DealWait key={room.dealUntil} left={dealLeft} text={dealingText(game)} />}
       <div className="turn-buttons" data-count={buttons.length}>
         {buttons.map((b) => (
-          <button key={b.key} className={`btn btn-turn ${b.cls}`} onClick={b.onClick} disabled={busy}>
+          <button key={b.key} className={`btn btn-turn ${b.cls}`} onClick={b.onClick} disabled={busy || locked}>
             {b.label}
             <kbd className="kbd">{b.hint}</kbd>
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** 딜러가 카드를 까는 동안 버튼 위에 뜨는 줄: 남은 초와 줄어드는 막대 */
+function DealWait({ left, text }: { left: number; text: string }) {
+  // 막대 길이는 처음 받은 남은 시간으로 한 번만 정해요 (다시 그릴 때마다 바꾸면 막대가 튀어요)
+  const [total] = useState(left);
+  return (
+    <div className="deal-wait" role="status">
+      <span className="deal-wait-text">
+        {text}
+        <span className="num">{Math.ceil(left / 1000)}</span>
+      </span>
+      <span className="deal-wait-bar" style={{ animationDuration: `${total}ms` }} aria-hidden="true" />
     </div>
   );
 }

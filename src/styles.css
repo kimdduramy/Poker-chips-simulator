@@ -1970,6 +1970,45 @@ button:disabled {
   font-size: 0.9375rem;
 }
 
+.deal-wait {
+  display: grid;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 560;
+  color: var(--ink-2);
+}
+
+.deal-wait-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.deal-wait-text .num {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.deal-wait-bar {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ink);
+  opacity: 0.55;
+  transform-origin: left;
+  animation: deal-wait linear both;
+}
+
+@keyframes deal-wait {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 .turn-head {
   display: flex;
   align-items: start;

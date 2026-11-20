@@ -5,6 +5,7 @@ import {
   award,
   repay,
   createGame,
+  dealLockMs,
   findPlayer,
   legalActions,
   rebuy,
@@ -37,6 +38,8 @@ import {
 import type { Env } from './index';
 
 export const DEFAULT_SETTINGS: Settings = { sb: 5, bb: 10, startingStack: 1000, buyInPrice: 0 };
+/** 폰 시계 차이로 버튼이 막 풀린 순간 누른 게 거절되지 않게 조금 봐줘요 */
+const DEAL_GRACE_MS = 400;
 export const IDLE_TTL_MS = 12 * 60 * 60 * 1000;
 const UNDO_DEPTH = 30;
 const LOG_KEEP = 100;
@@ -78,6 +81,9 @@ interface Stored {
   claims: Claim[];
   turnStartedAt: number | null;
   turnId: string | null;
+  /** 딜러가 카드를 까는 동안 베팅을 막는 시각과, 그게 어느 핸드·스트리트였는지 */
+  dealUntil?: number | null;
+  dealKey?: string | null;
 }
 
 interface Attachment {
@@ -155,6 +161,8 @@ export class Room extends DurableObject<Env> {
         claims: [],
         turnStartedAt: null,
         turnId: null,
+        dealUntil: null,
+        dealKey: null,
       };
       this.undo = [];
       this.redo = [];
@@ -414,6 +422,9 @@ export class Room extends DurableObject<Env> {
       case 'act': {
         const m = requireMember();
         checkV(msg.v);
+        if (s.dealUntil && Date.now() < s.dealUntil - DEAL_GRACE_MS) {
+          deny('PHASE', '딜러가 카드를 까는 중이에요. 잠깐만요!');
+        }
         const actorId = msg.playerId ?? m.id;
         if (actorId !== m.id) {
           const target = s.members.find((x) => x.id === actorId) ?? deny('INVALID', '없는 플레이어예요');
@@ -692,6 +703,15 @@ export class Room extends DurableObject<Env> {
       s.turnStartedAt = turn ? Date.now() : null;
       s.turnId = turn;
     }
+    // 새 핸드나 새 스트리트가 열리면 딜러가 카드를 깔 시간만큼 베팅을 잠가요.
+    // 되돌리기로 이미 진행된 스트리트에 돌아온 경우엔 누군가 행동했으니 잠그지 않아요.
+    const g = s.game;
+    const key = g.phase === 'betting' ? `${g.handNo}:${g.street}` : null;
+    if (key !== (s.dealKey ?? null)) {
+      const ms = this.env.DEAL_LOCK_OFF === '1' ? 0 : dealLockMs(g);
+      s.dealUntil = ms > 0 ? Date.now() + ms : null;
+      s.dealKey = key;
+    }
     s.lastActivity = Date.now();
     this.persist();
     this.broadcast();
@@ -777,6 +797,7 @@ export class Room extends DurableObject<Env> {
       undoLabel: this.undo.at(-1)?.label ?? null,
       redoLabel: this.redo.at(-1)?.label ?? null,
       turnStartedAt: s.turnStartedAt,
+      dealUntil: s.dealUntil ?? null,
     };
   }
 

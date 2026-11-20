@@ -11,13 +11,16 @@ import { Sheets, type SheetName } from '../components/Sheets';
 import { Stage } from '../components/Stage';
 import { turnAlert, unlockAudio, useWakeLock } from '../lib/device-features';
 import { useTable } from '../lib/table';
+import { useDealLeft } from '../lib/dealer';
 import { APP_NAME } from '../lib/format';
 import { BOT_NAMES, getTest, setTest } from '../lib/testMode';
 
 export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: () => void }) {
   const { room, game, you, conn, isHost, run } = useTable();
   const [sheet, setSheet] = useState<SheetName>(null);
-  const myTurn = !!you.legal;
+  // 딜러가 카드를 까는 동안은 아직 내 차례로 치지 않아요 (알림·노란 화면은 풀릴 때)
+  const dealLeft = useDealLeft();
+  const myTurn = !!you.legal && dealLeft === 0;
   const wasMyTurn = useRef(false);
   const dockRef = useRef<HTMLElement>(null);
 

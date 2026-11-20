@@ -622,3 +622,20 @@ export function award(g0: Game, winners: Record<string, string[]>): Game {
 
 /** Chips in play: stacks plus everything committed. Constant across betting and awards. */
 export const chipsInPlay = (g: Game) => g.players.reduce((s, p) => s + p.stack + p.committed, 0);
+
+// ---------- 딜러 시간 ----------
+
+/**
+ * 딜러가 카드를 까야 하는 순간이면 그 동안 베팅을 잠글 시간(ms), 아니면 0.
+ * 새 핸드는 사람마다 2장씩 나눠줘서 인원에 따라 길어지고, 플랍은 3장, 턴·리버는 1장이에요.
+ */
+export function dealLockMs(g: Game): number {
+  if (g.phase !== 'betting') return 0;
+  if (g.players.some((p) => p.acted)) return 0;
+  if (g.street === 0) {
+    const n = g.players.filter((p) => p.inHand).length;
+    return Math.min(8000, Math.max(3000, 1500 + n * 800));
+  }
+  if (g.currentBet !== 0) return 0;
+  return g.street === 1 ? 4000 : 2500;
+}
