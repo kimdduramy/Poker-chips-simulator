@@ -3625,6 +3625,7 @@ body {
 /* 카드 한 장 */
 .pcard {
   --w: 34px;
+  position: relative;
   display: inline-grid;
   grid-template-rows: auto auto;
   place-content: center;
@@ -3638,7 +3639,10 @@ body {
   color: oklch(0.2 0 0);
   line-height: 1;
   box-shadow: 0 1px 2px oklch(0 0 0 / 0.08);
-  transition: opacity 200ms var(--ease-out);
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
 }
 .pcard[data-size='sm'] {
   --w: 22px;
@@ -3649,15 +3653,13 @@ body {
 .pcard[data-red] {
   color: oklch(0.55 0.21 25);
 }
-.pcard[data-dim] {
-  opacity: 0.45;
-}
 .pcard[data-empty] {
   background: transparent;
   border: 1.25px dashed var(--line-strong);
   box-shadow: none;
 }
-.pcard[data-back] {
+.pcard[data-back],
+.pcard[data-flip]::after {
   background: repeating-linear-gradient(45deg, var(--accent) 0 4px, color-mix(in oklch, var(--accent) 70%, #fff) 4px 8px);
   border-color: var(--accent-text);
 }
@@ -3669,13 +3671,64 @@ body {
 .pcard-suit {
   font-size: calc(var(--w) * 0.4);
 }
-.pcard:not([data-empty], [data-back]) {
-  animation: pcard-in 260ms var(--ease-out);
+
+/* 족보 강조: 이긴 패가 아닌 카드는 흐리게, 누르고 있는 사람의 족보 카드는 밝고 살짝 크게 */
+.pcard[data-glow='dim'] {
+  opacity: 0.35;
 }
-@keyframes pcard-in {
-  from {
-    transform: translateY(-4px) scale(0.92);
+.pcard[data-glow='hl'] {
+  z-index: 1;
+  transform: translateY(-3px) scale(1.12);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 6px 16px -4px oklch(0 0 0 / 0.35);
+}
+
+/*
+ * 카드 깔기: 위에서 살짝 떨어지며 뒷면에서 앞면으로 뒤집혀요.
+ * 반 바퀴 돌 때까지는 뒷면 무늬(::after)가 덮고 있다가 사라져요.
+ */
+.pcard[data-flip] {
+  animation: pcard-flip 520ms var(--ease-out) var(--flip-delay, 0ms) backwards;
+}
+.pcard[data-flip]::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--accent-text);
+  border-radius: inherit;
+  opacity: 0;
+  animation: pcard-back 520ms linear var(--flip-delay, 0ms) backwards;
+  pointer-events: none;
+}
+@keyframes pcard-flip {
+  0% {
+    transform: perspective(500px) translateY(-14px) rotateY(180deg) scale(0.9);
+  }
+  100% {
+    transform: perspective(500px) rotateY(0) scale(1);
+  }
+}
+@keyframes pcard-back {
+  0%,
+  49.9% {
+    opacity: 1;
+  }
+  50%,
+  100% {
     opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pcard[data-flip],
+  .pcard[data-flip]::after {
+    animation: none;
+  }
+  .pcard {
+    transition: opacity 120ms linear;
+  }
+  .pcard[data-glow='hl'] {
+    transform: none;
   }
 }
 
@@ -3745,4 +3798,33 @@ body {
   .pcard[data-size='lg'] {
     --w: 40px;
   }
+}
+
+/* 쇼다운 뒤 꾹 누르기: 누른 사람 줄은 그대로, 나머지 줄은 흐리게 */
+.seat[data-holdable] {
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+.seat[data-holdable]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.seat[data-held] {
+  background: var(--accent-soft);
+}
+.seat[data-unheld] {
+  opacity: 0.5;
+}
+.seat[data-held] .seat-shown-label {
+  color: var(--ink);
+  font-weight: 650;
+}
+.seats-hint {
+  margin: 4px 0 12px;
+}
+.held-line {
+  font-weight: 650;
 }

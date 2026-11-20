@@ -5,6 +5,7 @@ import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
 import { BoardRow } from './PlayingCard';
+import { useHandFocus } from '../lib/handFocus';
 import { ScrollBox } from './ScrollBox';
 import type { ShownHand } from '../../shared/protocol';
 
@@ -61,6 +62,8 @@ function BoardCards({ game, dealing }: { game: Game; dealing: boolean }) {
 
 export function Stage() {
   const { game, you, nameOf, room } = useTable();
+  const focus = useHandFocus();
+  const held = room.shown.find((s) => s.id === focus);
   const pot = game.phase === 'done' ? game.results.reduce((s, r) => s + r.amount, 0) : potTotal(game);
   const actor = findPlayer(game, game.toActId);
   const freshStreet =
@@ -83,6 +86,9 @@ export function Stage() {
     );
   } else if (game.phase === 'showdown') {
     line = <span>{game.runout ? '올인 · 런아웃' : '핸드를 공개하세요'}</span>;
+  } else if (game.phase === 'done' && held) {
+    lineKey = `held-${held.id}`;
+    line = <span className="held-line">{`${held.id === you.id ? '내 패' : held.name} · ${held.label}`}</span>;
   } else if (game.phase === 'done') {
     line = <span>{outcomeLine(game, nameOf, room.shown)}</span>;
   }
