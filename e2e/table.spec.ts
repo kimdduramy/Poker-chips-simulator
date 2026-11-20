@@ -472,5 +472,15 @@ test('card mode deals cards on the phones and pays the best hand by itself', asy
   await expect(ana.getByRole('button', { name: '다음 핸드 시작' })).toBeVisible();
   await expect(ana.getByRole('img', { name: /^보드 카드: / })).toBeVisible();
   await expect(ben.locator('.stage-line')).toHaveText(/(승리|스플릿) · /);
+
+  // 플레이어를 누르고 있는 동안만 그 사람 족보 5장이 강조돼요
+  const row = ben.locator('.seat[data-holdable]').first();
+  const box = (await row.boundingBox())!;
+  await ben.mouse.move(box.x + 40, box.y + box.height / 2);
+  await ben.mouse.down();
+  await expect(ben.locator('.seat[data-held]')).toHaveCount(1);
+  await expect(ben.locator('.board-row .pcard[data-glow="hl"]')).not.toHaveCount(0);
+  await ben.mouse.up();
+  await expect(ben.locator('.seat[data-held]')).toHaveCount(0);
   expect(Number((await stackOf(ana, 'Ana').innerText()).replace(/,/g, '')) + Number((await stackOf(ana, 'Ben').innerText()).replace(/,/g, ''))).toBe(2000);
 });

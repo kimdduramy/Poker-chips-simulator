@@ -1,9 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
 import { bySeat, type Player } from '../../shared/engine';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
 import { cardsSpeech, PlayingCard } from './PlayingCard';
+import { setHandFocus, useHandFocus } from '../lib/handFocus';
 
 export function seatStatus(p: Player, phase: string, away: boolean, manual: boolean): string | null {
   const inHand = (phase === 'betting' || phase === 'showdown') && p.inHand;
@@ -21,12 +22,41 @@ export function seatStatus(p: Player, phase: string, away: boolean, manual: bool
   return null;
 }
 
+/**
+ * 쇼다운 뒤 플레이어를 누르고 있는 동안 그 사람 족보를 강조해요.
+ * 손을 떼거나 밖으로 끌면 풀려요. 키보드로는 그 줄에 초점이 있는 동안 강조해요.
+ */
+function holdHandlers(id: string) {
+  const release = () => setHandFocus(null);
+  return {
+    tabIndex: 0,
+    onPointerDown: (e: PointerEvent) => {
+      // 터치를 끝까지 이 줄에 붙잡아 둬서, 손가락이 조금 움직여도 풀리지 않게
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      setHandFocus(id);
+    },
+    onPointerUp: release,
+    onPointerCancel: release,
+    onLostPointerCapture: release,
+    onFocus: () => setHandFocus(id),
+    onBlur: release,
+    onContextMenu: (e: MouseEvent) => e.preventDefault(),
+  };
+}
+
 export function Seats() {
   const { game, you, member, away, room } = useTable();
   const hand = game.phase === 'betting' || game.phase === 'showdown';
   const listRef = useRef<HTMLUListElement>(null);
   const [glide, setGlide] = useState<{ top: number; height: number; slide: boolean } | null>(null);
   const seats = bySeat(game);
+  const focus = useHandFocus();
+  // 쇼다운 결과가 사라지면(다음 핸드) 누르고 있던 것도 풀어요
+  const anyShown = room.shown.length > 0;
+  useLayoutEffect(() => {
+    if (!anyShown) setHandFocus(null);
+  }, [anyShown]);
+  useLayoutEffect(() => () => setHandFocus(null), []);
 
   const [, remeasure] = useState(0);
   useLayoutEffect(() => {
@@ -49,6 +79,7 @@ export function Seats() {
   });
 
   return (
+    <>
     <ul ref={listRef} className="seats" aria-label="플레이어">
       <span
         className="seat-glide"
@@ -68,6 +99,10 @@ export function Seats() {
             key={p.id}
             className="seat"
             data-acting={acting || undefined}
+            data-holdable={shown ? true : undefined}
+            data-held={(shown && focus === p.id) || undefined}
+            data-unheld={(focus !== null && focus !== p.id) || undefined}
+            {...(shown ? holdHandlers(p.id) : {})}
             data-dim={(hand && (!p.inHand || p.folded)) || undefined}
             data-you={p.id === you.id || undefined}
             data-won={won > 0 || undefined}
@@ -93,8 +128,14 @@ export function Seats() {
               {shown && (
                 <span className="seat-shown">
                   <span className="seat-shown-cards" role="img" aria-label={cardsSpeech(shown.cards)}>
-                    {shown.cards.map((c) => (
-                      <PlayingCard key={c} card={c} size="sm" dim={!shown.best.includes(c)} />
+                    {shown.cards.map((c, i) => (
+                      <PlayingCard
+                        key={c}
+                        card={c}
+                        size="sm"
+                        glow={!shown.best.includes(c) ? 'dim' : focus === p.id ? 'hl' : undefined}
+                        flipDelay={i * 120}
+                      />
                     ))}
                   </span>
                   <span className="seat-shown-label">{shown.label}</span>
@@ -115,5 +156,7 @@ export function Seats() {
         );
       })}
     </ul>
+    {anyShown && <p className="hint seats-hint">플레이어를 누르고 있으면 그 사람의 족보 카드가 밝아져요</p>}
+    </>
   );
 }
