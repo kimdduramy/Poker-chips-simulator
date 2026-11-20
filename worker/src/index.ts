@@ -7,6 +7,8 @@ export interface Env {
   ROOMS: DurableObjectNamespace<Room>;
   CREATE_LIMITER?: RateLimit;
   ALLOWED_ORIGINS?: string;
+  /** 테스트용: '1'이면 딜러 대기 시간을 두지 않아요 */
+  DEAL_LOCK_OFF?: string;
 }
 
 const json = (body: unknown, status = 200) =>

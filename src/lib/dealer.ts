@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import type { Game } from '../../shared/engine';
+import { useTable } from './table';
 
 /**
  * 딜러 지시사항: 지금 딜러가 할 일. 카드를 깔 순간(now)에는 강조돼요.
@@ -26,4 +28,27 @@ export function dealerTip(game: Game): { text: string; now: boolean } | null {
   }
   if (game.phase === 'done') return { text: '카드 모아 섞기 · 다음 딜러는 왼쪽 사람', now: false };
   return null;
+}
+
+/**
+ * 딜러가 카드를 까는 중이라 베팅이 잠겨 있으면 남은 시간(ms), 아니면 0.
+ * 잠긴 동안엔 0.2초마다 다시 그려서 숫자가 줄고, 끝나는 순간 버튼이 풀려요.
+ */
+export function useDealLeft(): number {
+  const { room, conn, game } = useTable();
+  const until = game.phase === 'betting' ? room.dealUntil : null;
+  const [, tick] = useState(0);
+  const left = until ? until - (Date.now() + conn.clockOffset) : 0;
+  const locked = left > 0;
+  useEffect(() => {
+    if (!locked) return;
+    const id = window.setInterval(() => tick((n) => n + 1), 200);
+    return () => clearInterval(id);
+  }, [until, locked]);
+  return Math.max(0, left);
+}
+
+/** 잠긴 동안 보여줄 말: 딜러가 지금 무엇을 까는지 */
+export function dealingText(game: Game): string {
+  return ['딜러가 카드 나눠주는 중', '딜러가 플랍 까는 중', '딜러가 턴 까는 중', '딜러가 리버 까는 중'][game.street];
 }

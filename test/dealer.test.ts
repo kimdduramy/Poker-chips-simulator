@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { act, startHand, type Game } from '../shared/engine';
+import { act, dealLockMs, startHand, type Game } from '../shared/engine';
 import { dealerTip } from '../src/lib/dealer';
 import { table } from './helpers';
 
@@ -37,5 +37,27 @@ describe('dealerTip: what the dealer should do right now', () => {
     g = act(g, g.toActId!, { kind: 'raise', amount: 1000 });
     g = act(g, g.toActId!, { kind: 'call' });
     expect(dealerTip(g)).toEqual({ text: '남은 플랍 · 턴 · 리버 펼치기 · 장마다 1장 버리고', now: true });
+  });
+});
+
+describe('dealLockMs: how long betting waits for the dealer', () => {
+  it('locks at each new deal and unlocks once anyone acts', () => {
+    let g = startHand(table([1000, 1000, 1000]));
+    expect(dealLockMs(g)).toBe(3900); // 1.5초 + 3명 × 0.8초
+    const first = g.toActId!;
+    g = act(g, first, { kind: 'call' });
+    expect(dealLockMs(g)).toBe(0);
+    g = closeStreet(g);
+    expect(g.street).toBe(1);
+    expect(dealLockMs(g)).toBe(4000); // 플랍
+    g = closeStreet(g);
+    expect(dealLockMs(g)).toBe(2500); // 턴
+    g = closeStreet(g);
+    expect(dealLockMs(g)).toBe(2500); // 리버
+  });
+
+  it('stays between 3 and 8 seconds for the opening deal', () => {
+    expect(dealLockMs(startHand(table([1000, 1000])))).toBe(3100);
+    expect(dealLockMs(startHand(table(Array(10).fill(1000))))).toBe(8000);
   });
 });

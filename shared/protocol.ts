@@ -78,6 +78,8 @@ export interface RoomView {
   /** 방금 되돌린 것을 다시 실행할 수 있으면 그 설명 */
   redoLabel: string | null;
   turnStartedAt: number | null;
+  /** 딜러가 카드를 까는 동안(서버 시각 기준 이때까지) 베팅 버튼이 잠겨요 */
+  dealUntil: number | null;
 }
 
 export interface YouView {
