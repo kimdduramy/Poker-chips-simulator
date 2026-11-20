@@ -10,7 +10,7 @@ describe('http api', () => {
     const code = await createRoom();
     expect(code).toMatch(/^[A-HJKMNP-Z]{4}$/);
     const info = await api(`/api/rooms/${code}`);
-    expect(await info.json()).toEqual({ code, phase: 'lobby', players: [] });
+    expect(await info.json()).toEqual({ code, phase: 'lobby', cardMode: false, players: [] });
   });
 
   it('returns 404 for unknown or malformed rooms without creating them', async () => {

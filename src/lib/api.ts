@@ -1,11 +1,16 @@
 export interface RoomInfo {
   code: string;
   phase: string;
+  cardMode?: boolean;
   players: string[];
 }
 
-export async function createRoom(): Promise<string> {
-  const res = await fetch('/api/rooms', { method: 'POST' });
+export async function createRoom(opts: { cardMode?: boolean } = {}): Promise<string> {
+  const res = await fetch('/api/rooms', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ cardMode: !!opts.cardMode }),
+  });
   const body = (await res.json().catch(() => ({}))) as { code?: string; error?: string };
   if (!res.ok || !body.code) throw new Error(body.error ?? '테이블을 만들지 못했어요. 다시 시도해 주세요.');
   return body.code;

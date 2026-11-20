@@ -4,12 +4,25 @@ import { dealerTip } from '../lib/dealer';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
+import { BoardRow } from './PlayingCard';
 import { ScrollBox } from './ScrollBox';
+import type { ShownHand } from '../../shared/protocol';
 
-export function outcomeLine(game: Game, nameOf: (id: string) => string) {
+export function outcomeLine(game: Game, nameOf: (id: string) => string, shown: ShownHand[] = []) {
   const winners = [...new Set(game.results.map((r) => r.id))];
   if (winners.length === 0) return '핸드 종료';
   const names = winners.map(nameOf);
+  // 카드 모드: 이긴 족보도 같이 (예: 'Ana 승리 · 플러시 (A 하이)')
+  const hand = shown.find((s) => s.id === winners[0])?.label;
+  if (hand) {
+    if (winners.length > 1) {
+      const contested = game.pots.filter((pot) => pot.eligible.length > 1);
+      const everyPotSplit = contested.every((pot) => game.results.filter((r) => r.potId === pot.id).length > 1);
+      if (!everyPotSplit) return `${names.join(', ')} 팟 획득`;
+      return `${names.join(', ')} 스플릿 · ${hand}`;
+    }
+    return `${names[0]} 승리 · ${hand}`;
+  }
   if (winners.length > 1) {
     const contested = game.pots.filter((pot) => pot.eligible.length > 1);
     const everyPotSplit = contested.every((pot) => game.results.filter((r) => r.potId === pot.id).length > 1);
@@ -71,7 +84,7 @@ export function Stage() {
   } else if (game.phase === 'showdown') {
     line = <span>{game.runout ? '올인 · 런아웃' : '핸드를 공개하세요'}</span>;
   } else if (game.phase === 'done') {
-    line = <span>{outcomeLine(game, nameOf)}</span>;
+    line = <span>{outcomeLine(game, nameOf, room.shown)}</span>;
   }
 
   const last = room.log.at(-1);
@@ -82,7 +95,7 @@ export function Stage() {
         <div className="stage-main">
           <div className="stage-label-row">
             <span className="label">{game.phase === 'done' ? '지급됨' : '팟'}</span>
-            <BoardCards game={game} dealing={freshStreet} />
+            {!room.cardMode && <BoardCards game={game} dealing={freshStreet} />}
           </div>
           {/* 자리 수가 많아지면 글자를 줄여서 오른쪽 표 크기가 변하지 않게 */}
           <span className="pot-fit" style={{ '--pot-chars': Math.max(3, fmt(pot).length) } as CSSProperties}>
@@ -94,6 +107,7 @@ export function Stage() {
         </div>
         {game.phase === 'betting' && <BetBoard game={game} youId={you.id} />}
       </div>
+      <BoardRow />
       {game.phase === 'showdown' && game.pots.length > 1 && (
         <ul className="pot-breakdown">
           {game.pots.map((p, i) => (
@@ -105,7 +119,7 @@ export function Stage() {
           ))}
         </ul>
       )}
-      <DealerBar game={game} youId={you.id} />
+      {!room.cardMode && <DealerBar game={game} youId={you.id} />}
       {/* 베팅 중에는 줄을 항상 차지해서, 문구가 생기고 사라질 때 아래가 들썩이지 않게 */}
       {game.phase === 'betting' && (
         <p className="last-action" key={last && last.kind !== 'hand' ? last.id : 'none'}>

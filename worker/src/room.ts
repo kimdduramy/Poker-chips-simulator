@@ -7,6 +7,7 @@ import {
   createGame,
   dealLockMs,
   findPlayer,
+  handInProgress,
   legalActions,
   rebuy,
   removePlayer,
@@ -19,7 +20,9 @@ import {
   type Game,
   type Settings,
 } from '../../shared/engine';
+import { cryptoRandInt, newDeck, shuffle } from '../../shared/cards';
 import { cleanName, sameName } from '../../shared/names';
+import { autoAward, handValue, visibleBoard, type Deal } from '../../shared/showdown';
 import {
   AWAY_AFTER_MS,
   MAX_MESSAGE_BYTES,
@@ -34,6 +37,7 @@ import {
   type MemberView,
   type RoomView,
   type ServerMessage,
+  type ShownHand,
 } from '../../shared/protocol';
 import type { Env } from './index';
 
@@ -84,6 +88,10 @@ interface Stored {
   /** 딜러가 카드를 까는 동안 베팅을 막는 시각과, 그게 어느 핸드·스트리트였는지 */
   dealUntil?: number | null;
   dealKey?: string | null;
+  /** 카드 모드: 앱이 카드를 나눠주고 족보로 승자를 정해요 (테이블을 만들 때 정해요) */
+  cardMode?: boolean;
+  /** 카드 모드: 이번 핸드에 나눠준 카드. 절대 그대로 내보내지 않아요. */
+  deal?: Deal | null;
 }
 
 interface Attachment {
@@ -146,7 +154,7 @@ export class Room extends DurableObject<Env> {
 
     if (route === 'init' && request.method === 'POST') {
       if (this.s) return new Response('exists', { status: 409 });
-      const { code } = (await request.json()) as { code: string };
+      const { code, cardMode } = (await request.json()) as { code: string; cardMode?: boolean };
       const now = Date.now();
       this.s = {
         code,
@@ -163,6 +171,8 @@ export class Room extends DurableObject<Env> {
         turnId: null,
         dealUntil: null,
         dealKey: null,
+        cardMode: cardMode === true,
+        deal: null,
       };
       this.undo = [];
       this.redo = [];
@@ -176,6 +186,7 @@ export class Room extends DurableObject<Env> {
       return Response.json({
         code: this.s.code,
         phase: this.s.game.phase,
+        cardMode: !!this.s.cardMode,
         players: this.s.members.map((m) => m.name),
       });
     }
@@ -446,10 +457,12 @@ export class Room extends DurableObject<Env> {
       case 'undo': {
         const m = requireHost();
         checkV(msg.v);
-        const snap = this.undo.pop() ?? deny('INVALID', '되돌릴 게 없어요');
+        const peek = this.undo.at(-1) ?? deny('INVALID', '되돌릴 게 없어요');
+        this.guardCardUndo(peek.game);
+        const snap = this.undo.pop() as Snapshot;
         this.redo.push({ label: snap.label, game: s.game });
         if (this.redo.length > UNDO_DEPTH) this.redo.shift();
-        s.game = this.reconcile(snap.game);
+        s.game = this.withCards(this.reconcile(snap.game));
         s.v += 1;
         this.log('undo', `${m.name} 되돌림: ${snap.label}`);
         this.commit();
@@ -458,10 +471,12 @@ export class Room extends DurableObject<Env> {
       case 'redo': {
         const m = requireHost();
         checkV(msg.v);
-        const snap = this.redo.pop() ?? deny('INVALID', '다시 할 게 없어요');
+        const peek = this.redo.at(-1) ?? deny('INVALID', '다시 할 게 없어요');
+        this.guardCardUndo(peek.game);
+        const snap = this.redo.pop() as Snapshot;
         this.undo.push({ label: snap.label, game: s.game });
         if (this.undo.length > UNDO_DEPTH) this.undo.shift();
-        s.game = this.reconcile(snap.game);
+        s.game = this.withCards(this.reconcile(snap.game));
         s.v += 1;
         this.log('undo', `${m.name} 다시 하기: ${snap.label}`);
         this.commit();
@@ -560,7 +575,7 @@ export class Room extends DurableObject<Env> {
   private mutate(label: string, fn: (g: Game) => Game, kind: LogKind = 'hand') {
     const s = this.s as Stored;
     const before = s.game;
-    const after = fn(before);
+    const after = this.withCards(fn(before));
     this.undo.push({ label, game: before });
     this.redo = [];
     if (this.undo.length > UNDO_DEPTH) this.undo.shift();
@@ -587,6 +602,13 @@ export class Room extends DurableObject<Env> {
     if (after.results.length > 0 && after.phase === 'done' && before.phase !== 'done') {
       const totals = new Map<string, number>();
       for (const r of after.results) totals.set(r.id, (totals.get(r.id) ?? 0) + r.amount);
+      const deal = s.deal && s.deal.handNo === after.handNo ? s.deal : null;
+      if (deal && after.reveal) {
+        for (const id of after.reveal) {
+          const value = handValue(deal, id);
+          if (value) this.log('hand', `${name(id)} ${value.label}`);
+        }
+      }
       for (const [id, amount] of totals) {
         const p = findPlayer(after, id) ?? after.departed.find((d) => d.id === id);
         this.log('win', `${p?.name ?? '누군가'} ${fmt(amount)} 획득`);
@@ -613,6 +635,43 @@ export class Room extends DurableObject<Env> {
     }
   }
 
+  // ---------- 카드 모드 ----------
+
+  /** 새 핸드가 시작됐으면 카드를 나눠주고, 쇼다운에 왔으면 족보대로 팟을 지급해요. */
+  private withCards(g: Game): Game {
+    const s = this.s as Stored;
+    if (!s.cardMode) return g;
+    if (handInProgress(g) && g.handNo > 0 && s.deal?.handNo !== g.handNo) {
+      const deck = shuffle(newDeck(), cryptoRandInt);
+      const hole: Record<string, string[]> = {};
+      for (const p of g.players.filter((q) => q.inHand)) hole[p.id] = [deck.pop()!, deck.pop()!];
+      s.deal = { handNo: g.handNo, board: deck.slice(0, 5), hole };
+    }
+    return s.deal ? autoAward(g, s.deal) : g;
+  }
+
+  /** 카드 모드에서는 다른 핸드로 되돌아가지 못하게 해요 (이미 본 카드가 다시 섞이면 안 돼요). */
+  private guardCardUndo(target: Game) {
+    const s = this.s as Stored;
+    if (s.cardMode && target.handNo !== s.game.handNo) {
+      deny('INVALID', '카드 모드에서는 이전 핸드로 되돌릴 수 없어요');
+    }
+  }
+
+  /** 쇼다운에서 공개된 패 */
+  private shownHands(): ShownHand[] {
+    const s = this.s as Stored;
+    const g = s.game;
+    const deal = s.deal;
+    if (!s.cardMode || !deal || deal.handNo !== g.handNo || !g.reveal) return [];
+    return g.reveal.flatMap((id) => {
+      const value = handValue(deal, id);
+      if (!value) return [];
+      const name = findPlayer(g, id)?.name ?? g.departed.find((d) => d.id === id)?.name ?? '누군가';
+      return [{ id, name, cards: deal.hole[id], label: value.label, best: value.best }];
+    });
+  }
+
   /** Undo restores game state only. Seats follow current membership. */
   private reconcile(game: Game): Game {
     const s = this.s as Stored;
@@ -635,7 +694,7 @@ export class Room extends DurableObject<Env> {
   private removeMember(target: Member, how: 'left' | 'kicked') {
     const s = this.s as Stored;
     const before = s.game;
-    const after = findPlayer(before, target.id) ? removePlayer(before, target.id) : before;
+    const after = this.withCards(findPlayer(before, target.id) ? removePlayer(before, target.id) : before);
     s.members = s.members.filter((m) => m.id !== target.id);
     s.claims = s.claims.filter((c) => c.playerId !== target.id);
     if (s.hostId === target.id) {
@@ -708,7 +767,8 @@ export class Room extends DurableObject<Env> {
     const g = s.game;
     const key = g.phase === 'betting' ? `${g.handNo}:${g.street}` : null;
     if (key !== (s.dealKey ?? null)) {
-      const ms = this.env.DEAL_LOCK_OFF === '1' ? 0 : dealLockMs(g);
+      // 카드 모드에서는 앱이 바로 카드를 깔아서 기다릴 필요가 없어요
+      const ms = this.env.DEAL_LOCK_OFF === '1' || s.cardMode ? 0 : dealLockMs(g);
       s.dealUntil = ms > 0 ? Date.now() + ms : null;
       s.dealKey = key;
     }
@@ -788,6 +848,9 @@ export class Room extends DurableObject<Env> {
     }));
     return {
       code: s.code,
+      cardMode: !!s.cardMode,
+      board: s.cardMode ? visibleBoard(s.game, s.deal) : [],
+      shown: this.shownHands(),
       createdAt: s.createdAt,
       hostId: s.hostId,
       members,
@@ -815,8 +878,17 @@ export class Room extends DurableObject<Env> {
         isHost: !!id && s.hostId === id,
         claimId: s.claims.find((c) => c.connId === att.connId)?.id ?? null,
         legal: id ? legalActions(s.game, id) : null,
+        hole: this.holeFor(id),
       },
     };
+  }
+
+  /** 내 카드만 보내요. 이번 핸드 카드가 아니면 아무것도 안 보내요. */
+  private holeFor(id: string | null): string[] | null {
+    const s = this.s as Stored;
+    const deal = s.deal;
+    if (!s.cardMode || !id || !deal || deal.handNo !== s.game.handNo || s.game.handNo === 0) return null;
+    return deal.hole[id] ?? null;
   }
 
   private sendState(ws: WebSocket) {

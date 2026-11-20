@@ -9,6 +9,7 @@ import { Lobby } from '../components/Lobby';
 import { Seats } from '../components/Seats';
 import { Sheets, type SheetName } from '../components/Sheets';
 import { Stage } from '../components/Stage';
+import { MyHand } from '../components/PlayingCard';
 import { turnAlert, unlockAudio, useWakeLock } from '../lib/device-features';
 import { useTable } from '../lib/table';
 import { useDealLeft } from '../lib/dealer';
@@ -78,6 +79,7 @@ export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: ()
         )}
       </main>
       <aside ref={dockRef} className="dock-wrap" aria-label="내 행동">
+        <MyHand />
         <HistoryBar />
         <Dock />
       </aside>

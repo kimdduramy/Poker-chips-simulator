@@ -445,3 +445,32 @@ test('home help opens in a window with how-to, terms and hand ranks tabs', async
   await help.getByRole('button', { name: '닫기' }).click();
   await expect(help).toBeHidden();
 });
+
+test('card mode deals cards on the phones and pays the best hand by itself', async ({ browser }) => {
+  const ctx = await browser.newContext({ ...test.info().project.use });
+  contexts.push(ctx);
+  const ana = await ctx.newPage();
+  await ana.goto('/');
+  await ana.getByRole('radio', { name: /앱 카드/ }).click();
+  await ana.getByRole('button', { name: '테이블 만들기' }).click();
+  await ana.waitForURL(/\/t\/[A-Z]{4}$/);
+  await ana.getByLabel('내 이름').fill('Ana');
+  await ana.getByRole('button', { name: '참가하기' }).click();
+  const ben = await seat(browser, 'Ben', codeOf(ana));
+
+  await expect(ana.getByText('앱이 나눠줘요')).toBeVisible();
+  await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
+  for (const p of [ana, ben]) await expect(p.getByRole('img', { name: /^내 카드: / })).toBeVisible();
+  const anaCards = await ana.getByRole('img', { name: /^내 카드: / }).getAttribute('aria-label');
+  const benCards = await ben.getByRole('img', { name: /^내 카드: / }).getAttribute('aria-label');
+  expect(anaCards).not.toBe(benCards);
+
+  for (let i = 0; i < 8; i++) {
+    if (await ana.getByRole('button', { name: '다음 핸드 시작' }).isVisible()) break;
+    await actWhoeverIsUp([ana, ben], /^(체크|콜)/);
+  }
+  await expect(ana.getByRole('button', { name: '다음 핸드 시작' })).toBeVisible();
+  await expect(ana.getByRole('img', { name: /^보드 카드: / })).toBeVisible();
+  await expect(ben.locator('.stage-line')).toHaveText(/(승리|스플릿) · /);
+  expect(Number((await stackOf(ana, 'Ana').innerText()).replace(/,/g, '')) + Number((await stackOf(ana, 'Ben').innerText()).replace(/,/g, ''))).toBe(2000);
+});
