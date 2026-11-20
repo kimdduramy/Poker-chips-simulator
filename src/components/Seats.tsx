@@ -139,7 +139,7 @@ export function Seats() {
                         key={c}
                         card={c}
                         size="sm"
-                        glow={!(shown.made ?? shown.best).includes(c) ? 'dim' : focus === p.id ? 'hl' : undefined}
+                        glow={focus === p.id ? ((shown.made ?? shown.best).includes(c) ? 'hl' : 'dim') : undefined}
                         flipDelay={revealDelay + i * 120}
                       />
                     ))}
