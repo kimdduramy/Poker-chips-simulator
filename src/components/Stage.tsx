@@ -1,6 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { boardCards, bySeat, findPlayer, potTotal, type Game, type Player } from '../../shared/engine';
-import { dealerTip } from '../lib/dealer';
+import { dealerTip, useDealLeft } from '../lib/dealer';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
@@ -117,16 +117,30 @@ export function Stage() {
 }
 
 function DealerBar({ game, youId }: { game: Game; youId: string | null }) {
+  const { room } = useTable();
+  // 딜러가 카드를 까는 동안(베팅 잠김)은 모두에게 남은 초와 줄어드는 막대를 보여줘요
+  const dealLeft = useDealLeft();
   const tip = dealerTip(game);
   if (!tip) return null;
   const dealer = findPlayer(game, game.buttonId);
   const who = dealer ? (dealer.id === youId ? '딜러 (나)' : `딜러 ${dealer.name}`) : '딜러';
+  const locked = dealLeft > 0 && !!room.dealUntil;
   return (
-    <p className="dealer-bar" data-now={tip.now || undefined} key={tip.text}>
-      <span className="dealer-who">{who}</span>
+    <p className="dealer-bar" data-now={tip.now || undefined} data-locked={locked || undefined} key={tip.text}>
+      <span className="dealer-who">
+        <span>{who}</span>
+        {locked && <span className="dealer-wait">베팅 대기 <span className="num">{Math.ceil(dealLeft / 1000)}</span>초</span>}
+      </span>
       <span className="dealer-tip">{tip.text}</span>
+      {locked && <DealerBarTimer key={room.dealUntil} left={dealLeft} />}
     </p>
   );
+}
+
+/** 딜러 줄 아래쪽에서 줄어드는 막대. 길이는 처음 받은 남은 시간으로 한 번만 정해요. */
+function DealerBarTimer({ left }: { left: number }) {
+  const [total] = useState(left);
+  return <span className="dealer-timer" style={{ animationDuration: `${total}ms` }} aria-hidden="true" />;
 }
 
 /** 콜하려면 더 내야 할 칩: 스택보다 많으면 남은 칩만큼(올인)만 낼 수 있어요. */
@@ -137,7 +151,7 @@ function owes(game: Game, p: Player): string {
   return fmt(Math.min(Math.max(0, game.currentBet - p.bet), p.stack));
 }
 
-/** 팟 옆 표: 참가자별로 지금 내야 할 칩과 방금 추가로 넣은 칩. 내용이 많으면 안에서 스크롤돼요. */
+/** 팟 옆 표: 참가자별로 지금 내야 할 칩과 이번 판에 낸 칩. 내용이 많으면 안에서 스크롤돼요. */
 function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
   const rows = bySeat(game).filter((p) => p.inHand || p.committed > 0);
   return (
@@ -152,7 +166,7 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
               콜<span className="wide-only"> 금액</span>
             </th>
             <th className="num">
-              직전<span className="wide-only"> 베팅</span>
+              총 베팅
             </th>
           </tr>
         </thead>
@@ -162,7 +176,8 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
         <BoardCols />
         <tbody>
           {rows.map((p) => {
-            const added = p.lastPaid ?? 0;
+            // 이번 핸드에 지금까지 낸 칩 전부 (블라인드 포함)
+            const total = p.committed;
             return (
               <tr key={p.id} data-acting={game.toActId === p.id || undefined} data-dim={p.folded || !p.inHand || undefined}>
                 <th scope="row">
@@ -170,7 +185,7 @@ function BetBoard({ game, youId }: { game: Game; youId: string | null }) {
                   {p.id === youId && <span className="bet-board-you">나</span>}
                 </th>
                 <td className="num">{owes(game, p)}</td>
-                <td className="num">{added > 0 ? `+${fmt(added)}` : '–'}</td>
+                <td className="num">{total > 0 ? fmt(total) : '–'}</td>
               </tr>
             );
           })}
