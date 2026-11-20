@@ -668,7 +668,7 @@ export class Room extends DurableObject<Env> {
       const value = handValue(deal, id);
       if (!value) return [];
       const name = findPlayer(g, id)?.name ?? g.departed.find((d) => d.id === id)?.name ?? '누군가';
-      return [{ id, name, cards: deal.hole[id], label: value.label, best: value.best }];
+      return [{ id, name, cards: deal.hole[id], label: value.label, best: value.best, made: value.made }];
     });
   }
 

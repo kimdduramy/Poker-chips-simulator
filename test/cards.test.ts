@@ -75,3 +75,17 @@ describe('deck', () => {
     expect(mixed).not.toEqual(deck);
   });
 });
+
+describe('made cards', () => {
+  const made = (s: string) => h(s).made.map((c) => c[0]).sort().join('');
+  it('keeps only the cards that make the hand, not the kickers', () => {
+    expect(made('Th Tc Ad 7s 3c 2d 5h')).toBe('TT');
+    expect(made('Js Jd 4c 4h As 2d 7c')).toBe('44JJ');
+    expect(made('8s 8h 8d Kc 4h 2s 3c')).toBe('888');
+    expect(made('Kd Kc Kh Ks 3d 3c 2h')).toBe('KKKK');
+    expect(made('As Jd 8c 6h 2s 3d 4c')).toBe('A');
+    expect(h('Qs Qh Qd 7c 7h 2s 3s').made).toHaveLength(5);
+    expect(h('Ad Jd 8d 5d 2d Kc Qh').made).toHaveLength(5);
+    expect(h('Ah 2c 3d 4s 5h Kd Qc').made).toHaveLength(5);
+  });
+});

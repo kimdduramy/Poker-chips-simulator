@@ -3,7 +3,7 @@ import { bySeat, type Player } from '../../shared/engine';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
-import { cardsSpeech, PlayingCard } from './PlayingCard';
+import { boardSettleDelay, cardsSpeech, PlayingCard } from './PlayingCard';
 import { setHandFocus, useHandFocus } from '../lib/handFocus';
 
 export function seatStatus(p: Player, phase: string, away: boolean, manual: boolean): string | null {
@@ -51,6 +51,12 @@ export function Seats() {
   const [glide, setGlide] = useState<{ top: number; height: number; slide: boolean } | null>(null);
   const seats = bySeat(game);
   const focus = useHandFocus();
+  // 공개 패는 보드 카드가 다 깔린 뒤에 나와요 (쇼다운 결과가 처음 생긴 순간에 한 번 정해요)
+  // (같은 렌더에서 보드가 먼저 그려져서, 여기서 읽으면 이번에 깔릴 카드까지 반영돼요)
+  const shownKey = room.shown.length > 0 ? game.handNo : null;
+  const reveal = useRef<{ key: number | null; delay: number }>({ key: null, delay: 0 });
+  if (reveal.current.key !== shownKey) reveal.current = { key: shownKey, delay: shownKey === null ? 0 : boardSettleDelay() };
+  const revealDelay = reveal.current.delay;
   // 쇼다운 결과가 사라지면(다음 핸드) 누르고 있던 것도 풀어요
   const anyShown = room.shown.length > 0;
   useLayoutEffect(() => {
@@ -133,8 +139,8 @@ export function Seats() {
                         key={c}
                         card={c}
                         size="sm"
-                        glow={!shown.best.includes(c) ? 'dim' : focus === p.id ? 'hl' : undefined}
-                        flipDelay={i * 120}
+                        glow={!(shown.made ?? shown.best).includes(c) ? 'dim' : focus === p.id ? 'hl' : undefined}
+                        flipDelay={revealDelay + i * 120}
                       />
                     ))}
                   </span>
