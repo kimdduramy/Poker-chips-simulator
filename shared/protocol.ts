@@ -34,6 +34,8 @@ export type ClientMessage =
   | { type: 'rebuy'; playerId?: string }
   | { type: 'repay'; amount: number }
   | { type: 'leave' }
+  /** 딜러가 카드를 다 깔았다고 알려 베팅 잠금을 바로 풀어요 (차례인 사람은 못 해요) */
+  | { type: 'dealt' }
   | { type: 'settings'; v: number; settings: Settings }
   | { type: 'setStack'; v: number; playerId: string; stack: number }
   | { type: 'seatOrder'; v: number; ids: string[] }
@@ -129,6 +131,7 @@ export function parseClientMessage(raw: string): Envelope | null {
     case 'cancelClaim':
     case 'leave':
     case 'takeHost':
+    case 'dealt':
       return out({ type: m.type });
     case 'resolveClaim':
       return isId(m.claimId) && typeof m.allow === 'boolean'

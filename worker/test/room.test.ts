@@ -252,6 +252,31 @@ describe('seats and devices', () => {
     await c.ok({ type: 'act', v: c.state.v, kind: legal.canCheck ? 'check' : 'call' });
   });
 
+  it('anyone but the player to act can release the dealer lock early', async () => {
+    const { code, clients } = await table(['Ana', 'Ben']);
+    const [ana] = clients;
+    await ana.ok({ type: 'start', v: ana.state.v });
+    // 잠금이 없으면 풀 게 없어요
+    const t = ana.state.room.game.toActId!;
+    const actor = clients.find((x) => x.state.you.id === t)!;
+    const other = clients.find((x) => x !== actor)!;
+    expect(await other.request({ type: 'dealt' })).toMatchObject({ code: 'PHASE' });
+    const stub = env.ROOMS.get(env.ROOMS.idFromName(code));
+    await runInDurableObject(stub, async (room) => {
+      (room as unknown as { s: { dealUntil: number | null } }).s.dealUntil = Date.now() + 10_000;
+    });
+    // 차례인 사람은 못 풀어요
+    expect(await actor.request({ type: 'dealt' })).toMatchObject({ code: 'FORBIDDEN' });
+    const legal = actor.state.you.legal!;
+    const kind = legal.canCheck ? 'check' : 'call';
+    expect(await actor.request({ type: 'act', v: actor.state.v, kind })).toMatchObject({ code: 'PHASE' });
+    // 다른 사람이 풀면 바로 할 수 있어요
+    await other.ok({ type: 'dealt' });
+    await actor.settle();
+    expect(actor.state.room.dealUntil).toBeLessThanOrEqual(Date.now());
+    await actor.ok({ type: 'act', v: actor.state.v, kind });
+  });
+
   it('acting for someone is only allowed when they are away or have no phone', async () => {
     const { clients, idOf } = await table(['Ana', 'Ben']);
     const [ana, ben] = clients;

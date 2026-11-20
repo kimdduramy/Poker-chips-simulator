@@ -206,6 +206,7 @@ function DealWait({ left, text }: { left: number; text: string }) {
         <span className="num">{Math.ceil(left / 1000)}</span>
       </span>
       <span className="deal-wait-bar" style={{ animationDuration: `${total}ms` }} aria-hidden="true" />
+      <span className="deal-wait-hint">다 깔리면 다른 사람이 '다 깔았어요'로 바로 풀어줄 수 있어요</span>
     </div>
   );
 }

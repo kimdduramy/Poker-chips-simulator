@@ -1493,6 +1493,42 @@ button:disabled {
   overflow: hidden;
 }
 
+/* 딜러 줄 오른쪽의 '다 깔았어요' 버튼 (차례인 사람 말고 모두에게) */
+.dealer-bar:has(.dealer-done) {
+  grid-template-columns: 1fr auto;
+  column-gap: 10px;
+  align-items: center;
+}
+
+.dealer-bar:has(.dealer-done) .dealer-who,
+.dealer-bar:has(.dealer-done) .dealer-tip {
+  grid-column: 1;
+}
+
+.dealer-done {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--on-accent);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.dealer-done:active {
+  transform: scale(0.97);
+}
+
+.dealer-done:disabled {
+  opacity: 0.6;
+}
+
 /* 베팅이 풀릴 때까지 아래쪽에서 줄어드는 막대 */
 .dealer-timer {
   position: absolute;
@@ -2020,6 +2056,12 @@ button:disabled {
 .deal-wait-text .num {
   font-weight: 650;
   color: var(--ink);
+}
+
+.deal-wait-hint {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  opacity: 0.8;
 }
 
 .deal-wait-bar {
@@ -3372,11 +3414,22 @@ body {
   overflow-x: clip;
 }
 
-/* 아주 좁은 폰: 베팅 현황표 머리줄을 짧게 ('콜') */
+/* 아주 좁은 폰: 베팅 현황표 머리줄을 짧게 ('콜', '총액') */
+.narrow-only {
+  display: none;
+}
+
 @media (max-width: 374px) {
   .wide-only {
     display: none;
   }
+  .narrow-only {
+    display: inline;
+  }
+}
+
+.bet-board-head th {
+  white-space: nowrap;
 }
 
 /* ---------- 액션 알림: 화면 가운데를 가로지르는 띠 ---------- */

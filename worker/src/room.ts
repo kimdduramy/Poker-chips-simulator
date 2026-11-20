@@ -419,6 +419,15 @@ export class Room extends DurableObject<Env> {
         this.mutate('다음 핸드 시작', (g) => startHand(g));
         return;
       }
+      case 'dealt': {
+        const m = requireMember();
+        if (!s.dealUntil || Date.now() >= s.dealUntil) deny('PHASE', '이미 베팅할 수 있어요');
+        if (s.game.toActId === m.id) deny('FORBIDDEN', '차례인 사람은 못 풀어요. 다른 사람이 눌러 줘요');
+        s.dealUntil = Date.now();
+        this.log('table', `${m.name}님이 카드 다 깔았다고 알렸어요`);
+        this.commit();
+        return;
+      }
       case 'act': {
         const m = requireMember();
         checkV(msg.v);

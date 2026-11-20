@@ -627,15 +627,16 @@ export const chipsInPlay = (g: Game) => g.players.reduce((s, p) => s + p.stack +
 
 /**
  * 딜러가 카드를 까야 하는 순간이면 그 동안 베팅을 잠글 시간(ms), 아니면 0.
- * 새 핸드는 사람마다 2장씩 나눠줘서 인원에 따라 길어지고, 플랍은 3장, 턴·리버는 1장이에요.
+ * 손으로 버리고 까는 시간을 넉넉히 잡았어요. 다 깔면 차례가 아닌 사람 누구나 '다 깔았어요'로 바로 풀 수 있어요.
+ * 새 핸드는 사람마다 2장씩 나눠줘서 인원에 따라 길어지고(5~15초), 플랍 8초, 턴·리버 5초예요.
  */
 export function dealLockMs(g: Game): number {
   if (g.phase !== 'betting') return 0;
   if (g.players.some((p) => p.acted)) return 0;
   if (g.street === 0) {
     const n = g.players.filter((p) => p.inHand).length;
-    return Math.min(8000, Math.max(3000, 1500 + n * 800));
+    return Math.min(15000, Math.max(5000, 2000 + n * 1500));
   }
   if (g.currentBet !== 0) return 0;
-  return g.street === 1 ? 4000 : 2500;
+  return g.street === 1 ? 8000 : 5000;
 }
