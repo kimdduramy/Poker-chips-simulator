@@ -9,6 +9,8 @@
     "dev": "concurrently -k -n api,web -c yellow,cyan \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "wrangler dev -c worker/wrangler.jsonc --port 8787",
     "dev:web": "vite",
+    "dev:e2e": "concurrently -k -n api,web -c yellow,cyan \"npm:dev:api:e2e\" \"npm:dev:web\"",
+    "dev:api:e2e": "wrangler dev -c worker/wrangler.jsonc --port 8787 --var DEAL_LOCK_OFF:1",
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.worker.json --noEmit",
     "test": "npm run test:unit && npm run test:worker",

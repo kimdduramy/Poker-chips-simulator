@@ -17,6 +17,10 @@
 /index.html
   Cache-Control: no-cache
 
+# 켜둔 앱이 새 버전이 나왔는지 확인하는 파일
+/version.json
+  Cache-Control: no-store
+
 /t/*
   X-Robots-Tag: noindex
   Cache-Control: no-cache

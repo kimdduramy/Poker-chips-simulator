@@ -6,8 +6,10 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles.css';
 import { healStaleAssets } from './lib/staleAssets';
+import { autoUpdate } from './lib/autoUpdate';
 
 healStaleAssets();
+autoUpdate();
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
