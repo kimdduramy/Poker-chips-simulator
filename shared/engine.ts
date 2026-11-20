@@ -84,6 +84,8 @@ export interface Game {
   /** Showdown was reached before the river: the dealer must run out the board. */
   runout: boolean;
   lastAction: LastAction | null;
+  /** 카드 모드: 쇼다운에서 카드를 공개한 사람들. 실물 카드 모드에서는 비어 있어요. */
+  reveal?: string[] | null;
 }
 
 export interface Legal {
@@ -151,6 +153,7 @@ export function createGame(settings: Settings): Game {
     results: [],
     runout: false,
     lastAction: null,
+    reveal: null,
   };
 }
 
@@ -419,6 +422,7 @@ export function startHand(g0: Game): Game {
   g.pots = [];
   g.results = [];
   g.runout = false;
+  g.reveal = null;
   g.buttonId = btnP.id;
   g.sbId = sbP.id;
   g.bbId = bbP.id;

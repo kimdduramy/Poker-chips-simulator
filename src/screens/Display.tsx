@@ -3,6 +3,7 @@ import { ActionToast } from '../components/ActionToast';
 import { Qr } from '../components/Qr';
 import { outcomeLine } from '../components/Stage';
 import { Num } from '../components/Num';
+import { BoardRow } from '../components/PlayingCard';
 import { seatStatus } from '../components/Seats';
 import { useWakeLock } from '../lib/device-features';
 import { fmt, NEXT_CARDS, roomUrl, STREET_NAMES } from '../lib/format';
@@ -17,10 +18,10 @@ export function Display({ onExit }: { onExit: () => void }) {
 
   let headline = '';
   if (game.phase === 'lobby') headline = 'QR 찍고 들어오세요';
-  else if (game.phase === 'betting' && actor) headline = freshStreet ? NEXT_CARDS[game.street] : `${actor.name} 액션`;
+  else if (game.phase === 'betting' && actor) headline = freshStreet && !room.cardMode ? NEXT_CARDS[game.street] : `${actor.name} 액션`;
   else if (game.phase === 'showdown') headline = game.runout ? '올인 · 런아웃' : '핸드를 공개하세요';
   else if (game.phase === 'done') {
-    headline = outcomeLine(game, nameOf);
+    headline = outcomeLine(game, nameOf, room.shown);
   }
 
   return (
@@ -48,6 +49,7 @@ export function Display({ onExit }: { onExit: () => void }) {
           <span className="label">{game.phase === 'done' ? '지급됨' : '팟'}</span>
           <Num value={pot} className="display-pot-amount" />
         </div>
+        <BoardRow size="lg" />
         <p className="display-headline" aria-live="polite" key={headline}>
           {headline}
         </p>

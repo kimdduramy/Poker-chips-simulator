@@ -3585,3 +3585,164 @@ body {
   border-bottom: 1px solid var(--line);
   font-size: 0.9375rem;
 }
+
+/* ---------------- 카드 모드 ---------------- */
+
+/* 테이블 만들 때 실물 카드 / 앱 카드 고르기 */
+.mode-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.mode-pick-opt {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mode-pick-opt[aria-checked='true'] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  color: var(--ink);
+}
+.mode-pick-title {
+  font-weight: 650;
+}
+.mode-pick-desc {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+
+/* 카드 한 장 */
+.pcard {
+  --w: 34px;
+  display: inline-grid;
+  grid-template-rows: auto auto;
+  place-content: center;
+  justify-items: center;
+  flex: none;
+  width: var(--w);
+  height: calc(var(--w) * 1.4);
+  border: 1px solid var(--line-strong);
+  border-radius: calc(var(--w) * 0.14);
+  background: #fff;
+  color: oklch(0.2 0 0);
+  line-height: 1;
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.08);
+  transition: opacity 200ms var(--ease-out);
+}
+.pcard[data-size='sm'] {
+  --w: 22px;
+}
+.pcard[data-size='lg'] {
+  --w: 46px;
+}
+.pcard[data-red] {
+  color: oklch(0.55 0.21 25);
+}
+.pcard[data-dim] {
+  opacity: 0.45;
+}
+.pcard[data-empty] {
+  background: transparent;
+  border: 1.25px dashed var(--line-strong);
+  box-shadow: none;
+}
+.pcard[data-back] {
+  background: repeating-linear-gradient(45deg, var(--accent) 0 4px, color-mix(in oklch, var(--accent) 70%, #fff) 4px 8px);
+  border-color: var(--accent-text);
+}
+.pcard-rank {
+  font-size: calc(var(--w) * 0.44);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+}
+.pcard-suit {
+  font-size: calc(var(--w) * 0.4);
+}
+.pcard:not([data-empty], [data-back]) {
+  animation: pcard-in 260ms var(--ease-out);
+}
+@keyframes pcard-in {
+  from {
+    transform: translateY(-4px) scale(0.92);
+    opacity: 0;
+  }
+}
+
+/* 보드 5장: 플랍 3장 | 턴 | 리버 */
+.board-row {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+.board-row > .pcard:nth-child(4),
+.board-row > .pcard:nth-child(5) {
+  margin-left: 4px;
+}
+.board-row[data-size='lg'] {
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 8px;
+}
+.board-row[data-size='lg'] > .pcard {
+  --w: clamp(48px, 9vw, 96px);
+}
+
+/* 내 카드 (아래 행동 영역 위) */
+.my-hand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px var(--gutter) 4px;
+}
+.my-hand-cards {
+  display: flex;
+  gap: 5px;
+}
+.my-hand-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.my-hand-label {
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.my-hand[data-folded] .pcard {
+  opacity: 0.35;
+}
+
+/* 쇼다운에서 공개된 패 (좌석 목록) */
+.seat-shown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+.seat-shown-cards {
+  display: flex;
+  gap: 2px;
+}
+.seat-shown-label {
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+
+@media (max-width: 374px) {
+  .board-row > .pcard {
+    --w: 30px;
+  }
+  .pcard[data-size='lg'] {
+    --w: 40px;
+  }
+}

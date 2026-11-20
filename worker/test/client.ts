@@ -11,8 +11,12 @@ export async function api(path: string, init?: RequestInit) {
 
 let ipCounter = 0;
 
-export async function createRoom(ip = `10.0.0.${++ipCounter}`): Promise<string> {
-  const res = await api('/api/rooms', { method: 'POST', headers: { 'cf-connecting-ip': ip } });
+export async function createRoom(ip = `10.0.0.${++ipCounter}`, opts: { cardMode?: boolean } = {}): Promise<string> {
+  const res = await api('/api/rooms', {
+    method: 'POST',
+    headers: { 'cf-connecting-ip': ip },
+    body: opts.cardMode ? JSON.stringify({ cardMode: true }) : undefined,
+  });
   if (res.status !== 201) throw new Error(`create failed ${res.status}`);
   return ((await res.json()) as { code: string }).code;
 }
@@ -106,8 +110,8 @@ export class Client {
   }
 }
 
-export async function table(names: string[]) {
-  const code = await createRoom();
+export async function table(names: string[], opts: { cardMode?: boolean } = {}) {
+  const code = await createRoom(undefined, opts);
   const clients: Client[] = [];
   for (let i = 0; i < names.length; i++) {
     const c = await Client.connect(code, tokenFor(i + 1));

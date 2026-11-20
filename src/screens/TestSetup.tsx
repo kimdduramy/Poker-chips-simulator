@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { createRoom } from '../lib/api';
 import { setTest } from '../lib/testMode';
+import { CardModePick } from '../components/CardModePick';
 
 /** /test : 혼자서 여러 명 판을 시험해 보는 테스트 판 만들기 */
 export function TestSetup({ navigate }: { navigate: (to: string) => void }) {
   const [bots, setBots] = useState(3);
   const [busy, setBusy] = useState(false);
+  const [cardMode, setCardMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const start = async () => {
     setBusy(true);
     setError(null);
     try {
-      const code = await createRoom();
+      const code = await createRoom({ cardMode });
       setTest(code, { bots, joined: false, seeded: false });
       navigate(`/t/${code}`);
     } catch (e) {
@@ -47,6 +49,8 @@ export function TestSetup({ navigate }: { navigate: (to: string) => void }) {
             </button>
           ))}
         </div>
+        <span className="field-label">카드</span>
+        <CardModePick value={cardMode} onChange={setCardMode} />
         <button className="btn btn-primary btn-xl" onClick={start} disabled={busy}>
           {busy ? '만드는 중…' : '테스트 판 시작'}
         </button>

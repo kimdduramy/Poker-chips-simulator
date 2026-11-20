@@ -3,6 +3,7 @@ import { bySeat, type Player } from '../../shared/engine';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
+import { cardsSpeech, PlayingCard } from './PlayingCard';
 
 export function seatStatus(p: Player, phase: string, away: boolean, manual: boolean): string | null {
   const inHand = (phase === 'betting' || phase === 'showdown') && p.inHand;
@@ -21,7 +22,7 @@ export function seatStatus(p: Player, phase: string, away: boolean, manual: bool
 }
 
 export function Seats() {
-  const { game, you, member, away } = useTable();
+  const { game, you, member, away, room } = useTable();
   const hand = game.phase === 'betting' || game.phase === 'showdown';
   const listRef = useRef<HTMLUListElement>(null);
   const [glide, setGlide] = useState<{ top: number; height: number; slide: boolean } | null>(null);
@@ -61,6 +62,7 @@ export function Seats() {
         const acting = game.toActId === p.id;
         const blind = hand ? (game.sbId === p.id ? 'SB' : game.bbId === p.id ? 'BB' : null) : null;
         const won = game.phase === 'done' ? game.results.filter((r) => r.id === p.id).reduce((s, r) => s + r.amount, 0) : 0;
+        const shown = room.shown.find((s) => s.id === p.id);
         return (
           <li
             key={p.id}
@@ -86,6 +88,16 @@ export function Seats() {
               {(blind || status || p.loan) && (
                 <span className="seat-meta">
                   {[blind, status, p.loan ? `빚 ${fmt(p.loan)}` : null].filter(Boolean).join(' · ')}
+                </span>
+              )}
+              {shown && (
+                <span className="seat-shown">
+                  <span className="seat-shown-cards" role="img" aria-label={cardsSpeech(shown.cards)}>
+                    {shown.cards.map((c) => (
+                      <PlayingCard key={c} card={c} size="sm" dim={!shown.best.includes(c)} />
+                    ))}
+                  </span>
+                  <span className="seat-shown-label">{shown.label}</span>
                 </span>
               )}
             </div>

@@ -3,18 +3,20 @@ import { CODE_LENGTH, normalizeCode } from '../../shared/protocol';
 import { createRoom, roomInfo } from '../lib/api';
 import { unlockAudio } from '../lib/device-features';
 import { HelpButton } from '../components/Help';
+import { CardModePick } from '../components/CardModePick';
 
 export function Home({ navigate }: { navigate: (to: string) => void }) {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'new' | 'join' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cardMode, setCardMode] = useState(false);
 
   const start = async () => {
     unlockAudio();
     setBusy('new');
     setError(null);
     try {
-      navigate(`/t/${await createRoom()}`);
+      navigate(`/t/${await createRoom({ cardMode })}`);
     } catch (e) {
       setError((e as Error).message);
       setBusy(null);
@@ -65,6 +67,7 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
       </section>
 
       <section id="home-actions" className="home-actions">
+        <CardModePick value={cardMode} onChange={setCardMode} />
         <button className="btn btn-primary btn-xl" onClick={start} disabled={busy !== null}>
           {busy === 'new' ? '만드는 중…' : '테이블 만들기'}
         </button>

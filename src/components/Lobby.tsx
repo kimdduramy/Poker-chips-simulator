@@ -88,6 +88,10 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
             <dt>시작 스택</dt>
             <dd className="num">{fmt(startingStack)}</dd>
           </div>
+          <div>
+            <dt>카드</dt>
+            <dd>{room.cardMode ? '앱이 나눠줘요' : '실물 카드'}</dd>
+          </div>
         </dl>
       </section>
     </div>

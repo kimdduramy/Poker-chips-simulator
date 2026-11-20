@@ -1,3 +1,4 @@
+import type { Card } from './cards';
 import type { ActionKind, Game, Legal, Settings } from './engine';
 
 export const MAX_MESSAGE_BYTES = 2048;
@@ -66,8 +67,25 @@ export interface LogEntry {
   text: string;
 }
 
+/** 카드 모드 쇼다운에서 공개된 패 */
+export interface ShownHand {
+  id: string;
+  name: string;
+  cards: Card[];
+  /** 족보 이름, 예: '플러시 (A 하이)' */
+  label: string;
+  /** 족보를 만든 5장 */
+  best: Card[];
+}
+
 export interface RoomView {
   code: string;
+  /** 카드 모드: 앱이 카드를 나눠주고 승자를 정해요 */
+  cardMode: boolean;
+  /** 카드 모드에서 지금 깔린 보드 카드 */
+  board: Card[];
+  /** 카드 모드에서 쇼다운 때 공개된 패 */
+  shown: ShownHand[];
   createdAt: number;
   hostId: string | null;
   members: MemberView[];
@@ -87,6 +105,8 @@ export interface YouView {
   isHost: boolean;
   claimId: string | null;
   legal: Legal | null;
+  /** 카드 모드: 내 홀카드 (나한테만 보내요) */
+  hole: Card[] | null;
 }
 
 export type ErrorCode = 'STALE' | 'NOT_TURN' | 'INVALID' | 'PHASE' | 'FORBIDDEN' | 'RATE' | 'NOT_FOUND';
