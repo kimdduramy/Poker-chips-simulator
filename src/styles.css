@@ -70,6 +70,24 @@
 
 /* ---------- base ---------- */
 
+/*
+ * 앱처럼 쓰는 화면이라 꾹 눌러도 글자가 선택되거나, 검색·복사 메뉴가 뜨거나, 진동이 울리지 않게 해요.
+ * 입력칸만 예외예요.
+ */
+html {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+input,
+textarea,
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 *,
 *::before,
 *::after {

@@ -86,10 +86,9 @@ export function useFocusedBest(room: RoomView): { id: string | null; best: Set<C
   const shown = room.shown;
   // 족보를 이루는 카드만 (키커 제외). 예전 서버는 made가 없어서 best로 대신해요.
   const made = (s: (typeof shown)[number]) => s.made ?? s.best;
+  // 평소에는 아무 카드도 흐리게 하지 않아요. 플레이어를 누르고 있는 동안만 그 사람 족보를 강조해요.
   const held = focus ? shown.find((s) => s.id === focus) : undefined;
-  if (held) return { id: held.id, best: new Set(made(held)) };
-  const winners = new Set(room.game.results.map((r) => r.id));
-  return { id: null, best: new Set(shown.filter((s) => winners.has(s.id)).flatMap(made)) };
+  return held ? { id: held.id, best: new Set(made(held)) } : { id: null, best: new Set() };
 }
 
 /** 카드 모드 보드: 깔린 카드 + 아직 안 깐 자리 */
@@ -101,13 +100,12 @@ export function BoardRow({ size = 'md' }: { size?: 'md' | 'lg' }) {
     boardSettlesAt = performance.now() + last + DEAL_MS;
   });
   if (!room.cardMode || game.phase === 'lobby') return null;
-  const showing = room.shown.length > 0;
   const label = board.length === 0 ? '보드 카드 아직 없음' : `보드 카드: ${cardsSpeech(board)}`;
   return (
     <div className="board-row" data-size={size} data-focus={focus.id ? true : undefined} role="img" aria-label={label}>
       {[0, 1, 2, 3, 4].map((i) => {
         const c = board[i];
-        const glow: Glow = showing && c ? (focus.best.has(c) ? (focus.id ? 'hl' : undefined) : 'dim') : undefined;
+        const glow: Glow = focus.id && c ? (focus.best.has(c) ? 'hl' : 'dim') : undefined;
         // 카드가 바뀌면 새 요소로 그려야 애니메이션이 다시 돌아요
         return <PlayingCard key={c ?? `empty-${i}`} size={size} card={c} glow={glow} flipDelay={c ? delay(c) : null} />;
       })}
@@ -126,15 +124,18 @@ export function MyHand() {
   const all = [...hole, ...room.board];
   const value = all.length >= 5 ? evaluate(all) : null;
   const best = new Set(value?.made ?? []);
-  const held = focus !== null && focus === you.id;
-  // 핸드 중에는 내 카드를 흐리게 하지 않아요 (폴드한 것처럼 보여서). 결과가 나온 뒤에만 족보 밖 카드를 흐리게.
-  const ended = room.shown.length > 0;
+  // 누가 눌려 있을 때만: 나를 누르면 내 족보 카드 강조, 다른 사람을 누르면 내 카드는 흐리게
+  const holding = focus !== null && room.shown.some((s) => s.id === focus);
+  const glowOf = (c: Card): Glow => {
+    if (!holding) return undefined;
+    return focus === you.id && best.has(c) ? 'hl' : 'dim';
+  };
   const label = value ? value.label : hole[0][0] === hole[1][0] ? `포켓 페어 (${cardRankText(hole[0])})` : '프리플랍';
   return (
     <div className="my-hand" data-folded={folded || undefined}>
       <span className="my-hand-cards" role="img" aria-label={`내 카드: ${cardsSpeech(hole)}`}>
         {hole.map((c) => (
-          <PlayingCard key={c} card={c} size="lg" glow={ended && value && !best.has(c) ? 'dim' : held ? 'hl' : undefined} flipDelay={delay(c)} />
+          <PlayingCard key={c} card={c} size="lg" glow={glowOf(c)} flipDelay={delay(c)} />
         ))}
       </span>
       <span className="my-hand-text">
