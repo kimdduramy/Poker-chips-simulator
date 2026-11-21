@@ -460,9 +460,9 @@ test('card mode deals cards on the phones and pays the best hand by itself', asy
 
   await expect(ana.getByText('앱이 나눠줘요')).toBeVisible();
   await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
-  for (const p of [ana, ben]) await expect(p.getByRole('img', { name: /^내 카드: / })).toBeVisible();
-  const anaCards = await ana.getByRole('img', { name: /^내 카드: / }).getAttribute('aria-label');
-  const benCards = await ben.getByRole('img', { name: /^내 카드: / }).getAttribute('aria-label');
+  for (const p of [ana, ben]) await expect(p.getByRole('button', { name: /^내 카드: / })).toBeVisible();
+  const anaCards = await ana.getByRole('button', { name: /^내 카드: / }).getAttribute('aria-label');
+  const benCards = await ben.getByRole('button', { name: /^내 카드: / }).getAttribute('aria-label');
   expect(anaCards).not.toBe(benCards);
 
   for (let i = 0; i < 8; i++) {

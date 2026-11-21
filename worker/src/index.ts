@@ -9,6 +9,8 @@ export interface Env {
   ALLOWED_ORIGINS?: string;
   /** 테스트용: '1'이면 딜러 대기 시간을 두지 않아요 */
   DEAL_LOCK_OFF?: string;
+  /** 테스트용: '1'이면 테이블 만들기 횟수 제한을 두지 않아요 (e2e는 1분에 20개 넘게 만들어요) */
+  CREATE_LIMIT_OFF?: string;
 }
 
 const json = (body: unknown, status = 200) =>
@@ -65,7 +67,7 @@ export default {
 
     if (parts[1] === 'rooms' && parts.length === 2 && request.method === 'POST') {
       const ip = request.headers.get('cf-connecting-ip') ?? 'local';
-      if (env.CREATE_LIMITER) {
+      if (env.CREATE_LIMITER && env.CREATE_LIMIT_OFF !== '1') {
         const { success } = await env.CREATE_LIMITER.limit({ key: ip });
         if (!success) return json({ error: '테이블을 너무 많이 만들었어요. 1분 뒤에 다시 시도해 주세요.' }, 429);
       }
