@@ -482,5 +482,16 @@ test('card mode deals cards on the phones and pays the best hand by itself', asy
   await expect(ben.locator('.board-row .pcard[data-glow="hl"]')).not.toHaveCount(0);
   await ben.mouse.up();
   await expect(ben.locator('.seat[data-held]')).toHaveCount(0);
+
+  // 메뉴 → 기록 → 핸드 기록 복사: 보드와 공개된 패가 글로 복사돼요
+  await ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await ana.getByRole('button', { name: '메뉴' }).click();
+  await ana.getByRole('button', { name: /^기록/ }).click();
+  await ana.getByRole('button', { name: '핸드 기록 복사' }).click();
+  await expect(ana.getByText('핸드 1판 기록을 복사했어요')).toBeVisible();
+  const copied = await ana.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toContain('=== 핸드 #1');
+  expect(copied).toMatch(/보드: \S+ \S+ \S+ \S+ \S+/);
+  expect(copied).toContain('공개: ');
   expect(Number((await stackOf(ana, 'Ana').innerText()).replace(/,/g, '')) + Number((await stackOf(ana, 'Ben').innerText()).replace(/,/g, ''))).toBe(2000);
 });

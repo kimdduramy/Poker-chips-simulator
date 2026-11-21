@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { evaluate, winnersOf } from '../../shared/cards';
-import { api, type Client, table } from './client';
+import type { HandRecord } from '../../shared/protocol';
+import { api, type Client, table, tokenFor } from './client';
 
 /** 차례인 사람이 콜할 게 있으면 콜, 없으면 체크하면서 핸드 끝까지 */
 async function checkDown(clients: Client[]) {
@@ -114,5 +115,50 @@ describe('card mode', () => {
     await ana.ok({ type: 'start', v: ana.state.v });
     const reply = await ana.request({ type: 'award', v: (await ana.settle()).v, winners: { 0: [ana.state.you.id!] } });
     expect(reply).toMatchObject({ type: 'err' });
+  });
+});
+
+describe('hand history', () => {
+  it('records finished hands with only public cards, for seated players only', async () => {
+    const { code, clients } = await table(['Ana', 'Ben'], { cardMode: true });
+    const [ana, ben] = clients;
+    await ana.ok({ type: 'start', v: ana.state.v });
+    await ana.settle();
+    const holes = new Map(clients.map((c) => [c.state.you.id!, c.state.you.hole!]));
+    await checkDown(clients);
+    const room = (await ana.settle()).room;
+
+    const get = (token?: string) =>
+      api(`/api/rooms/${code}/history`, token ? { headers: { 'x-token': token } } : undefined);
+    expect((await get()).status).toBe(403);
+    expect((await get(tokenFor(99))).status).toBe(403);
+
+    const res = await get(tokenFor(2));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { cardMode: boolean; hands: HandRecord[] };
+    expect(body.cardMode).toBe(true);
+    expect(body.hands).toHaveLength(1);
+    const [h] = body.hands;
+    expect(h.handNo).toBe(1);
+    expect(h.board).toEqual(room.board);
+    expect(h.shown.map((s) => s.cards).sort()).toEqual([...holes.values()].sort());
+    expect(h.winners.reduce((sum, w) => sum + w.amount, 0)).toBe(20);
+    expect(h.lines[0]).toMatch(/^핸드 #1/);
+    void ben;
+  });
+
+  it('a hand won by folds keeps the folded cards private', async () => {
+    const { code, clients } = await table(['Ana', 'Ben'], { cardMode: true });
+    const [ana] = clients;
+    await ana.ok({ type: 'start', v: ana.state.v });
+    await ana.settle();
+    const hidden = clients.flatMap((c) => c.state.you.hole!);
+    const actor = clients.find((c) => c.state.you.id === ana.state.room.game.toActId)!;
+    await actor.ok({ type: 'act', v: actor.state.v, kind: 'fold' });
+    await ana.settle();
+    const text = await (await api(`/api/rooms/${code}/history`, { headers: { 'x-token': tokenFor(1) } })).text();
+    const body = JSON.parse(text) as { hands: HandRecord[] };
+    expect(body.hands[0].shown).toEqual([]);
+    for (const c of hidden) expect(text).not.toContain(`"${c}"`);
   });
 });

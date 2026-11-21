@@ -93,6 +93,14 @@ export default {
         if (res.status === 404) return json({ error: '그 코드의 테이블이 없어요' }, 404);
         return json(await res.json());
       }
+      if (parts.length === 4 && parts[3] === 'history' && request.method === 'GET') {
+        const res = await stub(env, code).fetch('https://room/history', {
+          headers: { 'x-token': request.headers.get('x-token') ?? '' },
+        });
+        if (res.status === 404) return json({ error: '그 코드의 테이블이 없어요' }, 404);
+        if (res.status === 403) return json({ error: '이 테이블에 앉은 사람만 볼 수 있어요' }, 403);
+        return json(await res.json());
+      }
       if (parts.length === 4 && parts[3] === 'ws') {
         if (request.headers.get('Upgrade') !== 'websocket') return json({ error: 'Expected WebSocket' }, 426);
         const res = await stub(env, code).fetch('https://room/ws', { headers: request.headers });

@@ -80,6 +80,21 @@ export interface ShownHand {
   made: Card[];
 }
 
+/** 끝난 핸드 한 판의 기록: 메뉴 → 기록 → 핸드 기록 복사에서 내려받아요. 모두에게 공개된 정보만 담아요. */
+export interface HandRecord {
+  handNo: number;
+  startedAt: number;
+  endedAt: number;
+  cardMode: boolean;
+  /** 카드 모드: 끝났을 때 깔려 있던 보드 */
+  board: Card[];
+  /** 카드 모드: 쇼다운에서 공개된 패 (폴드한 사람, 쇼다운 없이 끝난 핸드는 없음) */
+  shown: { name: string; cards: Card[]; label: string }[];
+  winners: { name: string; amount: number }[];
+  /** 그 핸드의 진행 기록 (기록 화면과 같은 문장) */
+  lines: string[];
+}
+
 export interface RoomView {
   code: string;
   /** 카드 모드: 앱이 카드를 나눠주고 승자를 정해요 */

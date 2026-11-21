@@ -32,6 +32,7 @@ import {
   type ClaimView,
   type Envelope,
   type ErrorCode,
+  type HandRecord,
   type LogEntry,
   type LogKind,
   type MemberView,
@@ -48,6 +49,7 @@ export const IDLE_TTL_MS = 12 * 60 * 60 * 1000;
 const UNDO_DEPTH = 30;
 const LOG_KEEP = 100;
 const LOG_SEND = 100;
+const HANDS_KEEP = 50;
 const MAX_SOCKETS = 40;
 const MAX_MEMBERS = 10;
 const RATE_PER_SEC = 8;
@@ -92,6 +94,10 @@ interface Stored {
   cardMode?: boolean;
   /** 카드 모드: 이번 핸드에 나눠준 카드. 절대 그대로 내보내지 않아요. */
   deal?: Deal | null;
+  /** 끝난 핸드 기록 (최근 HANDS_KEEP판) */
+  hands?: HandRecord[];
+  /** 이번 핸드가 시작된 기록 줄 번호 */
+  handLogFrom?: number;
 }
 
 interface Attachment {
@@ -181,6 +187,18 @@ export class Room extends DurableObject<Env> {
     }
 
     if (!this.s) return new Response('not found', { status: 404 });
+
+    // 핸드 기록: 이 테이블에 앉은 사람만 (기기 토큰으로 확인)
+    if (route === 'history') {
+      const token = request.headers.get('x-token') ?? '';
+      if (!/^[a-f0-9]{64}$/.test(token)) return new Response('forbidden', { status: 403 });
+      const hash = await sha256(`${this.s.code}:${token}`);
+      if (!this.s.members.some((m) => m.tokenHash === hash)) return new Response('forbidden', { status: 403 });
+      return Response.json(
+        { code: this.s.code, cardMode: !!this.s.cardMode, hands: this.s.hands ?? [] },
+        { headers: { 'cache-control': 'no-store' } },
+      );
+    }
 
     if (route === 'info') {
       return Response.json({
@@ -590,6 +608,7 @@ export class Room extends DurableObject<Env> {
     const name = (id: string | null) => findPlayer(after, id)?.name ?? s.members.find((m) => m.id === id)?.name ?? '';
     if (after.handNo !== before.handNo) {
       this.log('hand', `핸드 #${after.handNo} · 버튼 ${name(after.buttonId)}`);
+      s.handLogFrom = s.logSeq;
     } else if (kind !== 'hand') {
       this.log(kind, label);
     }
@@ -614,6 +633,36 @@ export class Room extends DurableObject<Env> {
         this.log('win', `${p?.name ?? '누군가'} ${fmt(amount)} 획득`);
       }
     }
+    if (after.phase === 'done' && before.phase !== 'done' && after.handNo > 0) this.recordHand(after);
+  }
+
+  /** 핸드가 끝나면 공개된 정보만 모아 기록해요. 되돌렸다가 다시 끝나면 같은 핸드를 덮어써요. */
+  private recordHand(g: Game) {
+    const s = this.s as Stored;
+    const name = (id: string) => findPlayer(g, id)?.name ?? g.departed.find((d) => d.id === id)?.name ?? s.members.find((m) => m.id === id)?.name ?? '누군가';
+    const deal = s.cardMode && s.deal && s.deal.handNo === g.handNo ? s.deal : null;
+    const totals = new Map<string, number>();
+    for (const r of g.results) totals.set(r.id, (totals.get(r.id) ?? 0) + r.amount);
+    const from = s.handLogFrom ?? 0;
+    const lines = s.log.filter((e) => e.id >= from);
+    const record: HandRecord = {
+      handNo: g.handNo,
+      startedAt: lines[0]?.at ?? Date.now(),
+      endedAt: Date.now(),
+      cardMode: !!s.cardMode,
+      board: deal ? visibleBoard(g, deal) : [],
+      shown: deal && g.reveal
+        ? g.reveal.flatMap((id) => {
+            const value = handValue(deal, id);
+            return value ? [{ name: name(id), cards: deal.hole[id], label: value.label }] : [];
+          })
+        : [],
+      winners: [...totals].map(([id, amount]) => ({ name: name(id), amount })),
+      lines: lines.map((e) => e.text),
+    };
+    const hands = (s.hands ?? []).filter((h) => h.handNo !== g.handNo);
+    hands.push(record);
+    s.hands = hands.slice(-HANDS_KEEP);
   }
 
   private describeAction(before: Game, after: Game, id: string) {

@@ -4100,3 +4100,16 @@ body {
 .menu-section .menu-item {
   min-height: 50px;
 }
+
+/* 기록 창: 핸드 기록 복사 */
+.history-copy {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.history-text {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  -webkit-user-select: text;
+  user-select: text;
+}
