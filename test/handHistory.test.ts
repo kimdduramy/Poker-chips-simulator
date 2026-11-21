@@ -51,24 +51,25 @@ describe('compact hand history', () => {
 
   it('writes each hand in a few short lines', () => {
     const text = formatHistory('ABCD', true, hands);
-    const body = text.split('\n\n')[1];
+    const [, players, body] = text.split('\n\n');
+    expect(players).toBe('P1 = Ana\nP2 = Ben\nP3 = Cy');
     expect(body).toBe(
       [
-        '#1 5/10 D:Ana',
-        'P Ana c Ben c Cy x',
-        'F Td Jh Ts: Ben b20 Cy r60 Ana f Ben c',
-        'T 5d: Ben x Cy x',
-        'R Jd: Ben x Cy x',
-        'SD *Ben Kd8d FL(K) +150 | Cy 7hQs 2P(J,10)',
-        '#2 D:Ben',
-        'P Ben f Cy f',
-        '*Ana +15',
-        '#3 10/20 D:Cy',
-        'P Cy r1000! Ana c!',
+        '#1 5/10 D:P1',
+        'P P1 c P2 c P3 x',
+        'F Td Jh Ts: P2 b20 P3 r60 P1 f P2 c',
+        'T 5d: P2 x P3 x',
+        'R Jd: P2 x P3 x',
+        'SD *P2 Kd8d FL(K) +150 | P3 7hQs 2P(J,10)',
+        '#2 D:P2',
+        'P P2 f P3 f',
+        '*P1 +15',
+        '#3 10/20 D:P3',
+        'P P3 r1000! P1 c!',
         'F 2d 6c Th',
         'T 9h',
         'R Tc',
-        'SD Ana KdAs 1P(10) | *Cy TsAh 3K(10) +2,000',
+        'SD P1 KdAs 1P(10) | *P3 TsAh 3K(10) +2,000',
       ].join('\n'),
     );
     expect(text.split('\n')[0]).toContain('테이블 ABCD');
@@ -79,6 +80,27 @@ describe('compact hand history', () => {
       { ...base, cardMode: false, handNo: 1, button: 'Ana', actions: [act(0, 'Ana', 'raise', 30), act(0, 'Ben', 'fold')], board: [], shown: [], winners: [{ name: 'Ana', amount: 25 }] },
     ]);
     expect(text).toContain('실물 카드');
-    expect(text.split('\n\n')[1]).toBe('#1 5/10 D:Ana\nP Ana r30 Ben f\n*Ana +25');
+    expect(text.split('\n\n').slice(1).join('\n\n')).toBe('P1 = Ana\nP2 = Ben\n\n#1 5/10 D:P1\nP P1 r30 P2 f\n*P1 +25');
+  });
+});
+
+describe('names that would break the notation', () => {
+  it('become P1, P2 with a key at the top', () => {
+    const weird = 'AX 컨설팅 및 교육 문의:';
+    const text = formatHistory('QMQQ', true, [
+      {
+        ...base,
+        handNo: 12,
+        button: weird,
+        actions: [act(0, weird, 'call', 50), act(0, 'soyeonrie', 'check'), act(1, 'soyeonrie', 'raise', 50), act(1, weird, 'call', 50)],
+        board: ['As', '6c', '2h'],
+        shown: [],
+        winners: [{ name: weird, amount: 200 }],
+      },
+    ]);
+    expect(text).toContain(`P1 = ${weird}\nP2 = soyeonrie`);
+    expect(text).toContain('P P1 c P2 x\nF As 6c 2h: P2 b50 P1 c');
+    // 기보 본문에는 원래 이름이 안 나와요
+    expect(text.split('\n\n').at(-1)).not.toContain('컨설팅');
   });
 });
