@@ -3978,3 +3978,106 @@ body {
   align-items: center;
 }
 
+
+/* ---------------- 카드 뒷면 고르기 ---------------- */
+
+/*
+ * 기본(네이비)은 위 .pcard[data-back]. 나머지는 <html data-card-back>으로 바꿔요.
+ * 고르는 버튼의 견본(.back-sample)은 data-back-style로 각자 모양을 보여줘요.
+ */
+/* 크림: 크림색 여백 + 안쪽 테두리 선 + 가운데 마름모와 노란 점 */
+:root[data-card-back='cream'] .pcard[data-back]:not([data-back-style]),
+.pcard[data-back-style='cream'] {
+  --back: #1f2d4f;
+  border-color: #c9c2ad;
+  background: var(--back);
+  box-shadow:
+    inset 0 0 0 calc(var(--w) * 0.07) #f2ead8,
+    inset 0 0 0 calc(var(--w) * 0.07 + 1px) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.11) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.11 + 1px) #f2ead8,
+    0 1px 2px oklch(0 0 0 / 0.15);
+}
+:root[data-card-back='cream'] .pcard[data-back]:not([data-back-style])::after,
+.pcard[data-back-style='cream']::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--w) * 0.42);
+  height: calc(var(--w) * 0.42);
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1px solid #f2ead8;
+  box-shadow:
+    0 0 0 calc(var(--w) * 0.05) var(--back),
+    0 0 0 calc(var(--w) * 0.05 + 1px) rgb(242 234 216 / 0.5);
+  background: radial-gradient(circle, #f3db2c 0 22%, transparent 24%);
+}
+
+/* 스페이드: 짙은 초록 펠트색 + 노란 안쪽 선 + 가운데 ♠ */
+:root[data-card-back='spade'] .pcard[data-back]:not([data-back-style]),
+.pcard[data-back-style='spade'] {
+  --back: #13372a;
+  background: repeating-linear-gradient(45deg, rgb(255 255 255 / 0.05) 0 1px, transparent 1px 4px), var(--back);
+  box-shadow:
+    inset 0 0 0 calc(var(--w) * 0.07) #fff,
+    inset 0 0 0 calc(var(--w) * 0.07 + 1px) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.1) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.1 + 1px) rgb(243 219 44 / 0.7),
+    0 1px 2px oklch(0 0 0 / 0.15);
+}
+:root[data-card-back='spade'] .pcard[data-back]:not([data-back-style])::after,
+.pcard[data-back-style='spade']::after {
+  content: '♠';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #f3db2c;
+  font-size: calc(var(--w) * 0.5);
+  line-height: 1;
+}
+
+/* 미니멀: 테두리 없는 먹색에 노란 대각선 한 줄. 다크 화면에서도 묻히지 않게 밝은 테두리 */
+:root[data-card-back='minimal'] .pcard[data-back]:not([data-back-style]),
+.pcard[data-back-style='minimal'] {
+  border-color: #55554f;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 0.8px), #f3db2c calc(50% - 0.8px) calc(50% + 0.8px), transparent calc(50% + 0.8px)),
+    #23231f;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 2px oklch(0 0 0 / 0.2);
+}
+
+.back-pick-wrap {
+  display: grid;
+  gap: 8px;
+}
+.back-pick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.back-pick-opt {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.back-pick-opt[aria-checked='true'] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 650;
+}
+.back-sample {
+  --w: 30px;
+  overflow: hidden;
+}

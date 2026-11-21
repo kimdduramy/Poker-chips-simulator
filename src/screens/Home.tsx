@@ -4,6 +4,7 @@ import { createRoom, roomInfo } from '../lib/api';
 import { unlockAudio } from '../lib/device-features';
 import { HelpButton } from '../components/Help';
 import { CardModePick } from '../components/CardModePick';
+import { CardBackPick } from '../components/CardBackPick';
 
 export function Home({ navigate }: { navigate: (to: string) => void }) {
   const [code, setCode] = useState('');
@@ -68,6 +69,7 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
 
       <section id="home-actions" className="home-actions">
         <CardModePick value={cardMode} onChange={setCardMode} />
+        {cardMode && <CardBackPick />}
         <button className="btn btn-primary btn-xl" onClick={start} disabled={busy !== null}>
           {busy === 'new' ? '만드는 중…' : '테이블 만들기'}
         </button>
