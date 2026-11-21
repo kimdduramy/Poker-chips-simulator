@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { evaluate, winnersOf } from '../../shared/cards';
 import type { HandRecord } from '../../shared/protocol';
+import { debugCode } from '../../shared/debugCode';
 import { api, type Client, table, tokenFor } from './client';
 
 /** 차례인 사람이 콜할 게 있으면 콜, 없으면 체크하면서 핸드 끝까지 */
@@ -133,9 +134,21 @@ describe('hand history', () => {
     expect((await get()).status).toBe(403);
     expect((await get(tokenFor(99))).status).toBe(403);
 
-    const res = await get(tokenFor(2));
+    // 코드 없이: 누구든(방장 포함) 공개된 정보만, 시작 패는 없어요
+    const plain = (await (await get(tokenFor(1))).json()) as { debug: boolean; hands: HandRecord[] };
+    expect(plain.debug).toBe(false);
+    expect(plain.hands[0].holes).toBeUndefined();
+
+    // 틀린 디버그 코드는 거절
+    const wrong = await api(`/api/rooms/${code}/history`, { headers: { 'x-token': tokenFor(2), 'x-debug-code': 'NOPE00' } });
+    expect(wrong.status).toBe(401);
+
+    // 맞는 디버그 코드면 방장이 아니어도 시작 패까지
+    const res = await api(`/api/rooms/${code}/history`, { headers: { 'x-token': tokenFor(2), 'x-debug-code': debugCode(code).toLowerCase() } });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { cardMode: boolean; hands: HandRecord[] };
+    const body = (await res.json()) as { cardMode: boolean; debug: boolean; hands: HandRecord[] };
+    expect(body.debug).toBe(true);
+    expect(body.hands[0].holes).toHaveLength(2);
     expect(body.cardMode).toBe(true);
     expect(body.hands).toHaveLength(1);
     const [h] = body.hands;
@@ -150,18 +163,30 @@ describe('hand history', () => {
     void ben;
   });
 
-  it('a hand won by folds keeps the folded cards private', async () => {
+  it('a finished hand lists everyone\'s starting cards, but the hand in progress is never in the history', async () => {
     const { code, clients } = await table(['Ana', 'Ben'], { cardMode: true });
     const [ana] = clients;
     await ana.ok({ type: 'start', v: ana.state.v });
     await ana.settle();
-    const hidden = clients.flatMap((c) => c.state.you.hole!);
+    const first = new Map(clients.map((c) => [c.state.you.id!, c.state.you.hole!]));
     const actor = clients.find((c) => c.state.you.id === ana.state.room.game.toActId)!;
     await actor.ok({ type: 'act', v: actor.state.v, kind: 'fold' });
     await ana.settle();
-    const text = await (await api(`/api/rooms/${code}/history`, { headers: { 'x-token': tokenFor(1) } })).text();
-    const body = JSON.parse(text) as { hands: HandRecord[] };
+    const history = async () => {
+      const text = await (await api(`/api/rooms/${code}/history`, { headers: { 'x-token': tokenFor(1), 'x-debug-code': debugCode(code) } })).text();
+      return { text, body: JSON.parse(text) as { hands: HandRecord[] } };
+    };
+    let { body } = await history();
     expect(body.hands[0].shown).toEqual([]);
-    for (const c of hidden) expect(text).not.toContain(`"${c}"`);
+    expect(body.hands[0].holes!.map((h) => h.cards).sort()).toEqual([...first.values()].sort());
+
+    // 다음 판이 진행 중일 때: 지금 카드는 기록 어디에도 없어요
+    await ana.ok({ type: 'next', v: (await ana.settle()).v });
+    await Promise.all(clients.map((c) => c.settle()));
+    const now = clients.flatMap((c) => c.state.you.hole!);
+    const { text } = await history();
+    ({ body } = await history());
+    expect(body.hands).toHaveLength(1);
+    for (const c of now) if (![...first.values()].flat().includes(c)) expect(text).not.toContain(`"${c}"`);
   });
 });

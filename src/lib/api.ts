@@ -25,9 +25,19 @@ export async function roomInfo(code: string): Promise<RoomInfo | null> {
 }
 
 /** 끝난 핸드 기록 (이 테이블에 앉은 기기만 받을 수 있어요) */
-export async function fetchHistory(code: string, token: string): Promise<{ code: string; cardMode: boolean; hands: HandRecord[] }> {
-  const res = await fetch(`/api/rooms/${code}/history`, { headers: { 'x-token': token }, cache: 'no-store' });
+export interface HistoryReply {
+  code: string;
+  cardMode: boolean;
+  /** 디버그 코드가 맞으면 hands에 모두의 시작 패(holes)가 들어 있어요 */
+  debug: boolean;
+  hands: HandRecord[];
+}
+
+export async function fetchHistory(code: string, token: string, debugCode?: string): Promise<HistoryReply> {
+  const headers: Record<string, string> = { 'x-token': token };
+  if (debugCode !== undefined) headers['x-debug-code'] = debugCode;
+  const res = await fetch(`/api/rooms/${code}/history`, { headers, cache: 'no-store' });
   const body = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) throw new Error(body.error ?? '기록을 가져오지 못했어요');
-  return body as { code: string; cardMode: boolean; hands: HandRecord[] };
+  return body as HistoryReply;
 }

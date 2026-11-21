@@ -80,7 +80,10 @@ export interface ShownHand {
   made: Card[];
 }
 
-/** 끝난 핸드 한 판의 기록(기보): 메뉴 → 기록 → 핸드 기록 복사. 모두에게 공개된 정보만 담아요. */
+/**
+ * 끝난 핸드 한 판의 기록(기보): 메뉴 → 기록 → 핸드 기록 복사.
+ * 끝난 판만 기록해서, 진행 중인 판의 카드는 절대 들어가지 않아요.
+ */
 export interface HandRecord {
   handNo: number;
   startedAt: number;
@@ -91,6 +94,8 @@ export interface HandRecord {
   button: string;
   /** 0 프리플랍 · 1 플랍 · 2 턴 · 3 리버 */
   actions: { street: number; name: string; kind: string; to: number; allIn: boolean }[];
+  /** 카드 모드: 이 판에 참여한 사람마다 받은 시작 패 (폴드한 사람 포함, 좌석 순서) */
+  holes?: { name: string; cards: Card[] }[];
   /** 카드 모드: 끝났을 때 깔려 있던 보드 */
   board: Card[];
   /** 카드 모드: 쇼다운에서 공개된 패 (category: 0 하이카드 … 9 로열 플러시) */
