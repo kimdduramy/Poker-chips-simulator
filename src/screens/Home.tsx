@@ -63,7 +63,7 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
             시뮬레이터
           </span>
         </h1>
-        <p className="home-tagline">칩은 폰으로, 카드는 테이블에서.</p>
+        <p className="home-tagline">칩은 폰으로, 카드는 테이블이나 앱에서.</p>
       </section>
 
       <section id="home-actions" className="home-actions">

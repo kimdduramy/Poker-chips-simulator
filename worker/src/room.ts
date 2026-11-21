@@ -597,7 +597,7 @@ export class Room extends DurableObject<Env> {
       this.log('hand', STREETS[after.street]);
     }
     if (after.phase === 'showdown' && before.phase !== 'showdown') {
-      this.log('hand', after.runout ? '올인 · 런아웃' : '쇼다운');
+      this.log('hand', after.runout ? '올인 런아웃' : '쇼다운');
     }
     if (after.results.length > 0 && after.phase === 'done' && before.phase !== 'done') {
       const totals = new Map<string, number>();

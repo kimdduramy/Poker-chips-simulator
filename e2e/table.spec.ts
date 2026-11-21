@@ -123,7 +123,7 @@ test('short stack all in creates a side pot that pays the right people', async (
   await cat.getByRole('button', { name: '올인 990' }).click();
 
   await expect(ana.getByText('누가 이겼나요?')).toBeVisible();
-  await expect(ana.locator('.stage-line')).toHaveText('올인 · 런아웃');
+  await expect(ana.locator('.stage-line')).toHaveText('올인 런아웃');
   const main = ana.locator('.pot-pick').filter({ hasText: '메인 팟' });
   const side = ana.locator('.pot-pick').filter({ hasText: '사이드 팟 1' });
   await expect(main).toContainText('300');

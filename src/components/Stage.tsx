@@ -4,7 +4,7 @@ import { dealerTip } from '../lib/dealer';
 import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Num } from './Num';
-import { BoardRow } from './PlayingCard';
+import { CardZone } from './PlayingCard';
 import { useHandFocus } from '../lib/handFocus';
 import { ScrollBox } from './ScrollBox';
 import type { ShownHand } from '../../shared/protocol';
@@ -85,15 +85,25 @@ export function Stage() {
       </>
     );
   } else if (game.phase === 'showdown') {
-    line = <span>{game.runout ? '올인 · 런아웃' : '핸드를 공개하세요'}</span>;
+    line = <span>{game.runout ? '올인 런아웃' : '핸드를 공개하세요'}</span>;
   } else if (game.phase === 'done' && held) {
     lineKey = `held-${held.id}`;
-    line = <span className="held-line">{`${held.id === you.id ? '내 패' : held.name} · ${held.label}`}</span>;
+    line = <span className="held-line">{`${held.id === you.id ? '내 패' : held.name} ${held.label}`}</span>;
   } else if (game.phase === 'done') {
     line = <span>{outcomeLine(game, nameOf, room.shown)}</span>;
   }
 
   const last = room.log.at(-1);
+  // 카드 모드에서 스트리트가 막 넘어갔으면 띠를 띄우지 않으니, 그 스트리트를 끝낸 행동을 여기에 남겨요 (예: 'Cy 체크 → 턴')
+  const lastAction = room.log.findLast((e) => e.kind === 'action');
+  const lastLine =
+    !last
+      ? null
+      : last.kind !== 'hand'
+        ? last.text
+        : room.cardMode && freshStreet && lastAction && lastAction.id === last.id - 1
+          ? `${lastAction.text} → ${last.text}`
+          : null;
 
   return (
     <section className="stage" aria-label="팟">
@@ -113,7 +123,7 @@ export function Stage() {
         </div>
         {game.phase === 'betting' && <BetBoard game={game} youId={you.id} />}
       </div>
-      <BoardRow />
+      <CardZone />
       {game.phase === 'showdown' && game.pots.length > 1 && (
         <ul className="pot-breakdown">
           {game.pots.map((p, i) => (
@@ -128,8 +138,8 @@ export function Stage() {
       {!room.cardMode && <DealerBar game={game} youId={you.id} />}
       {/* 베팅 중에는 줄을 항상 차지해서, 문구가 생기고 사라질 때 아래가 들썩이지 않게 */}
       {game.phase === 'betting' && (
-        <p className="last-action" key={last && last.kind !== 'hand' ? last.id : 'none'}>
-          {last && last.kind !== 'hand' ? last.text : '\u00a0'}
+        <p className="last-action" key={lastLine ? last?.id : 'none'}>
+          {lastLine ?? '\u00a0'}
         </p>
       )}
     </section>

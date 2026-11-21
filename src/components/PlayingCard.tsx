@@ -113,35 +113,58 @@ export function BoardRow({ size = 'md' }: { size?: 'md' | 'lg' }) {
   );
 }
 
-/** 카드 모드: 내 카드 2장과 지금 내 족보 */
-export function MyHand() {
+/**
+ * 카드 모드 폰 화면: 보드 5장과 내 카드 2장을 한 줄에 나란히 놓고, 그 아래에 지금 내 족보를 적어요.
+ * 족보는 내 카드와 보드를 같이 봐야 해서 한눈에 들어오게 붙여 두고,
+ * 아래 행동 영역에서 내 카드 줄을 빼서 좌석 목록이 보일 자리를 만들어요.
+ */
+export function CardZone() {
   const { room, you, me, game } = useTable();
-  const focus = useHandFocus();
+  const focusId = useHandFocus();
+  const focus = useFocusedBest(room);
+  const board = room.board;
   const hole = you.hole ?? [];
-  const delay = useFlipDelays(hole, game.handNo);
-  if (!room.cardMode || hole.length === 0 || game.phase === 'lobby') return null;
+  const boardDelay = useFlipDelays(board, game.handNo, [3, 4], (last) => {
+    boardSettlesAt = performance.now() + last + DEAL_MS;
+  });
+  const holeDelay = useFlipDelays(hole, game.handNo);
+  if (!room.cardMode || game.phase === 'lobby') return null;
+
   const folded = !!me?.folded;
-  const all = [...hole, ...room.board];
-  const value = all.length >= 5 ? evaluate(all) : null;
-  const best = new Set(value?.made ?? []);
-  // 누가 눌려 있을 때만: 나를 누르면 내 족보 카드 강조, 다른 사람을 누르면 내 카드는 흐리게
-  const holding = focus !== null && room.shown.some((s) => s.id === focus);
-  const glowOf = (c: Card): Glow => {
-    if (!holding) return undefined;
-    return focus === you.id && best.has(c) ? 'hl' : 'dim';
-  };
-  const label = value ? value.label : hole[0][0] === hole[1][0] ? `포켓 페어 (${cardRankText(hole[0])})` : '프리플랍';
+  const all = [...hole, ...board];
+  const value = hole.length === 2 && all.length >= 5 ? evaluate(all) : null;
+  const mine = new Set(value?.made ?? []);
+  // 꾹 누르는 동안: 누른 사람 족보 카드만 밝고 크게, 나머지는 흐리게. 평소엔 구분 없음.
+  const holding = focus.id !== null;
+  const boardGlow = (c: Card): Glow => (holding ? (focus.best.has(c) ? 'hl' : 'dim') : undefined);
+  const holeGlow = (c: Card): Glow => (holding ? (focusId === you.id && mine.has(c) ? 'hl' : 'dim') : undefined);
+  const label =
+    hole.length < 2 ? null : value ? value.label : hole[0][0] === hole[1][0] ? `포켓 페어 (${cardRankText(hole[0])})` : '프리플랍';
+  const boardLabel = board.length === 0 ? '보드 카드 아직 없음' : `보드 카드: ${cardsSpeech(board)}`;
+
   return (
-    <div className="my-hand" data-folded={folded || undefined}>
-      <span className="my-hand-cards" role="img" aria-label={`내 카드: ${cardsSpeech(hole)}`}>
-        {hole.map((c) => (
-          <PlayingCard key={c} card={c} size="lg" glow={glowOf(c)} flipDelay={delay(c)} />
-        ))}
-      </span>
-      <span className="my-hand-text">
-        <span className="label">내 패</span>
-        <span className="my-hand-label">{folded ? '폴드' : label}</span>
-      </span>
+    <div className="card-zone">
+      <div className="card-zone-row">
+        <div className="board-row" role="img" aria-label={boardLabel}>
+          {[0, 1, 2, 3, 4].map((i) => {
+            const c = board[i];
+            return <PlayingCard key={c ?? `empty-${i}`} card={c} glow={c ? boardGlow(c) : undefined} flipDelay={c ? boardDelay(c) : null} />;
+          })}
+        </div>
+        {hole.length === 2 && (
+          <div className="card-zone-mine" data-folded={folded || undefined} role="img" aria-label={`내 카드: ${cardsSpeech(hole)}`}>
+            {hole.map((c) => (
+              <PlayingCard key={c} card={c} glow={holeGlow(c)} flipDelay={holeDelay(c)} />
+            ))}
+          </div>
+        )}
+      </div>
+      {label && (
+        <p className="card-zone-label">
+          <span className="card-zone-label-key">내 패</span>
+          <span className="card-zone-label-value">{folded ? '폴드' : label}</span>
+        </p>
+      )}
     </div>
   );
 }

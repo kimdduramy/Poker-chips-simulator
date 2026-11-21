@@ -1038,6 +1038,7 @@ button:disabled {
 
 .hold-pill {
   /* 깔끔한 보조 버튼: 테두리 없이 옅은 바탕 + 카드 아이콘 */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -2757,7 +2758,8 @@ button:disabled {
 }
 
 .display-pot-amount {
-  font-size: clamp(4.5rem, 16vw, 11rem);
+  /* 낮은 화면(720p TV 등)에서는 높이에 맞춰 줄여서 좌석과 QR이 밀려나지 않게 */
+  font-size: clamp(3.5rem, min(16vw, 16vh), 11rem);
   font-weight: 560;
   line-height: 0.95;
   letter-spacing: -0.06em;
@@ -2886,7 +2888,8 @@ button:disabled {
   }
 }
 
-@media (min-width: 960px) {
+/* 넓은 화면, 그리고 가로로 눕힌 폰: 왼쪽에 팟·카드·좌석, 오른쪽에 내 행동 */
+@media (min-width: 960px), (orientation: landscape) and (max-height: 520px) and (min-width: 600px) {
   .table-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 400px;
@@ -2945,6 +2948,36 @@ button:disabled {
 
   .seat {
     min-height: 64px;
+  }
+}
+
+/* 가로로 눕힌 폰: 높이가 낮아서 여백과 글자를 줄이고, 오른쪽 행동 칸도 좁혀요 */
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 600px) and (max-width: 959px) {
+  .table-shell {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 16px;
+    padding: 0 max(12px, env(safe-area-inset-left)) 0 max(12px, env(safe-area-inset-right));
+  }
+  .table-main {
+    padding: 4px 12px 16px;
+  }
+  .dock-wrap {
+    padding: 8px 0;
+  }
+  .dock {
+    padding: 14px;
+  }
+  .stage {
+    padding-top: 8px;
+  }
+  .pot-amount {
+    font-size: 2.75rem;
+  }
+  .seat {
+    min-height: 52px;
+  }
+  .card-zone .pcard {
+    --w: 34px;
   }
 }
 
@@ -3629,9 +3662,14 @@ body {
 .mode-pick-opt[aria-checked='true'] {
   border-color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--ink);
+  background: var(--accent-soft);
   color: var(--ink);
 }
 .mode-pick-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
   font-weight: 650;
 }
 .mode-pick-desc {
@@ -3663,7 +3701,7 @@ body {
     box-shadow 220ms var(--ease-out);
 }
 .pcard[data-size='sm'] {
-  --w: 22px;
+  --w: 28px;
 }
 .pcard[data-size='lg'] {
   --w: 46px;
@@ -3743,31 +3781,63 @@ body {
   margin: 16px 0 8px;
 }
 .board-row[data-size='lg'] > .pcard {
-  --w: clamp(48px, 9vw, 96px);
+  --w: clamp(44px, min(9vw, 9vh), 96px);
 }
 
-/* 내 카드 (아래 행동 영역 위) */
-.my-hand {
+/* 카드 모드: 보드 5장 + 내 카드 2장을 한 줄에, 그 아래 내 족보 */
+.card-zone {
+  margin-top: 12px;
+}
+.card-zone-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px var(--gutter) 4px;
 }
-.my-hand-cards {
+.card-zone .board-row {
+  margin-top: 0;
+}
+.card-zone .pcard {
+  --w: 40px;
+}
+/* 내 카드: 옅은 노란 바탕으로 보드와 구분 */
+.card-zone-mine {
   display: flex;
-  gap: 5px;
+  gap: 4px;
+  padding: 4px;
+  margin: -4px;
+  border-radius: 10px;
+  background: var(--accent-soft);
 }
-.my-hand-text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.my-hand-label {
-  font-weight: 650;
-  overflow-wrap: anywhere;
-}
-.my-hand[data-folded] .pcard {
+.card-zone-mine[data-folded] .pcard {
   opacity: 0.35;
+}
+.card-zone-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+.card-zone-label-key {
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+.card-zone-label-value {
+  font-weight: 650;
+}
+@media (max-width: 380px) {
+  .card-zone-row {
+    gap: 8px;
+  }
+  .card-zone .board-row {
+    gap: 3px;
+  }
+  .card-zone .board-row > .pcard:nth-child(4),
+  .card-zone .board-row > .pcard:nth-child(5) {
+    margin-left: 2px;
+  }
+  .card-zone .pcard {
+    --w: 36px;
+  }
 }
 
 /* 쇼다운에서 공개된 패 (좌석 목록) */
@@ -3782,7 +3852,8 @@ body {
   gap: 2px;
 }
 .seat-shown-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 560;
   color: var(--ink-2);
 }
 
@@ -3822,4 +3893,27 @@ body {
 }
 .held-line {
   font-weight: 650;
+}
+
+/* 족보 버튼: 보이는 크기(26px)는 그대로, 누르는 영역만 위아래로 넓혀 44px로 */
+.hold-pill::before {
+  content: '';
+  position: absolute;
+  inset: -9px -2px;
+}
+
+/* 큰 화면이 낮으면(720p TV 등) 간격과 QR을 줄여서 아래 QR·기록까지 한 화면에 들어오게 */
+@media (max-height: 800px) {
+  .display {
+    gap: 12px;
+    padding-top: calc(var(--safe-top) + 14px);
+    padding-bottom: calc(var(--safe-bottom) + 14px);
+  }
+  .display-foot .qr {
+    width: 84px;
+    height: 84px;
+  }
+  .board-row[data-size='lg'] {
+    margin: 8px 0 4px;
+  }
 }
