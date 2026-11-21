@@ -1,11 +1,11 @@
 import { CARD_BACKS, setCardBack, useCardBack } from '../lib/cardBack';
 
 /** 카드 뒷면 고르기: 실제 뒷면 모양을 작게 보여주고 누르면 바로 바뀌어요 */
-export function CardBackPick() {
+export function CardBackPick({ label = true }: { label?: boolean }) {
   const value = useCardBack();
   return (
     <div className="back-pick-wrap">
-      <span className="field-label" id="back-pick-label">
+      <span className={label ? 'field-label' : 'sr-only'} id="back-pick-label">
         내 카드 뒷면
       </span>
       <div className="back-pick" role="radiogroup" aria-labelledby="back-pick-label">

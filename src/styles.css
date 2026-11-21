@@ -4081,3 +4081,22 @@ body {
   --w: 30px;
   overflow: hidden;
 }
+
+/* 메뉴 묶음 제목: 게임 / 내 설정 / 방장 */
+.menu-section .menu-group {
+  border-top: 0;
+}
+.menu-section {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.menu-heading {
+  margin: 0 0 2px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+.menu-section .menu-item {
+  min-height: 50px;
+}
