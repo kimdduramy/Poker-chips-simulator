@@ -17,6 +17,7 @@ import { getTest } from '../lib/testMode';
 import { useShake } from '../lib/motion';
 import { Icon } from './Icon';
 import { Num } from './Num';
+import { HandPeek } from './PlayingCard';
 
 const ACT_FOR_AFTER_MS = 15_000;
 
@@ -89,7 +90,10 @@ function MyStatus() {
     <div className="my-status">
       <div>
         <span className="label">내 스택</span>
-        <Num value={me.stack} className="my-stack" />
+        <span className="my-stack-row">
+          <Num value={me.stack} className="my-stack" />
+          <HandPeek />
+        </span>
       </div>
       <div className="my-note">
         <span>{note}</span>
@@ -177,10 +181,12 @@ function ActionPanel({ legal, player, actingFor, bot, onCancel }: ActionProps) {
           </span>
           <span className="turn-sub">스택 {fmt(player.stack)}</span>
         </div>
-        {actingFor && onCancel && (
+        {actingFor && onCancel ? (
           <button className="icon-btn" onClick={onCancel} aria-label="대신 하기 그만두기">
             <Icon name="close" />
           </button>
+        ) : (
+          !actingFor && !bot && <HandPeek align="end" />
         )}
       </div>
       {locked && room.dealUntil && <DealWait key={room.dealUntil} left={dealLeft} text={dealingText(game)} />}

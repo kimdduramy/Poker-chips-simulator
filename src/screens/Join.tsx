@@ -3,6 +3,7 @@ import { saveName, savedName } from '../lib/device';
 import { unlockAudio } from '../lib/device-features';
 import { useTable } from '../lib/table';
 import { getTest, setTest } from '../lib/testMode';
+import { CardBackPick } from '../components/CardBackPick';
 
 export function Join({ onDisplay }: { onDisplay: () => void }) {
   const { room, game, you, run, busy, away } = useTable();
@@ -86,6 +87,7 @@ export function Join({ onDisplay }: { onDisplay: () => void }) {
             placeholder="친구들이 부르는 이름"
             autoFocus
           />
+          {room.cardMode && <CardBackPick />}
           <button className="btn btn-primary btn-xl" disabled={!name.trim() || busy || full}>
             {full ? '좌석이 꽉 찼어요' : '참가하기'}
           </button>

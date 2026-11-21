@@ -22,3 +22,28 @@ export function useHandFocus(): string | null {
     () => focused,
   );
 }
+
+/**
+ * 내 패 들춰 보기: 열어 둔 상태를 핸드 번호와 같이 기억해요.
+ * 아래 영역은 내 차례/대기 화면이 번갈아 그려져서, 컴포넌트 안에 두면 매번 닫혀 버려요.
+ */
+let peek: { handNo: number; open: boolean } = { handNo: -1, open: false };
+const peekListeners = new Set<() => void>();
+
+export function setPeek(handNo: number, open: boolean) {
+  if (peek.handNo === handNo && peek.open === open) return;
+  peek = { handNo, open };
+  peekListeners.forEach((l) => l());
+}
+
+export function usePeek(handNo: number): boolean {
+  const p = useSyncExternalStore(
+    (l) => {
+      peekListeners.add(l);
+      return () => peekListeners.delete(l);
+    },
+    () => peek,
+  );
+  // 새 핸드가 되면 다시 뒷면으로
+  return p.handNo === handNo && p.open;
+}

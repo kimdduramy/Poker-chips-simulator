@@ -123,7 +123,7 @@ test('short stack all in creates a side pot that pays the right people', async (
   await cat.getByRole('button', { name: '올인 990' }).click();
 
   await expect(ana.getByText('누가 이겼나요?')).toBeVisible();
-  await expect(ana.locator('.stage-line')).toHaveText('올인 · 런아웃');
+  await expect(ana.locator('.stage-line')).toHaveText('올인 런아웃');
   const main = ana.locator('.pot-pick').filter({ hasText: '메인 팟' });
   const side = ana.locator('.pot-pick').filter({ hasText: '사이드 팟 1' });
   await expect(main).toContainText('300');
@@ -460,9 +460,9 @@ test('card mode deals cards on the phones and pays the best hand by itself', asy
 
   await expect(ana.getByText('앱이 나눠줘요')).toBeVisible();
   await ana.getByRole('button', { name: '첫 핸드 시작' }).click();
-  for (const p of [ana, ben]) await expect(p.getByRole('img', { name: /^내 카드: / })).toBeVisible();
-  const anaCards = await ana.getByRole('img', { name: /^내 카드: / }).getAttribute('aria-label');
-  const benCards = await ben.getByRole('img', { name: /^내 카드: / }).getAttribute('aria-label');
+  for (const p of [ana, ben]) await expect(p.getByRole('button', { name: /^내 카드: / })).toBeVisible();
+  const anaCards = await ana.getByRole('button', { name: /^내 카드: / }).getAttribute('aria-label');
+  const benCards = await ben.getByRole('button', { name: /^내 카드: / }).getAttribute('aria-label');
   expect(anaCards).not.toBe(benCards);
 
   for (let i = 0; i < 8; i++) {

@@ -1,7 +1,7 @@
 import { useRef, type CSSProperties } from 'react';
 import { cardRankText, cardSpeech, cardSuitSymbol, evaluate, isRed, type Card } from '../../shared/cards';
 import type { RoomView } from '../../shared/protocol';
-import { useHandFocus } from '../lib/handFocus';
+import { setPeek, useHandFocus, usePeek } from '../lib/handFocus';
 import { useTable } from '../lib/table';
 
 type Glow = 'hl' | 'dim' | undefined;
@@ -113,35 +113,98 @@ export function BoardRow({ size = 'md' }: { size?: 'md' | 'lg' }) {
   );
 }
 
-/** 카드 모드: 내 카드 2장과 지금 내 족보 */
-export function MyHand() {
+/** 카드 모드 보드 (폰 화면): 팟 아래 5장. 내 카드는 아래 내 영역(HandPeek)에 있어요. */
+export function CardZone() {
+  const { room, game } = useTable();
+  const focus = useFocusedBest(room);
+  const board = room.board;
+  const delay = useFlipDelays(board, game.handNo, [3, 4], (last) => {
+    boardSettlesAt = performance.now() + last + DEAL_MS;
+  });
+  if (!room.cardMode || game.phase === 'lobby') return null;
+  // 꾹 누르는 동안: 누른 사람 족보 카드만 밝고 크게, 나머지는 흐리게. 평소엔 구분 없음.
+  const glow = (c: Card): Glow => (focus.id ? (focus.best.has(c) ? 'hl' : 'dim') : undefined);
+  const label = board.length === 0 ? '보드 카드 아직 없음' : `보드 카드: ${cardsSpeech(board)}`;
+  return (
+    <div className="card-zone">
+      <div className="board-row" role="img" aria-label={label}>
+        {[0, 1, 2, 3, 4].map((i) => {
+          const c = board[i];
+          return <PlayingCard key={c ?? `empty-${i}`} card={c} glow={c ? glow(c) : undefined} flipDelay={c ? delay(c) : null} />;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 내 패: 평소엔 뒷면으로 겹쳐 두고, 누르면 앞면이 보여요.
+ * - 짧게 탭: 열기/닫기
+ * - 꾹 누르기: 누르는 동안만 보기 (손을 떼면 다시 뒷면)
+ * 옆사람이 내 폰을 봐도 패가 바로 보이지 않고, 실제로 패를 들춰 보는 느낌이에요.
+ */
+const HOLD_MS = 280;
+
+export function HandPeek({ align = 'start' }: { align?: 'start' | 'end' }) {
   const { room, you, me, game } = useTable();
-  const focus = useHandFocus();
   const hole = you.hole ?? [];
-  const delay = useFlipDelays(hole, game.handNo);
-  if (!room.cardMode || hole.length === 0 || game.phase === 'lobby') return null;
+  const open = usePeek(game.handNo);
+  const pressedAt = useRef<{ at: number; wasOpen: boolean } | null>(null);
+  if (!room.cardMode || hole.length !== 2 || game.phase === 'lobby') return null;
+
   const folded = !!me?.folded;
   const all = [...hole, ...room.board];
   const value = all.length >= 5 ? evaluate(all) : null;
-  const best = new Set(value?.made ?? []);
-  // 누가 눌려 있을 때만: 나를 누르면 내 족보 카드 강조, 다른 사람을 누르면 내 카드는 흐리게
-  const holding = focus !== null && room.shown.some((s) => s.id === focus);
-  const glowOf = (c: Card): Glow => {
-    if (!holding) return undefined;
-    return focus === you.id && best.has(c) ? 'hl' : 'dim';
+  const label = folded ? '폴드' : value ? value.label : hole[0][0] === hole[1][0] ? `포켓 페어 (${cardRankText(hole[0])})` : '프리플랍';
+
+  const down = () => {
+    pressedAt.current = { at: performance.now(), wasOpen: open };
+    setPeek(game.handNo, true);
   };
-  const label = value ? value.label : hole[0][0] === hole[1][0] ? `포켓 페어 (${cardRankText(hole[0])})` : '프리플랍';
+  const up = () => {
+    const p = pressedAt.current;
+    pressedAt.current = null;
+    if (!p) return;
+    const held = performance.now() - p.at >= HOLD_MS;
+    // 꾹 눌렀으면 떼는 순간 닫고, 짧게 탭했으면 열기/닫기
+    setPeek(game.handNo, held ? false : !p.wasOpen);
+  };
+  const cancel = () => {
+    if (pressedAt.current) setPeek(game.handNo, pressedAt.current.wasOpen);
+    pressedAt.current = null;
+  };
+
   return (
-    <div className="my-hand" data-folded={folded || undefined}>
-      <span className="my-hand-cards" role="img" aria-label={`내 카드: ${cardsSpeech(hole)}`}>
+    <button
+      type="button"
+      className="hand-peek"
+      data-open={open || undefined}
+      data-folded={folded || undefined}
+      data-align={align}
+      aria-pressed={open}
+      aria-label={`내 카드: ${cardsSpeech(hole)}. ${label}`}
+      onPointerDown={(e) => {
+        (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+        down();
+      }}
+      onPointerUp={up}
+      onPointerCancel={cancel}
+      onKeyDown={(e) => {
+        if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+          e.preventDefault();
+          setPeek(game.handNo, !open);
+        }
+      }}
+    >
+      <span className="hand-peek-cards">
         {hole.map((c) => (
-          <PlayingCard key={c} card={c} size="lg" glow={glowOf(c)} flipDelay={delay(c)} />
+          <PlayingCard key={c} card={c} hidden={!open} />
         ))}
       </span>
-      <span className="my-hand-text">
-        <span className="label">내 패</span>
-        <span className="my-hand-label">{folded ? '폴드' : label}</span>
+      <span className="hand-peek-cap">
+        <span className="hand-peek-key">내 패</span>
+        <span className="hand-peek-value">{open ? label : '눌러서 보기'}</span>
       </span>
-    </div>
+    </button>
   );
 }

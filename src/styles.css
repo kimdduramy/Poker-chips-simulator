@@ -1038,6 +1038,7 @@ button:disabled {
 
 .hold-pill {
   /* 깔끔한 보조 버튼: 테두리 없이 옅은 바탕 + 카드 아이콘 */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -2042,14 +2043,14 @@ button:disabled {
 
 .turn-title {
   display: block;
-  font-size: 1.375rem;
+  font-size: 1.1875rem;
   font-weight: 680;
   letter-spacing: -0.02em;
 }
 
 .turn-sub {
   display: block;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   opacity: 0.8;
 }
 
@@ -2072,7 +2073,7 @@ button:disabled {
 }
 
 .btn-turn {
-  min-height: 64px;
+  min-height: 54px;
   padding: 0 10px;
   border-radius: 16px;
   font-size: 1.0625rem;
@@ -2757,7 +2758,8 @@ button:disabled {
 }
 
 .display-pot-amount {
-  font-size: clamp(4.5rem, 16vw, 11rem);
+  /* 낮은 화면(720p TV 등)에서는 높이에 맞춰 줄여서 좌석과 QR이 밀려나지 않게 */
+  font-size: clamp(3.5rem, min(16vw, 16vh), 11rem);
   font-weight: 560;
   line-height: 0.95;
   letter-spacing: -0.06em;
@@ -2886,7 +2888,8 @@ button:disabled {
   }
 }
 
-@media (min-width: 960px) {
+/* 넓은 화면, 그리고 가로로 눕힌 폰: 왼쪽에 팟·카드·좌석, 오른쪽에 내 행동 */
+@media (min-width: 960px), (orientation: landscape) and (max-height: 520px) and (min-width: 600px) {
   .table-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 400px;
@@ -2945,6 +2948,36 @@ button:disabled {
 
   .seat {
     min-height: 64px;
+  }
+}
+
+/* 가로로 눕힌 폰: 높이가 낮아서 여백과 글자를 줄이고, 오른쪽 행동 칸도 좁혀요 */
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 600px) and (max-width: 959px) {
+  .table-shell {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 16px;
+    padding: 0 max(12px, env(safe-area-inset-left)) 0 max(12px, env(safe-area-inset-right));
+  }
+  .table-main {
+    padding: 4px 12px 16px;
+  }
+  .dock-wrap {
+    padding: 8px 0;
+  }
+  .dock {
+    padding: 14px;
+  }
+  .stage {
+    padding-top: 8px;
+  }
+  .pot-amount {
+    font-size: 2.75rem;
+  }
+  .seat {
+    min-height: 52px;
+  }
+  .card-zone .pcard {
+    --w: 34px;
   }
 }
 
@@ -3629,9 +3662,14 @@ body {
 .mode-pick-opt[aria-checked='true'] {
   border-color: var(--ink);
   box-shadow: inset 0 0 0 1px var(--ink);
+  background: var(--accent-soft);
   color: var(--ink);
 }
 .mode-pick-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
   font-weight: 650;
 }
 .mode-pick-desc {
@@ -3663,7 +3701,7 @@ body {
     box-shadow 220ms var(--ease-out);
 }
 .pcard[data-size='sm'] {
-  --w: 22px;
+  --w: 28px;
 }
 .pcard[data-size='lg'] {
   --w: 46px;
@@ -3676,9 +3714,22 @@ body {
   border: 1.25px dashed var(--line-strong);
   box-shadow: none;
 }
+/*
+ * 카드 뒷면: 실제 트럼프처럼 흰 테두리 여백 + 짙은 남색 바탕 + 촘촘한 다이아몬드 격자,
+ * 가운데엔 앱 로고와 같은 노란 칩 문양. 흰 화면·다크 화면·노란 내 차례 창 어디서나 또렷해요.
+ */
 .pcard[data-back] {
-  background: repeating-linear-gradient(45deg, var(--accent) 0 4px, color-mix(in oklch, var(--accent) 70%, #fff) 4px 8px);
-  border-color: var(--accent-text);
+  --back: #1c2b4a;
+  border-color: var(--line-strong);
+  background:
+    radial-gradient(circle at 50% 50%, #f3db2c 0 9%, var(--back) 9.5% 14%, #f3db2c 14.5% 17%, transparent 17.5%),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 5px),
+    var(--back);
+  box-shadow:
+    inset 0 0 0 calc(var(--w) * 0.07) #fff,
+    inset 0 0 0 calc(var(--w) * 0.07 + 1px) var(--back),
+    0 1px 2px oklch(0 0 0 / 0.15);
 }
 .pcard-rank {
   font-size: calc(var(--w) * 0.44);
@@ -3743,31 +3794,100 @@ body {
   margin: 16px 0 8px;
 }
 .board-row[data-size='lg'] > .pcard {
-  --w: clamp(48px, 9vw, 96px);
+  --w: clamp(44px, min(9vw, 9vh), 96px);
 }
 
-/* 내 카드 (아래 행동 영역 위) */
-.my-hand {
+/* 카드 모드: 팟 아래 보드 5장 */
+.card-zone {
+  margin-top: 12px;
+}
+.card-zone .board-row {
+  margin-top: 0;
+}
+.card-zone .pcard {
+  --w: 40px;
+}
+@media (max-width: 380px) {
+  .card-zone .pcard {
+    --w: 38px;
+  }
+}
+
+/*
+ * 내 패: 아래 내 영역에 두 장을 살짝 겹쳐 부채꼴로. 평소엔 뒷면, 누르면 앞면.
+ * 버튼이지만 버튼처럼 보이지 않게 테두리·바탕 없이.
+ */
+.hand-peek {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.hand-peek[data-align='end'] {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.hand-peek-cards {
+  display: inline-flex;
+  padding: 2px 6px 0 2px;
+}
+.hand-peek .pcard {
+  --w: 34px;
+  transition: transform 180ms var(--ease-out);
+}
+.hand-peek .pcard:first-child {
+  transform: rotate(-7deg);
+}
+.hand-peek .pcard:last-child {
+  margin-left: -12px;
+  transform: rotate(7deg) translateY(2px);
+}
+/* 들춰 볼 때: 살짝 커지면서 펼쳐져요 */
+.hand-peek[data-open] .pcard:first-child {
+  transform: rotate(-5deg) translateY(-3px) scale(1.12);
+}
+.hand-peek[data-open] .pcard:last-child {
+  margin-left: -6px;
+  transform: rotate(5deg) translateY(-2px) scale(1.12);
+}
+.hand-peek[data-folded] .pcard {
+  opacity: 0.4;
+}
+.hand-peek-cap {
+  display: grid;
+  gap: 1px;
+  line-height: 1.2;
+}
+.hand-peek-key {
+  font-size: 0.6875rem;
+  opacity: 0.7;
+}
+.hand-peek-value {
+  font-size: 0.875rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.hand-peek:not([data-open]) .hand-peek-value {
+  font-weight: 500;
+  opacity: 0.75;
+}
+.hand-peek:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.my-stack-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px var(--gutter) 4px;
-}
-.my-hand-cards {
-  display: flex;
-  gap: 5px;
-}
-.my-hand-text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.my-hand-label {
-  font-weight: 650;
-  overflow-wrap: anywhere;
-}
-.my-hand[data-folded] .pcard {
-  opacity: 0.35;
+  gap: 14px;
 }
 
 /* 쇼다운에서 공개된 패 (좌석 목록) */
@@ -3782,7 +3902,8 @@ body {
   gap: 2px;
 }
 .seat-shown-label {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 560;
   color: var(--ink-2);
 }
 
@@ -3822,4 +3943,160 @@ body {
 }
 .held-line {
   font-weight: 650;
+}
+
+/* 족보 버튼: 보이는 크기(26px)는 그대로, 누르는 영역만 위아래로 넓혀 44px로 */
+.hold-pill::before {
+  content: '';
+  position: absolute;
+  inset: -9px -2px;
+}
+
+/* 큰 화면이 낮으면(720p TV 등) 간격과 QR을 줄여서 아래 QR·기록까지 한 화면에 들어오게 */
+@media (max-height: 800px) {
+  .display {
+    gap: 12px;
+    padding-top: calc(var(--safe-top) + 14px);
+    padding-bottom: calc(var(--safe-bottom) + 14px);
+  }
+  .display-foot .qr {
+    width: 84px;
+    height: 84px;
+  }
+  .board-row[data-size='lg'] {
+    margin: 8px 0 4px;
+  }
+}
+
+/* 내 차례 노란 창: 위아래 여백과 줄 간격을 줄여 좌석 목록이 더 보이게 */
+.dock-turn {
+  gap: 10px;
+  padding-top: 12px;
+  padding-bottom: calc(var(--safe-bottom) + 12px);
+}
+.turn-head {
+  align-items: center;
+}
+
+
+/* ---------------- 카드 뒷면 고르기 ---------------- */
+
+/*
+ * 기본(네이비)은 위 .pcard[data-back]. 나머지는 <html data-card-back>으로 바꿔요.
+ * 고르는 버튼의 견본(.back-sample)은 data-back-style로 각자 모양을 보여줘요.
+ */
+/* 크림: 크림색 여백 + 안쪽 테두리 선 + 가운데 마름모와 노란 점 */
+:root[data-card-back='cream'] .pcard[data-back]:not([data-back-style]),
+.pcard[data-back-style='cream'] {
+  --back: #1f2d4f;
+  border-color: #c9c2ad;
+  background: var(--back);
+  box-shadow:
+    inset 0 0 0 calc(var(--w) * 0.07) #f2ead8,
+    inset 0 0 0 calc(var(--w) * 0.07 + 1px) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.11) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.11 + 1px) #f2ead8,
+    0 1px 2px oklch(0 0 0 / 0.15);
+}
+:root[data-card-back='cream'] .pcard[data-back]:not([data-back-style])::after,
+.pcard[data-back-style='cream']::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--w) * 0.42);
+  height: calc(var(--w) * 0.42);
+  transform: translate(-50%, -50%) rotate(45deg);
+  border: 1px solid #f2ead8;
+  box-shadow:
+    0 0 0 calc(var(--w) * 0.05) var(--back),
+    0 0 0 calc(var(--w) * 0.05 + 1px) rgb(242 234 216 / 0.5);
+  background: radial-gradient(circle, #f3db2c 0 22%, transparent 24%);
+}
+
+/* 스페이드: 짙은 초록 펠트색 + 노란 안쪽 선 + 가운데 ♠ */
+:root[data-card-back='spade'] .pcard[data-back]:not([data-back-style]),
+.pcard[data-back-style='spade'] {
+  --back: #13372a;
+  background: repeating-linear-gradient(45deg, rgb(255 255 255 / 0.05) 0 1px, transparent 1px 4px), var(--back);
+  box-shadow:
+    inset 0 0 0 calc(var(--w) * 0.07) #fff,
+    inset 0 0 0 calc(var(--w) * 0.07 + 1px) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.1) var(--back),
+    inset 0 0 0 calc(var(--w) * 0.1 + 1px) rgb(243 219 44 / 0.7),
+    0 1px 2px oklch(0 0 0 / 0.15);
+}
+:root[data-card-back='spade'] .pcard[data-back]:not([data-back-style])::after,
+.pcard[data-back-style='spade']::after {
+  content: '♠';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #f3db2c;
+  font-size: calc(var(--w) * 0.5);
+  line-height: 1;
+}
+
+/* 미니멀: 테두리 없는 먹색에 노란 대각선 한 줄. 다크 화면에서도 묻히지 않게 밝은 테두리 */
+:root[data-card-back='minimal'] .pcard[data-back]:not([data-back-style]),
+.pcard[data-back-style='minimal'] {
+  border-color: #55554f;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 0.8px), #f3db2c calc(50% - 0.8px) calc(50% + 0.8px), transparent calc(50% + 0.8px)),
+    #23231f;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 2px oklch(0 0 0 / 0.2);
+}
+
+.back-pick-wrap {
+  display: grid;
+  gap: 8px;
+}
+.back-pick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.back-pick-opt {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 10px 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.back-pick-opt[aria-checked='true'] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 650;
+}
+.back-sample {
+  --w: 30px;
+  overflow: hidden;
+}
+
+/* 메뉴 묶음 제목: 게임 / 내 설정 / 방장 */
+.menu-section .menu-group {
+  border-top: 0;
+}
+.menu-section {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.menu-heading {
+  margin: 0 0 2px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+}
+.menu-section .menu-item {
+  min-height: 50px;
 }

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { bySeat, handInProgress, LIMITS } from '../../shared/engine';
 import { ledger, netsInCents, settleUp } from '../../shared/settle';
 import { setSoundEnabled, soundEnabled } from '../lib/device';
@@ -8,8 +8,10 @@ import { GameLog } from './GameLog';
 import { Icon } from './Icon';
 import { Invite } from './Invite';
 import { Sheet } from './Sheet';
+import { CardBackPick } from './CardBackPick';
+import { CARD_BACKS, useCardBack } from '../lib/cardBack';
 
-export type SheetName = 'menu' | 'invite' | 'settings' | 'players' | 'settle' | 'log' | 'bank' | null;
+export type SheetName = 'menu' | 'invite' | 'settings' | 'players' | 'settle' | 'log' | 'bank' | 'cardBack' | null;
 
 interface Props {
   open: SheetName;
@@ -44,6 +46,12 @@ export function Sheets({ open, setOpen, onDisplay, onLeft }: Props) {
       <Sheet open={open === 'bank'} onClose={close} title="은행">
         <Bank />
       </Sheet>
+      <Sheet open={open === 'cardBack'} onClose={close} title="카드 뒷면">
+        <div className="stack-form">
+          <p className="hint">내 폰에서만 바뀌어요. 다른 사람에게는 보이지 않아요.</p>
+          <CardBackPick label={false} />
+        </div>
+      </Sheet>
     </>
   );
 }
@@ -52,6 +60,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
   const { room, game, me, isHost, run, busy, v, away } = useTable();
   const [sound, setSound] = useState(soundEnabled);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const cardBack = useCardBack();
   const inHand = !!me?.inHand && handInProgress(game);
   const hostAway = !isHost && (!room.hostId || away(room.hostId));
 
@@ -64,21 +73,27 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
     </li>
   );
 
+  const backName = CARD_BACKS.find((b) => b.id === cardBack)?.name;
+
   return (
     <div className="menu">
+      {/* 지금 바로 하는 일: 되돌리기(방장), 친구 초대 */}
       <ul className="menu-group">
         {isHost && room.undoLabel && item('되돌리기', () => run({ type: 'undo', v }).then((ok) => ok && setOpen(null)), { note: room.undoLabel })}
         {item('친구 초대', () => setOpen('invite'), { note: room.code })}
-        {item('기록', () => setOpen('log'), { note: '누가 뭘 했는지' })}
-        {item('은행', () => setOpen('bank'), { note: me?.loan ? `빚 ${fmt(me.loan)}` : '리바이·빚 갚기' })}
-        {item('정산', () => setOpen('settle'))}
-        {item('큰 화면 모드', onDisplay, { note: '테이블 가운데 두는 화면' })}
       </ul>
 
+      <MenuGroup title="게임">
+        {item('기록', () => setOpen('log'), { note: '누가 뭘 했는지' })}
+        {item('정산', () => setOpen('settle'))}
+        {item('은행', () => setOpen('bank'), { note: me?.loan ? `빚 ${fmt(me.loan)}` : '리바이·빚 갚기' })}
+        {item('큰 화면 모드', onDisplay, { note: '테이블 가운데 두는 화면' })}
+      </MenuGroup>
+
       {me && (
-        <ul className="menu-group">
+        <MenuGroup title="내 설정">
           {item(me.sittingOut ? '싯인' : '싯아웃', () => run({ type: 'sit', out: !me.sittingOut }), {
-            note: inHand ? '다음 핸드부터' : undefined,
+            note: inHand ? '다음 핸드부터' : me.sittingOut ? '쉬는 중' : '잠깐 쉬기',
           })}
           {me.stack === 0 &&
             item(`리바이 ${fmt(game.settings.startingStack)}`, () => run({ type: 'rebuy' }), {
@@ -98,15 +113,16 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
               <span className="menu-note">{sound ? '켬' : '끔'}</span>
             </button>
           </li>
-        </ul>
+          {room.cardMode && item('카드 뒷면', () => setOpen('cardBack'), { note: backName })}
+        </MenuGroup>
       )}
 
       {(isHost || hostAway) && (
-        <ul className="menu-group">
-          {isHost && item('게임 설정', () => setOpen('settings'))}
+        <MenuGroup title="방장">
+          {isHost && item('게임 설정', () => setOpen('settings'), { note: '블라인드, 시작 스택' })}
           {isHost && item('플레이어·스택 관리', () => setOpen('players'))}
           {hostAway && item('방장 넘겨받기', () => run({ type: 'takeHost' }))}
-        </ul>
+        </MenuGroup>
       )}
 
       {me && (
@@ -133,6 +149,19 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
         </ul>
       )}
     </div>
+  );
+}
+
+/** 메뉴 묶음: 작은 제목 + 항목들 */
+function MenuGroup({ title, children }: { title: string; children: ReactNode }) {
+  const id = `menu-${title}`;
+  return (
+    <section className="menu-section" aria-labelledby={id}>
+      <h3 className="menu-heading" id={id}>
+        {title}
+      </h3>
+      <ul className="menu-group">{children}</ul>
+    </section>
   );
 }
 
