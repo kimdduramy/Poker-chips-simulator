@@ -56,7 +56,7 @@ function CopyHistory() {
       <button className="btn btn-quiet btn-block" onClick={copy} disabled={busy}>
         {busy ? '가져오는 중…' : '핸드 기록 복사'}
       </button>
-      <p className="hint">끝난 핸드 최근 50판의 보드, 공개된 패, 승자, 진행이 글로 복사돼요.</p>
+      <p className="hint">끝난 핸드 최근 50판이 짧은 기보로 복사돼요. 읽는 법은 도움말 → 용어 → 기록에 있어요.</p>
       {fallback && (
         <textarea className="text-input history-text" readOnly value={fallback} rows={8} onFocus={(e) => e.currentTarget.select()} aria-label="핸드 기록" />
       )}
