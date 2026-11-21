@@ -3242,58 +3242,160 @@ button:disabled {
   }
 }
 
-/* ---------------- 기록 ---------------- */
+/* ---------------- 기록 (기보) ---------------- */
 .game-log {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
-.game-log-note {
-  margin: 0;
-  color: var(--ink-3);
-  font-size: 0.8125rem;
-}
-.game-log-group {
+.nt-hand {
   display: grid;
   gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
 }
-.game-log-head {
-  margin: 0;
+.nt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--line);
-  font-size: 0.875rem;
+}
+.nt-no {
+  font-family: var(--font-mono);
   font-weight: 700;
 }
-.game-log-list {
+.nt-meta {
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+}
+.nt-live {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+.nt-streets,
+.nt-result {
+  display: grid;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: 2px;
 }
-.game-log-row {
+.nt-street,
+.nt-res {
   display: grid;
-  grid-template-columns: 3.2em minmax(0, 1fr);
-  gap: 10px;
-  padding: 5px 0;
-  font-size: 0.9375rem;
+  grid-template-columns: 1.9rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.nt-res {
+  grid-template-columns: 1.9rem auto auto minmax(0, 1fr) auto;
+}
+/* 스트리트 기호: 작은 회색 상자 */
+.nt-st {
+  justify-self: start;
+  min-width: 1.6rem;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+.nt-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-width: 0;
+}
+.nt-board {
+  display: inline-flex;
+  gap: 4px;
+  margin-right: 2px;
+}
+/* 카드: 흰 바탕 작은 상자에 숫자+무늬 */
+.nt-card {
+  padding: 0 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: #fff;
+  color: oklch(0.2 0 0);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: -0.02em;
+}
+.nt-card[data-red] {
+  color: oklch(0.55 0.21 25);
+}
+.nt-act {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  white-space: nowrap;
+}
+.nt-name {
+  overflow: hidden;
+  max-width: 9em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--ink);
 }
-.game-log-time {
-  color: var(--ink-3);
-  font-size: 0.75rem;
-  padding-top: 2px;
-}
-.game-log-row[data-kind='hand'] .game-log-text {
-  color: var(--ink-2);
-  font-weight: 600;
-}
-.game-log-row[data-kind='win'] .game-log-text {
-  color: var(--good);
+/* 행동 기호: 색으로 한눈에 (체크 회색, 콜 파랑, 벳·레이즈 주황, 폴드 흐리게, 올인 빨강) */
+.nt-code {
+  font-family: var(--font-mono);
   font-weight: 700;
-}
-.game-log-row[data-kind='undo'] .game-log-text,
-.game-log-row[data-kind='table'] .game-log-text {
+  font-size: 0.8125rem;
   color: var(--ink-3);
+}
+.nt-code[data-k='c'] {
+  color: oklch(0.55 0.13 245);
+}
+.nt-code[data-k='b'],
+.nt-code[data-k='r'] {
+  color: oklch(0.6 0.15 55);
+}
+.nt-code[data-k='f'] {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.nt-code[data-allin] {
+  color: var(--danger);
+}
+.nt-label {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.nt-res[data-won] .nt-name,
+.nt-res[data-won] .nt-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+.nt-won {
+  justify-self: end;
+  font-weight: 700;
+  color: var(--good);
+}
+@media (prefers-color-scheme: dark) {
+  .nt-code[data-k='c'] {
+    color: oklch(0.75 0.11 245);
+  }
+  .nt-code[data-k='b'],
+  .nt-code[data-k='r'] {
+    color: oklch(0.8 0.13 70);
+  }
 }
 
 /* ---------- 보드 카드 표시: 팟 옆 작은 카드 5장 (깔린 만큼 켜짐) ---------- */
@@ -4104,8 +4206,22 @@ body {
 /* 기록 창: 핸드 기록 복사 */
 .history-copy {
   display: grid;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 8px;
+}
+.history-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.history-debug {
+  display: flex;
+  gap: 8px;
+}
+.history-debug .text-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
 }
 .history-text {
   font-family: var(--font-mono);

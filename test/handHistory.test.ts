@@ -17,6 +17,11 @@ describe('compact hand history', () => {
         act(2, 'Ben', 'check'), act(2, 'Cy', 'check'),
         act(3, 'Ben', 'check'), act(3, 'Cy', 'check'),
       ],
+      holes: [
+        { name: 'Ana', cards: ['4c', '8s'] },
+        { name: 'Ben', cards: ['Kd', '8d'] },
+        { name: 'Cy', cards: ['7h', 'Qs'] },
+      ],
       board: ['Td', 'Jh', 'Ts', '5d', 'Jd'],
       shown: [
         { name: 'Ben', cards: ['Kd', '8d'], category: 5, label: '플러시 (K 하이)' },
@@ -29,6 +34,11 @@ describe('compact hand history', () => {
       handNo: 2,
       button: 'Ben',
       actions: [act(0, 'Ben', 'fold'), act(0, 'Cy', 'fold')],
+      holes: [
+        { name: 'Ana', cards: ['Ac', 'Ad'] },
+        { name: 'Ben', cards: ['2c', '7d'] },
+        { name: 'Cy', cards: ['3h', '9s'] },
+      ],
       board: [],
       shown: [],
       winners: [{ name: 'Ana', amount: 15 }],
@@ -56,12 +66,14 @@ describe('compact hand history', () => {
     expect(body).toBe(
       [
         '#1 5/10 D:P1',
+        'H P1 4c8s P2 Kd8d P3 7hQs',
         'P P1 c P2 c P3 x',
         'F Td Jh Ts: P2 b20 P3 r60 P1 f P2 c',
         'T 5d: P2 x P3 x',
         'R Jd: P2 x P3 x',
-        'SD *P2 Kd8d FL(K) +150 | P3 7hQs 2P(J,10)',
+        'SD *P2 FL(K) +150 | P3 2P(J,10)',
         '#2 D:P2',
+        'H P1 AcAd P2 2c7d P3 3h9s',
         'P P2 f P3 f',
         '*P1 +15',
         '#3 10/20 D:P3',
@@ -102,5 +114,15 @@ describe('names that would break the notation', () => {
     expect(text).toContain('P P1 c P2 x\nF As 6c 2h: P2 b50 P1 c');
     // 기보 본문에는 원래 이름이 안 나와요
     expect(text.split('\n\n').at(-1)).not.toContain('컨설팅');
+  });
+});
+
+describe('debug code', () => {
+  it('is the room code written backwards', async () => {
+    const { debugCode, isDebugCode } = await import('../shared/debugCode');
+    expect(debugCode('QMQQ')).toBe('QQMQ');
+    expect(debugCode('ABCD')).toBe('DCBA');
+    expect(isDebugCode('ABCD', ' dcba ')).toBe(true);
+    expect(isDebugCode('ABCD', 'ABCD')).toBe(false);
   });
 });

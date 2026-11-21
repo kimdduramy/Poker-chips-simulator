@@ -420,9 +420,11 @@ test('menu has a game log that shows who did what', async ({ browser }) => {
 
   await ben.getByRole('button', { name: '메뉴' }).click();
   await ben.getByRole('button', { name: /기록/ }).click();
+  // 핸드마다 기보로: '#1' 머리줄과 'P' 줄에 누가 무엇을 했는지 (c 콜, x 체크)
   const log = ben.locator('dialog[open] .game-log');
-  await expect(log.getByRole('heading', { name: /핸드 #1/ })).toBeVisible();
-  await expect(log.locator('.game-log-row').filter({ hasText: /콜|체크/ }).first()).toBeVisible();
+  const hand = log.getByRole('region', { name: '핸드 1' });
+  await expect(hand.locator('.nt-no')).toHaveText('#1');
+  await expect(hand.locator('.nt-act').filter({ hasText: 'Ana' }).locator('.nt-code')).toHaveText(/^[cx]$/);
 });
 
 test('home help opens in a window with how-to, terms and hand ranks tabs', async ({ browser }) => {
@@ -483,15 +485,26 @@ test('card mode deals cards on the phones and pays the best hand by itself', asy
   await ben.mouse.up();
   await expect(ben.locator('.seat[data-held]')).toHaveCount(0);
 
-  // 메뉴 → 기록 → 핸드 기록 복사: 보드와 공개된 패가 글로 복사돼요
+  // 메뉴 → 기록 → 기록 복사: 누구나 공개 정보 기보를, 디버그 코드(방 코드 거꾸로)면 시작 패까지
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
   await ana.getByRole('button', { name: '메뉴' }).click();
   await ana.getByRole('button', { name: /^기록/ }).click();
-  await ana.getByRole('button', { name: '핸드 기록 복사' }).click();
+  await ana.getByRole('button', { name: '기록 복사', exact: true }).click();
   await expect(ana.getByText('핸드 1판 기록을 복사했어요')).toBeVisible();
   const copied = await ana.evaluate(() => navigator.clipboard.readText());
   expect(copied).toMatch(/^#1 5\/10 D:/m);
   expect(copied).toMatch(/^F [2-9TJQKA][shdc] [2-9TJQKA][shdc] [2-9TJQKA][shdc]/m);
   expect(copied).toMatch(/^SD .*\*/m);
+  expect(copied).not.toMatch(/^H /m);
+
+  await ana.getByRole('button', { name: '디버그 복사' }).click();
+  await ana.getByLabel('디버그 코드').fill('XXXX');
+  await ana.getByRole('button', { name: '복사', exact: true }).click();
+  await expect(ana.getByText('디버그 코드가 맞지 않아요')).toBeVisible();
+  await ana.getByLabel('디버그 코드').fill([...codeOf(ana)].reverse().join(''));
+  await ana.getByRole('button', { name: '복사', exact: true }).click();
+  await expect(ana.getByText('핸드 1판 디버그 기록을 복사했어요')).toBeVisible();
+  const debugText = await ana.evaluate(() => navigator.clipboard.readText());
+  expect(debugText).toMatch(/^H P1 [2-9TJQKA][shdc][2-9TJQKA][shdc] P2 /m);
   expect(Number((await stackOf(ana, 'Ana').innerText()).replace(/,/g, '')) + Number((await stackOf(ana, 'Ben').innerText()).replace(/,/g, ''))).toBe(2000);
 });

@@ -94,11 +94,13 @@ export default {
         return json(await res.json());
       }
       if (parts.length === 4 && parts[3] === 'history' && request.method === 'GET') {
-        const res = await stub(env, code).fetch('https://room/history', {
-          headers: { 'x-token': request.headers.get('x-token') ?? '' },
-        });
+        const headers: Record<string, string> = { 'x-token': request.headers.get('x-token') ?? '' };
+        const debug = request.headers.get('x-debug-code');
+        if (debug !== null) headers['x-debug-code'] = debug.slice(0, 16);
+        const res = await stub(env, code).fetch('https://room/history', { headers });
         if (res.status === 404) return json({ error: '그 코드의 테이블이 없어요' }, 404);
         if (res.status === 403) return json({ error: '이 테이블에 앉은 사람만 볼 수 있어요' }, 403);
+        if (res.status === 401) return json({ error: '디버그 코드가 맞지 않아요' }, 401);
         return json(await res.json());
       }
       if (parts.length === 4 && parts[3] === 'ws') {

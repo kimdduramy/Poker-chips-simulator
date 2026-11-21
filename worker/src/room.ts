@@ -19,9 +19,11 @@ import {
   updateSettings,
   type Game,
   type Settings,
+  bySeat,
 } from '../../shared/engine';
 import { cryptoRandInt, newDeck, shuffle } from '../../shared/cards';
 import { cleanName, sameName } from '../../shared/names';
+import { isDebugCode } from '../../shared/debugCode';
 import { autoAward, handValue, visibleBoard, type Deal } from '../../shared/showdown';
 import {
   AWAY_AFTER_MS,
@@ -188,14 +190,19 @@ export class Room extends DurableObject<Env> {
 
     if (!this.s) return new Response('not found', { status: 404 });
 
-    // 핸드 기록: 이 테이블에 앉은 사람만 (기기 토큰으로 확인)
+    // 핸드 기록: 이 테이블에 앉은 사람만 (기기 토큰으로 확인). 공개된 정보만 보내요.
+    // 디버그 코드(x-debug-code)가 맞으면 모두의 시작 패(holes)까지 보내요. 틀리면 거절.
     if (route === 'history') {
       const token = request.headers.get('x-token') ?? '';
       if (!/^[a-f0-9]{64}$/.test(token)) return new Response('forbidden', { status: 403 });
       const hash = await sha256(`${this.s.code}:${token}`);
       if (!this.s.members.some((m) => m.tokenHash === hash)) return new Response('forbidden', { status: 403 });
+      const asked = request.headers.get('x-debug-code');
+      if (asked !== null && !isDebugCode(this.s.code, asked)) return new Response('bad code', { status: 401 });
+      const debug = asked !== null;
+      const hands = (this.s.hands ?? []).map((h) => (debug ? h : { ...h, holes: undefined }));
       return Response.json(
-        { code: this.s.code, cardMode: !!this.s.cardMode, hands: this.s.hands ?? [] },
+        { code: this.s.code, cardMode: !!this.s.cardMode, debug, hands },
         { headers: { 'cache-control': 'no-store' } },
       );
     }
@@ -653,6 +660,17 @@ export class Room extends DurableObject<Env> {
       bb: g.settings.bb,
       button: name(g.buttonId),
       actions: (g.actions ?? []).map((a) => ({ street: a.street, name: name(a.id), kind: a.kind, to: a.to, allIn: a.allIn })),
+      holes: deal
+        ? bySeat(g)
+            .filter((p) => deal.hole[p.id])
+            .map((p) => ({ name: p.name, cards: deal.hole[p.id] }))
+            // 핸드가 끝나기 전에 나간 사람도 받은 패는 남겨요
+            .concat(
+              Object.entries(deal.hole)
+                .filter(([id]) => !findPlayer(g, id))
+                .map(([id, cards]) => ({ name: name(id), cards })),
+            )
+        : [],
       board: deal ? visibleBoard(g, deal) : [],
       shown:
         deal && g.reveal

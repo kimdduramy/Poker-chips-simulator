@@ -8,18 +8,19 @@ import { fmt } from './format';
  * 이름은 띄어쓰기나 기호가 있어도 기보가 깨지지 않게 P1, P2…로 바꾸고, 맨 위에 누가 누군지 적어요.
  *
  * #3 D:P3
+ * H P1 KdAs P2 TsAh P3 7c2d
  * P P3 c P1 c P2 x
  * F 2d 6c Th: P1 x P2 b20 P3 f P1 c
  * T 9h: P1 x P2 x
  * R Tc: P1 x P2 x
- * SD P1 KdAs 1P(10) | *P2 TsAh 3K(10) +70
+ * SD P1 1P(10) | *P2 3K(10) +70
  */
 const STREETS = ['P', 'F', 'T', 'R'];
 const CATEGORY = ['HC', '1P', '2P', '3K', 'ST', 'FL', 'FH', '4K', 'SF', 'RF'];
 
 export const LEGEND = [
   '행동: x 체크, c 콜, b 벳, r 레이즈 (숫자는 총액), f 폴드, ! 올인, * 승자',
-  '스트리트: P 프리플랍, F 플랍, T 턴, R 리버, SD 쇼다운. D 딜러 버튼',
+  '줄: H 시작 패, P 프리플랍, F 플랍, T 턴, R 리버, SD 쇼다운. D 딜러 버튼',
   '카드: 숫자(T=10) + 무늬(s♠ h♥ d♦ c♣)',
   '족보: HC 하이카드, 1P 원페어, 2P 투페어, 3K 트리플, ST 스트레이트, FL 플러시, FH 풀하우스, 4K 포카드, SF 스티플, RF 로티플',
 ];
@@ -56,6 +57,7 @@ function aliasesFor(hands: HandRecord[]): Map<string, string> {
   for (const h of hands) {
     see(h.button);
     h.actions.forEach((a) => see(a.name));
+    (h.holes ?? []).forEach((x) => see(x.name));
     h.shown.forEach((s) => see(s.name));
     h.winners.forEach((w) => see(w.name));
   }
@@ -64,6 +66,8 @@ function aliasesFor(hands: HandRecord[]): Map<string, string> {
 
 function handLines(h: HandRecord, showBlinds: boolean, alias: (name: string) => string): string[] {
   const out = [`#${h.handNo}${showBlinds ? ` ${fmt(h.sb)}/${fmt(h.bb)}` : ''} D:${alias(h.button)}`];
+  // 시작 패: 모두의 패를 한 줄에 (끝난 판만 기록돼서 진행 중인 판은 안 보여요)
+  if (h.holes?.length) out.push(`H ${h.holes.map((x) => `${alias(x.name)} ${x.cards.join('')}`).join(' ')}`);
   const boardFor = [[], h.board.slice(0, 3), h.board.slice(3, 4), h.board.slice(4, 5)];
   const lastStreet = Math.max(-1, ...h.actions.map((a) => a.street));
   for (let st = 0; st < 4; st++) {
@@ -85,7 +89,9 @@ function handLines(h: HandRecord, showBlinds: boolean, alias: (name: string) => 
   if (h.shown.length) {
     const parts = h.shown.map((s) => {
       const amount = won.get(s.name);
-      return `${amount ? '*' : ''}${alias(s.name)} ${s.cards.join('')} ${handCode(s.category, s.label)}${amount ? ` +${fmt(amount)}` : ''}`;
+      // 카드는 H 줄에 있으니 여기는 족보만 (예전 기록처럼 H 줄이 없으면 카드도 적어요)
+      const cards = h.holes?.length ? '' : ` ${s.cards.join('')}`;
+      return `${amount ? '*' : ''}${alias(s.name)}${cards} ${handCode(s.category, s.label)}${amount ? ` +${fmt(amount)}` : ''}`;
     });
     // 쇼다운에서 패를 안 깐 승자(사이드 팟 등)도 빠뜨리지 않게
     for (const w of h.winners) if (!h.shown.some((s) => s.name === w.name)) parts.push(`*${alias(w.name)} +${fmt(w.amount)}`);
