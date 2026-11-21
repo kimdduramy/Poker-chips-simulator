@@ -63,6 +63,16 @@ export interface LastAction {
   allIn: boolean;
 }
 
+/** 이번 핸드의 행동 하나: 핸드 기록(기보)을 만들 때 써요 */
+export interface HandAction {
+  street: Street;
+  id: string;
+  kind: ActionKind;
+  /** 레이즈·벳은 올린 총액, 콜은 낸 뒤 이번 스트리트 총액, 체크·폴드는 0 */
+  to: number;
+  allIn: boolean;
+}
+
 export interface Game {
   phase: Phase;
   settings: Settings;
@@ -86,6 +96,8 @@ export interface Game {
   lastAction: LastAction | null;
   /** 카드 모드: 쇼다운에서 카드를 공개한 사람들. 실물 카드 모드에서는 비어 있어요. */
   reveal?: string[] | null;
+  /** 이번 핸드의 행동 순서 (블라인드 제외) */
+  actions?: HandAction[];
 }
 
 export interface Legal {
@@ -154,6 +166,7 @@ export function createGame(settings: Settings): Game {
     runout: false,
     lastAction: null,
     reveal: null,
+    actions: [],
   };
 }
 
@@ -423,6 +436,7 @@ export function startHand(g0: Game): Game {
   g.results = [];
   g.runout = false;
   g.reveal = null;
+  g.actions = [];
   g.buttonId = btnP.id;
   g.sbId = sbP.id;
   g.bbId = bbP.id;
@@ -488,6 +502,13 @@ export function act(g0: Game, id: string, action: { kind: ActionKind; amount?: n
     default:
       fail('INVALID', '알 수 없는 행동이에요');
   }
+  (g.actions ??= []).push({
+    street: g0.street,
+    id,
+    kind: action.kind,
+    to: action.kind === 'fold' || action.kind === 'check' ? 0 : p.bet,
+    allIn: p.allIn,
+  });
   advance(g, p.seat);
   return g;
 }
