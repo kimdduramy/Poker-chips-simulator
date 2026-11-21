@@ -639,26 +639,29 @@ export class Room extends DurableObject<Env> {
   /** 핸드가 끝나면 공개된 정보만 모아 기록해요. 되돌렸다가 다시 끝나면 같은 핸드를 덮어써요. */
   private recordHand(g: Game) {
     const s = this.s as Stored;
-    const name = (id: string) => findPlayer(g, id)?.name ?? g.departed.find((d) => d.id === id)?.name ?? s.members.find((m) => m.id === id)?.name ?? '누군가';
+    const name = (id: string | null) =>
+      (id && (findPlayer(g, id)?.name ?? g.departed.find((d) => d.id === id)?.name ?? s.members.find((m) => m.id === id)?.name)) || '누군가';
     const deal = s.cardMode && s.deal && s.deal.handNo === g.handNo ? s.deal : null;
     const totals = new Map<string, number>();
     for (const r of g.results) totals.set(r.id, (totals.get(r.id) ?? 0) + r.amount);
-    const from = s.handLogFrom ?? 0;
-    const lines = s.log.filter((e) => e.id >= from);
+    const start = s.log.find((e) => e.id === s.handLogFrom);
     const record: HandRecord = {
       handNo: g.handNo,
-      startedAt: lines[0]?.at ?? Date.now(),
-      endedAt: Date.now(),
+      startedAt: start?.at ?? Date.now(),
       cardMode: !!s.cardMode,
+      sb: g.settings.sb,
+      bb: g.settings.bb,
+      button: name(g.buttonId),
+      actions: (g.actions ?? []).map((a) => ({ street: a.street, name: name(a.id), kind: a.kind, to: a.to, allIn: a.allIn })),
       board: deal ? visibleBoard(g, deal) : [],
-      shown: deal && g.reveal
-        ? g.reveal.flatMap((id) => {
-            const value = handValue(deal, id);
-            return value ? [{ name: name(id), cards: deal.hole[id], label: value.label }] : [];
-          })
-        : [],
+      shown:
+        deal && g.reveal
+          ? g.reveal.flatMap((id) => {
+              const value = handValue(deal, id);
+              return value ? [{ name: name(id), cards: deal.hole[id], category: value.category, label: value.label }] : [];
+            })
+          : [],
       winners: [...totals].map(([id, amount]) => ({ name: name(id), amount })),
-      lines: lines.map((e) => e.text),
     };
     const hands = (s.hands ?? []).filter((h) => h.handNo !== g.handNo);
     hands.push(record);

@@ -490,8 +490,8 @@ test('card mode deals cards on the phones and pays the best hand by itself', asy
   await ana.getByRole('button', { name: '핸드 기록 복사' }).click();
   await expect(ana.getByText('핸드 1판 기록을 복사했어요')).toBeVisible();
   const copied = await ana.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toContain('=== 핸드 #1');
-  expect(copied).toMatch(/보드: \S+ \S+ \S+ \S+ \S+/);
-  expect(copied).toContain('공개: ');
+  expect(copied).toMatch(/^#1 5\/10 D:/m);
+  expect(copied).toMatch(/^F [2-9TJQKA][shdc] [2-9TJQKA][shdc] [2-9TJQKA][shdc]/m);
+  expect(copied).toMatch(/^SD .*\*/m);
   expect(Number((await stackOf(ana, 'Ana').innerText()).replace(/,/g, '')) + Number((await stackOf(ana, 'Ben').innerText()).replace(/,/g, ''))).toBe(2000);
 });

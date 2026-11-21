@@ -143,7 +143,10 @@ describe('hand history', () => {
     expect(h.board).toEqual(room.board);
     expect(h.shown.map((s) => s.cards).sort()).toEqual([...holes.values()].sort());
     expect(h.winners.reduce((sum, w) => sum + w.amount, 0)).toBe(20);
-    expect(h.lines[0]).toMatch(/^핸드 #1/);
+    expect(h.button).toBeTruthy();
+    expect(h.actions.length).toBeGreaterThanOrEqual(7);
+    expect(h.actions.every((a) => ['call', 'check'].includes(a.kind))).toBe(true);
+    expect(h.shown.every((s) => s.category >= 0 && s.category <= 9)).toBe(true);
     void ben;
   });
 
