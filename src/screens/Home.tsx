@@ -4,19 +4,22 @@ import { createRoom, roomInfo } from '../lib/api';
 import { unlockAudio } from '../lib/device-features';
 import { HelpButton } from '../components/Help';
 import { CardModePick } from '../components/CardModePick';
+import { GamePick } from '../components/GamePick';
+import type { GameType } from '../../shared/protocol';
 
 export function Home({ navigate }: { navigate: (to: string) => void }) {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<'new' | 'join' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cardMode, setCardMode] = useState(false);
+  const [gameType, setGameType] = useState<GameType>('holdem');
 
   const start = async () => {
     unlockAudio();
     setBusy('new');
     setError(null);
     try {
-      navigate(`/t/${await createRoom({ cardMode })}`);
+      navigate(`/t/${await createRoom({ cardMode: gameType === 'holdem' && cardMode, gameType })}`);
     } catch (e) {
       setError((e as Error).message);
       setBusy(null);
@@ -67,7 +70,8 @@ export function Home({ navigate }: { navigate: (to: string) => void }) {
       </section>
 
       <section id="home-actions" className="home-actions">
-        <CardModePick value={cardMode} onChange={setCardMode} />
+        <GamePick value={gameType} onChange={setGameType} />
+        {gameType === 'holdem' && <CardModePick value={cardMode} onChange={setCardMode} />}
         <button className="btn btn-primary btn-xl" onClick={start} disabled={busy !== null}>
           {busy === 'new' ? '만드는 중…' : '테이블 만들기'}
         </button>

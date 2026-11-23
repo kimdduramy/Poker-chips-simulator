@@ -8,10 +8,76 @@ import { seatStatus } from '../components/Seats';
 import { useWakeLock } from '../lib/device-features';
 import { fmt, NEXT_CARDS, roomUrl, STREET_NAMES } from '../lib/format';
 import { useTable } from '../lib/table';
+import { MjInfo, MjSeats } from '../components/mahjong/Board';
+import { roundName } from '../../shared/mahjong/tiles';
+import { drawName } from '../../shared/mahjong/names';
+import type { MjView } from '../../shared/mahjong/view';
 
 export function Display({ onExit }: { onExit: () => void }) {
-  const { room, game, member, away, nameOf, conn } = useTable();
+  const { room } = useTable();
   useWakeLock(true);
+  if (room.gameType === 'mahjong') return <MjDisplay onExit={onExit} />;
+  return <HoldemDisplay onExit={onExit} />;
+}
+
+function mjHeadline(mj: MjView): string {
+  const name = (seat: number | null) => (seat === null ? '' : mj.seats[seat]?.name ?? '누군가');
+  if (mj.phase === 'end' && mj.final) {
+    const first = mj.final.rank.indexOf(1);
+    return `게임 끝 · 1위 ${name(first)}`;
+  }
+  if (mj.phase === 'result') {
+    return mj.results
+      .map((r) => (r.kind === 'win' ? `${name(r.seat)} ${r.from === null ? '쯔모' : '론'} ${fmt(r.points)}점` : drawName(r.name)))
+      .join(' · ');
+  }
+  if (mj.claiming) return '누군가 론을 고르는 중…';
+  return `${name(mj.turn)} 차례`;
+}
+
+function MjDisplay({ onExit }: { onExit: () => void }) {
+  const { room, conn } = useTable();
+  const mj = room.mj;
+  return (
+    <div className="display mj-display" data-game="mahjong">
+      <header className="display-top">
+        <span className="big-code">
+          <span className="sr-only">테이블 코드 {room.code.split('').join(' ')}</span>
+          <span aria-hidden="true">{room.code}</span>
+        </span>
+        <span className="display-phase">{mj ? `${roundName(mj.roundWind, mj.kyoku)} ${mj.honba}본장` : '대기실'}</span>
+        <button className="link-btn" onClick={onExit}>
+          큰 화면 끄기
+        </button>
+      </header>
+      <section id="display-main" className="display-center" tabIndex={-1}>
+        {mj ? (
+          <>
+            <MjInfo mj={mj} />
+            <p className="display-headline" aria-live="polite">
+              {mjHeadline(mj)}
+            </p>
+            <MjSeats mj={mj} fixed />
+          </>
+        ) : (
+          <p className="display-headline">QR 찍고 들어오세요 · 마작 {room.members.length}/4</p>
+        )}
+        {conn.status !== 'open' && <p className="display-sub">다시 연결 중…</p>}
+      </section>
+      <footer className="display-foot">
+        <Qr value={roomUrl(room.code)} size={112} label={`${room.code} 테이블 참가 QR 코드`} />
+        <ol className="display-log">
+          {room.log.slice(-4).map((l) => (
+            <li key={l.id}>{l.text}</li>
+          ))}
+        </ol>
+      </footer>
+    </div>
+  );
+}
+
+function HoldemDisplay({ onExit }: { onExit: () => void }) {
+  const { room, game, member, away, nameOf, conn } = useTable();
   const actor = findPlayer(game, game.toActId);
   const pot = game.phase === 'done' ? game.results.reduce((s, r) => s + r.amount, 0) : potTotal(game);
   const freshStreet = game.phase === 'betting' && game.street > 0 && game.players.every((p) => !p.acted) && game.currentBet === 0;

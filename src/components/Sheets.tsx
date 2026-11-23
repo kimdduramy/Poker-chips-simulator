@@ -10,6 +10,7 @@ import { Invite } from './Invite';
 import { Sheet } from './Sheet';
 import { CardBackPick } from './CardBackPick';
 import { CARD_BACKS, useCardBack } from '../lib/cardBack';
+import { MjRulesForm } from './mahjong/Rules';
 
 export type SheetName = 'menu' | 'invite' | 'settings' | 'players' | 'settle' | 'log' | 'bank' | 'cardBack' | null;
 
@@ -31,8 +32,8 @@ export function Sheets({ open, setOpen, onDisplay, onLeft }: Props) {
       <Sheet open={open === 'invite'} onClose={close} title="친구 초대">
         <Invite code={room.code} qrSize={220} />
       </Sheet>
-      <Sheet open={open === 'settings'} onClose={close} title="게임 설정">
-        <SettingsForm onDone={close} />
+      <Sheet open={open === 'settings'} onClose={close} title={room.gameType === 'mahjong' ? '마작 규칙' : '게임 설정'}>
+        {room.gameType === 'mahjong' ? <MjRulesForm onDone={close} /> : <SettingsForm onDone={close} />}
       </Sheet>
       <Sheet open={open === 'players'} onClose={close} title="플레이어">
         <Players />
@@ -74,6 +75,7 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
   );
 
   const backName = CARD_BACKS.find((b) => b.id === cardBack)?.name;
+  const mahjong = room.gameType === 'mahjong';
 
   return (
     <div className="menu">
@@ -85,17 +87,18 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
 
       <MenuGroup title="게임">
         {item('기록', () => setOpen('log'), { note: '누가 뭘 했는지' })}
-        {item('정산', () => setOpen('settle'))}
-        {item('은행', () => setOpen('bank'), { note: me?.loan ? `빚 ${fmt(me.loan)}` : '리바이·빚 갚기' })}
+        {!mahjong && item('정산', () => setOpen('settle'))}
+        {!mahjong && item('은행', () => setOpen('bank'), { note: me?.loan ? `빚 ${fmt(me.loan)}` : '리바이·빚 갚기' })}
         {item('큰 화면 모드', onDisplay, { note: '테이블 가운데 두는 화면' })}
       </MenuGroup>
 
       {me && (
         <MenuGroup title="내 설정">
-          {item(me.sittingOut ? '싯인' : '싯아웃', () => run({ type: 'sit', out: !me.sittingOut }), {
-            note: inHand ? '다음 핸드부터' : me.sittingOut ? '쉬는 중' : '잠깐 쉬기',
-          })}
-          {me.stack === 0 &&
+          {!mahjong &&
+            item(me.sittingOut ? '싯인' : '싯아웃', () => run({ type: 'sit', out: !me.sittingOut }), {
+              note: inHand ? '다음 핸드부터' : me.sittingOut ? '쉬는 중' : '잠깐 쉬기',
+            })}
+          {!mahjong && me.stack === 0 &&
             item(`리바이 ${fmt(game.settings.startingStack)}`, () => run({ type: 'rebuy' }), {
               disabled: inHand,
               note: inHand ? '이번 핸드 후' : undefined,
@@ -119,8 +122,8 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
 
       {(isHost || hostAway) && (
         <MenuGroup title="방장">
-          {isHost && item('게임 설정', () => setOpen('settings'), { note: '블라인드, 시작 스택' })}
-          {isHost && item('플레이어·스택 관리', () => setOpen('players'))}
+          {isHost && item(mahjong ? '마작 규칙' : '게임 설정', () => setOpen('settings'), { note: mahjong ? '길이, 적도라, 쿠이탕' : '블라인드, 시작 스택' })}
+          {isHost && item(mahjong ? '플레이어 관리' : '플레이어·스택 관리', () => setOpen('players'))}
           {hostAway && item('방장 넘겨받기', () => run({ type: 'takeHost' }))}
         </MenuGroup>
       )}
@@ -129,7 +132,15 @@ function Menu({ setOpen, onDisplay, onLeft }: { setOpen: (s: SheetName) => void;
         <ul className="menu-group">
           {confirmLeave ? (
             <li className="confirm-row">
-              <span>{isHost ? '방장이 나가면 모두에게 테이블이 닫혀요.' : inHand ? '이번 핸드는 폴드 처리돼요.' : '테이블에서 나갈까요?'}</span>
+              <span>
+                {isHost
+                  ? '방장이 나가면 모두에게 테이블이 닫혀요.'
+                  : mahjong && room.mj
+                    ? '내 자리는 봇이 이어서 둬요.'
+                    : inHand
+                      ? '이번 핸드는 폴드 처리돼요.'
+                      : '테이블에서 나갈까요?'}
+              </span>
               <button className="btn btn-quiet btn-sm" onClick={() => setConfirmLeave(false)}>
                 취소
               </button>
@@ -251,6 +262,7 @@ function Players() {
   const [editing, setEditing] = useState<string | null>(null);
   const [stack, setStack] = useState('');
   const hand = handInProgress(game);
+  const mahjong = room.gameType === 'mahjong';
 
   const addSeat = async (e: FormEvent) => {
     e.preventDefault();
@@ -271,7 +283,7 @@ function Players() {
                   {room.hostId === p.id && <span className="tag">방장</span>}
                   {m?.manual && <span className="tag">폰 없음</span>}
                 </span>
-                <span className="num">{fmt(p.stack)}</span>
+                {!mahjong && <span className="num">{fmt(p.stack)}</span>}
               </div>
               {editing === p.id ? (
                 <form
@@ -300,20 +312,24 @@ function Players() {
                 </form>
               ) : (
                 <div className="player-actions">
-                  <button
-                    className="btn btn-quiet btn-sm"
-                    disabled={busy || locked}
-                    title={locked ? '이번 핸드 후' : undefined}
-                    onClick={() => {
-                      setEditing(p.id);
-                      setStack(String(p.stack));
-                    }}
-                  >
-                    스택 수정
-                  </button>
-                  <button className="btn btn-quiet btn-sm" disabled={busy} onClick={() => run({ type: 'sit', out: !p.sittingOut, playerId: p.id })}>
-                    {p.sittingOut ? '싯인' : '싯아웃'}
-                  </button>
+                  {!mahjong && (
+                    <button
+                      className="btn btn-quiet btn-sm"
+                      disabled={busy || locked}
+                      title={locked ? '이번 핸드 후' : undefined}
+                      onClick={() => {
+                        setEditing(p.id);
+                        setStack(String(p.stack));
+                      }}
+                    >
+                      스택 수정
+                    </button>
+                  )}
+                  {!mahjong && (
+                    <button className="btn btn-quiet btn-sm" disabled={busy} onClick={() => run({ type: 'sit', out: !p.sittingOut, playerId: p.id })}>
+                      {p.sittingOut ? '싯인' : '싯아웃'}
+                    </button>
+                  )}
                   {m && !m.manual && room.hostId !== p.id && (
                     <button className="btn btn-quiet btn-sm" disabled={busy} onClick={() => run({ type: 'transferHost', playerId: p.id })}>
                       방장 넘기기

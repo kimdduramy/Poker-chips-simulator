@@ -27,6 +27,7 @@
 - **폰 없는 사람 자리**: 메뉴에서 자리를 추가하고 다른 사람이 대신 눌러줄 수 있어요.
 - **기록**: 메뉴 → 기록에서 핸드별로 누가 언제 무엇을 했는지 최근 100개까지 볼 수 있어요.
 - **카드 모드 (실험)**: 테이블을 만들 때 **앱 카드**를 고르면 앱이 카드를 섞어 각자 폰에 2장씩 나눠주고, 보드를 스트리트마다 펼치고, 쇼다운에서 족보로 승자를 정해 팟을 자동으로 지급해요. 내 카드는 서버가 나한테만 보내요. 카드 모드에서는 이전 핸드로 되돌릴 수 없어요.
+- **마작 (만드는 중)**: 테이블을 만들 때 **마작**을 고르면 앱이 136장 패산을 섞어 각자 폰에 손패를 나눠주는 4인 리치 마작 테이블이 돼요. 쯔모·버림·쯔모 화료·론·유국까지 돼요. 론·쯔모 버튼은 역이 있고 후리텐이 아닐 때만 나오고, 텐파이면 기다리는 패를 보여줘요. 폰 없는 자리는 봇이 둬요. 진행 상황은 [앞으로 할 일](docs/roadmap.md)에 있어요.
 - **테스트 판**: [`/test`](https://chip-poker.pages.dev/test)로 들어가면 봇 1~7명이 앉은 판이 바로 차려져요. 봇 차례에는 봇의 버튼이 바로 떠서 혼자서도 끝까지 돌려볼 수 있어요.
 - **정산**: 바이인·리바이·최종 손익과 최소 송금 횟수를 계산해요.
 - **큰 화면 모드**: 아이패드나 노트북을 테이블 가운데 두고 팟, 차례, 스택을 크게 보여줘요.
@@ -73,6 +74,10 @@ React 19, Vite, TypeScript, Cloudflare Pages · Workers · Durable Objects (SQLi
 ## 효과음
 
 `public/sounds/`의 칩·카드 소리는 [Pixabay](https://pixabay.com/sound-effects/) 무료 효과음(OxidVideos, freesound_community)을 잘라서 쓴 거예요. Pixabay 콘텐츠 라이선스라 출처 표기 없이 쓸 수 있어요. 팟을 가져갈 때 나는 동전 소리(`win.mp3`)는 [Mixkit](https://mixkit.co/free-sound-effects/casino/) 무료 효과음(Clinking coins)이에요. 체크 소리는 코드로 합성해요.
+
+## 오픈소스
+
+- 마작 규칙(패산, 화료 판정, 역·부·점수, 친 넘기기)은 [kobalab/majiang-core](https://github.com/kobalab/majiang-core) (MIT, © 2021 Satoshi Kobayashi)를 서버에서 그대로 써요. JS라서 [`shared/mahjong/majiang-core.d.ts`](shared/mahjong/majiang-core.d.ts)에 타입을 붙였고, 동작은 [`test/majiang.test.ts`](test/majiang.test.ts)와 [`worker/test/mahjong.test.ts`](worker/test/mahjong.test.ts)에서 확인해요.
 
 ## 라이선스
 

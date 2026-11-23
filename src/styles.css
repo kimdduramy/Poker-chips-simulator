@@ -4229,3 +4229,471 @@ body {
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* ---------- 마작 ---------- */
+/* 패는 지금 글자로 그려요 (4단계에서 직접 그린 패 그림으로 바꿔요). 패 앞면은 밝은 상아색이라 다크 모드에서도 그대로예요. */
+
+:root {
+  --tile-face: oklch(0.975 0.014 92);
+  --tile-edge: oklch(0.83 0.025 92);
+  --tile-back: oklch(0.56 0.09 165);
+  --tile-man: oklch(0.47 0.17 25);
+  --tile-pin: oklch(0.44 0.14 255);
+  --tile-sou: oklch(0.47 0.13 150);
+  --tile-ink: oklch(0.22 0.01 90);
+  --tile-red: oklch(0.58 0.22 25);
+  --tile-red-face: oklch(0.93 0.05 20);
+}
+
+.mj-tile {
+  --tw: 28px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--tw);
+  height: calc(var(--tw) * 1.34);
+  border: 1px solid var(--tile-edge);
+  border-bottom: calc(var(--tw) * 0.09) solid var(--tile-back);
+  border-radius: calc(var(--tw) * 0.16);
+  background: var(--tile-face);
+  color: var(--tile-ink);
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 1px oklch(0 0 0 / 0.12);
+}
+
+.mj-tile[data-size='sm'] {
+  --tw: 21px;
+}
+
+.mj-tile[data-size='lg'] {
+  /* 손패 14장이 화면 너비에 들어가게 */
+  --tw: clamp(20px, calc((100vw - 2 * var(--gutter) - 14px) / 14 - 2px), 42px);
+}
+
+.mj-tile-num {
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--tw) * 0.04);
+}
+
+.mj-tile-digit {
+  font-size: calc(var(--tw) * 0.56);
+  font-family: var(--font-sans);
+}
+
+.mj-tile-suit {
+  font-size: calc(var(--tw) * 0.3);
+  font-weight: 600;
+}
+
+.mj-tile[data-suit='m'] {
+  color: var(--tile-man);
+}
+
+.mj-tile[data-suit='p'] {
+  color: var(--tile-pin);
+}
+
+.mj-tile[data-suit='s'] {
+  color: var(--tile-sou);
+}
+
+.mj-tile-honor {
+  font-size: calc(var(--tw) * 0.58);
+}
+
+.mj-tile[data-honor='6'] {
+  color: var(--tile-sou);
+}
+
+.mj-tile[data-honor='7'] {
+  color: var(--tile-red);
+}
+
+/* 백: 빈 테두리 */
+.mj-tile[data-honor='5']::before {
+  content: '';
+  width: 58%;
+  height: 60%;
+  border: calc(var(--tw) * 0.07) solid var(--tile-pin);
+  border-radius: 2px;
+}
+
+/* 빨간 5: 분홍 바탕 + 빨간 숫자 + 오른쪽 위 점 (만수는 원래 붉어서 바탕으로 구별해요) */
+.mj-tile[data-red] {
+  background: var(--tile-red-face);
+  border-color: var(--tile-red);
+}
+
+.mj-tile[data-red] .mj-tile-num {
+  color: var(--tile-red);
+}
+
+.mj-tile[data-red]::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--tw) * 0.1);
+  right: calc(var(--tw) * 0.1);
+  width: calc(var(--tw) * 0.14);
+  height: calc(var(--tw) * 0.14);
+  border-radius: 50%;
+  background: var(--tile-red);
+}
+
+.mj-tile[data-faint] {
+  opacity: 0.72;
+}
+
+.mj-tile[data-mark] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.mj-tile-back {
+  border-color: var(--tile-back);
+  background: var(--tile-back);
+}
+
+.mj-tiles {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+/* 판 */
+
+.mj-table {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.mj-info {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.mj-info-round,
+.mj-info-wall {
+  display: grid;
+  gap: 2px;
+}
+
+.mj-round {
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+
+.mj-wall-left {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 1.0625rem;
+}
+
+.mj-info-dora {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: end;
+  align-items: center;
+  gap: 2px 6px;
+}
+
+.mj-info-dora .label {
+  grid-column: 1 / -1;
+  text-align: right;
+}
+
+.mj-dora-tiles {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.mj-seats {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mj-seat {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+
+.mj-seat[data-me] {
+  background: var(--surface);
+}
+
+.mj-seat[data-acting] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.mj-seat-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mj-seat-name {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mj-seat-points {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.mj-wind {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.mj-wind[data-dealer] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.tag-accent {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.mj-river {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-height: 30px;
+}
+
+.mj-river-empty {
+  align-self: center;
+}
+
+/* 손패와 버튼 */
+
+.mj-dock {
+  gap: 10px;
+}
+
+.table-shell[data-turn] .mj-dock[data-turn] {
+  border-top-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  animation: drench 300ms var(--ease-out);
+}
+
+.mj-dock-title {
+  margin: 0;
+  font-weight: 650;
+  text-align: center;
+}
+
+.mj-hand {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: calc(clamp(20px, calc((100vw - 2 * var(--gutter) - 14px) / 14 - 2px), 42px) * 1.34 + 10px);
+  padding-top: 10px;
+}
+
+.mj-hand-drawn {
+  display: inline-flex;
+  margin-left: 10px;
+}
+
+.mj-hand-tile {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out);
+  touch-action: manipulation;
+}
+
+.mj-hand-tile:disabled {
+  cursor: default;
+}
+
+.mj-dock[data-discard] .mj-hand-tile:disabled {
+  opacity: 0.45;
+}
+
+.mj-hand-tile[data-picked] {
+  transform: translateY(-10px);
+}
+
+.mj-hand-tile:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.mj-helper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.mj-helper-label {
+  font-weight: 600;
+}
+
+.mj-helper[data-warn] .mj-helper-label {
+  color: var(--danger);
+}
+
+.mj-dock[data-turn] .mj-helper[data-warn] .mj-helper-label {
+  color: inherit;
+}
+
+.mj-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mj-actions:empty {
+  display: none;
+}
+
+.mj-actions .btn {
+  flex: 1 1 120px;
+}
+
+/* 결과 */
+
+.mj-result {
+  max-height: 62vh;
+  overflow-y: auto;
+}
+
+.mj-result-block {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.mj-result-title {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.mj-result-hand {
+  display: grid;
+  gap: 4px;
+}
+
+.mj-yaku {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 2px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mj-yaku li,
+.mj-deltas li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mj-score {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.mj-deltas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.mj-deltas li[data-sign='1'] .num {
+  color: var(--good);
+}
+
+.mj-deltas li[data-sign='-1'] .num {
+  color: var(--danger);
+}
+
+.mj-final {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mj-final li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.mj-final li[data-first] {
+  font-weight: 700;
+}
+
+.mj-final-rank {
+  font-family: var(--font-mono);
+}
+
+/* 큰 화면 */
+
+.mj-display .display-center {
+  display: grid;
+  gap: 16px;
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.mj-display .mj-tile[data-size='sm'] {
+  --tw: 30px;
+}

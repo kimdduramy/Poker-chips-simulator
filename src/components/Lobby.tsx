@@ -3,6 +3,8 @@ import { fmt } from '../lib/format';
 import { useTable } from '../lib/table';
 import { Icon } from './Icon';
 import { Invite } from './Invite';
+import { rulesFacts } from './mahjong/Rules';
+import { DEFAULT_MJ_RULES } from '../../shared/mahjong/view';
 
 export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPlayers: () => void }) {
   const { room, game, isHost, run, busy, v, away, member } = useTable();
@@ -14,6 +16,8 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
     void run({ type: 'seatOrder', v, ids });
   };
   const { sb, bb, startingStack } = game.settings;
+  const mahjong = room.gameType === 'mahjong';
+  const max = mahjong ? 4 : 10;
 
   return (
     <div className="lobby">
@@ -22,7 +26,9 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
       <section className="lobby-section" aria-labelledby="lobby-players">
         <div className="section-head">
           <h2 id="lobby-players">
-            좌석 <span className="muted num">{seats.length}/10</span>
+            좌석 <span className="muted num">
+              {seats.length}/{max}
+            </span>
           </h2>
           {isHost && (
             <button className="link-btn" onClick={onPlayers}>
@@ -42,7 +48,7 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
                   <span className="lobby-name">
                     {p.name}
                     {room.hostId === p.id && <span className="tag">방장</span>}
-                    {i === 0 && <span className="tag">첫 버튼</span>}
+                    {i === 0 && <span className="tag">{mahjong ? '첫 친' : '첫 버튼'}</span>}
                   </span>
                   <span className="muted small">{m?.manual ? '폰 없음' : away(p.id) ? '자리 비움' : ''}</span>
                   {isHost && seats.length > 1 && (
@@ -65,7 +71,13 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
             })}
           </ol>
         )}
-        {isHost && seats.length > 1 && <p className="hint">실제 좌석 순서대로, 버튼부터 시계 방향으로 맞춰 주세요. 이 순서대로 액션이 돌아요.</p>}
+        {isHost && seats.length > 1 && (
+          <p className="hint">
+            {mahjong
+              ? '첫 친(동)부터 차례가 도는 순서대로 맞춰 주세요. 실제로 둘러앉았다면 반시계 방향이에요. 폰 없는 자리는 봇이 자동으로 둬요.'
+              : '실제 좌석 순서대로, 버튼부터 시계 방향으로 맞춰 주세요. 이 순서대로 액션이 돌아요.'}
+          </p>
+        )}
       </section>
 
       <section className="lobby-section" aria-labelledby="lobby-rules">
@@ -77,6 +89,20 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
             </button>
           )}
         </div>
+        {mahjong ? (
+          <dl className="facts">
+            <div>
+              <dt>게임</dt>
+              <dd>리치 마작 (4인)</dd>
+            </div>
+            {rulesFacts(room.mjRules ?? DEFAULT_MJ_RULES).map((f) => (
+              <div key={f.label}>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
         <dl className="facts">
           <div>
             <dt>블라인드</dt>
@@ -93,6 +119,7 @@ export function Lobby({ onSettings, onPlayers }: { onSettings: () => void; onPla
             <dd>{room.cardMode ? '앱이 나눠줘요' : '실물 카드'}</dd>
           </div>
         </dl>
+        )}
       </section>
     </div>
   );

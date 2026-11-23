@@ -3,8 +3,20 @@ import { TermsPanel } from './Glossary';
 import { RanksList } from './HandRanks';
 import { Icon } from './Icon';
 import { ScrollBox } from './ScrollBox';
+import { MAHJONG_TERMS } from './mahjong/terms';
 
-const TABS = ['진행 방법', '용어', '족보'] as const;
+const TABS = ['진행 방법', '용어', '족보', '마작'] as const;
+
+/** 마작 처음 하는 사람용 */
+const MJ_STEPS = [
+  '테이블 만들기에서 마작을 고르고 4명이 들어와요. 폰 없는 자리는 봇이 대신 둬요.',
+  '목표: 손패 14장을 몸통 4개 + 머리 1개로 맞춰요. 몸통은 같은 패 3장이나 같은 종류 이어진 숫자 3장(예: 3통 4통 5통), 머리는 같은 패 2장이에요.',
+  '이기려면 역이 하나 있어야 해요. 처음에는 리치(안 울고 텐파이에서 선언), 탕야오(2~8 숫자패만), 역패(백·발·중이나 내 바람 3장)부터 노려 보세요.',
+  '내 차례에는 패를 하나 가져온 상태예요. 버릴 패를 한 번 누르면 들리고, 한 번 더 누르면 버려요.',
+  '한 장만 더 오면 이기는 텐파이가 되면 화면 아래에 기다리는 패가 나와요. 내가 이미 버린 패를 기다리면 후리텐이라 론은 못 하고 쯔모만 돼요.',
+  '이길 수 있을 때만 쯔모·론 버튼이 나와요. 이기면 역 이름, 부·판, 점수를 앱이 계산해서 주고받아요.',
+  '아무도 못 이기고 패가 떨어지면 유국이에요. 국이 끝나면 방장이 다음 국을 눌러요.',
+];
 
 const STEPS = [
   '한 명이 테이블 만들기를 누르고 코드, QR, 링크 중 하나로 친구들을 불러요. 만든 사람이 방장이에요.',
@@ -86,6 +98,16 @@ function HelpDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
                 <div className="help-ranks">
                   <RanksList />
                 </div>
+              )}
+              {tab === 3 && (
+                <>
+                  <ol className="help-steps">
+                    {MJ_STEPS.map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ol>
+                  <TermsPanel groups={MAHJONG_TERMS} />
+                </>
               )}
             </div>
           </ScrollBox>
