@@ -71,7 +71,7 @@ function HoldButton({
 /** 방장 전용: 되돌리기 / 다시 하기를 메뉴를 열지 않고 바로. */
 export function HistoryBar() {
   const { isHost, room, game, run, busy, v } = useTable();
-  if (!isHost || game.phase === 'lobby') return null;
+  if (!isHost || (room.gameType === 'mahjong' ? !room.mj : game.phase === 'lobby')) return null;
   const undo = room.undoLabel;
   const redo = room.redoLabel;
   if (!undo && !redo) return null;

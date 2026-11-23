@@ -71,14 +71,15 @@ export default {
         const { success } = await env.CREATE_LIMITER.limit({ key: ip });
         if (!success) return json({ error: '테이블을 너무 많이 만들었어요. 1분 뒤에 다시 시도해 주세요.' }, 429);
       }
-      // 본문은 없어도 돼요. { cardMode: true }면 카드 모드 테이블이에요.
-      const body = (await request.json().catch(() => null)) as { cardMode?: unknown } | null;
+      // 본문은 없어도 돼요. { cardMode: true }면 카드 모드 테이블, { gameType: 'mahjong' }이면 마작 테이블이에요.
+      const body = (await request.json().catch(() => null)) as { cardMode?: unknown; gameType?: unknown } | null;
       const cardMode = body?.cardMode === true;
+      const gameType = body?.gameType === 'mahjong' ? 'mahjong' : 'holdem';
       for (let attempt = 0; attempt < 8; attempt++) {
         const code = randomCode();
         const res = await stub(env, code).fetch('https://room/init', {
           method: 'POST',
-          body: JSON.stringify({ code, cardMode }),
+          body: JSON.stringify({ code, cardMode, gameType }),
         });
         if (res.status === 201) return json({ code }, 201);
       }

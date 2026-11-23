@@ -1,16 +1,18 @@
-import type { HandRecord } from '../../shared/protocol';
+import type { GameType, HandRecord } from '../../shared/protocol';
+import type { MjRoundRecord } from '../../shared/mahjong/record';
 export interface RoomInfo {
   code: string;
   phase: string;
   cardMode?: boolean;
+  gameType?: GameType;
   players: string[];
 }
 
-export async function createRoom(opts: { cardMode?: boolean } = {}): Promise<string> {
+export async function createRoom(opts: { cardMode?: boolean; gameType?: GameType } = {}): Promise<string> {
   const res = await fetch('/api/rooms', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ cardMode: !!opts.cardMode }),
+    body: JSON.stringify({ cardMode: !!opts.cardMode, gameType: opts.gameType ?? 'holdem' }),
   });
   const body = (await res.json().catch(() => ({}))) as { code?: string; error?: string };
   if (!res.ok || !body.code) throw new Error(body.error ?? '테이블을 만들지 못했어요. 다시 시도해 주세요.');
@@ -31,6 +33,9 @@ export interface HistoryReply {
   /** 디버그 코드가 맞으면 hands에 모두의 시작 패(holes)가 들어 있어요 */
   debug: boolean;
   hands: HandRecord[];
+  gameType?: GameType;
+  /** 마작: 끝난 국들 */
+  mjRounds?: MjRoundRecord[];
 }
 
 export async function fetchHistory(code: string, token: string, debugCode?: string): Promise<HistoryReply> {

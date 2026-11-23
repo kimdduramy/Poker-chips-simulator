@@ -373,7 +373,7 @@ test('/test sets up a solo table with bots and lets me play their turns', async 
 
   await me.goto('/test');
   await expect(me.getByRole('heading', { name: '테스트 판 만들기' })).toBeVisible();
-  await me.getByRole('radio', { name: '2' }).click();
+  await me.getByRole('radio', { name: '2', exact: true }).click();
   await me.getByRole('button', { name: '테스트 판 시작' }).click();
   await me.waitForURL(/\/t\/[A-Z]{4}$/);
 
@@ -507,4 +507,38 @@ test('card mode deals cards on the phones and pays the best hand by itself', asy
   const debugText = await ana.evaluate(() => navigator.clipboard.readText());
   expect(debugText).toMatch(/^H P1 [2-9TJQKA][shdc][2-9TJQKA][shdc] P2 /m);
   expect(Number((await stackOf(ana, 'Ana').innerText()).replace(/,/g, '')) + Number((await stackOf(ana, 'Ben').innerText()).replace(/,/g, ''))).toBe(2000);
+});
+
+test('mahjong: a solo table with three bots deals my hand and plays the bots after my discard', async ({ browser }) => {
+  const ctx = await browser.newContext({ ...test.info().project.use });
+  contexts.push(ctx);
+  const me = await ctx.newPage();
+  const errors: string[] = [];
+  me.on('pageerror', (e) => errors.push(e.message));
+
+  await me.goto('/test');
+  await me.getByRole('radio', { name: /마작/ }).click();
+  await me.getByRole('button', { name: '테스트 판 시작' }).click();
+  await me.waitForURL(/\/t\/[A-Z]{4}$/);
+  await expect(me.getByText('리치 마작 (4인)')).toBeVisible();
+  await expect(me.getByText('봇3')).toBeVisible();
+  await me.getByRole('button', { name: '게임 시작' }).click();
+
+  // 친이라 14장: 손패 13장 + 방금 가져온 패
+  const hand = me.getByRole('group', { name: '내 손패' });
+  await expect(hand.getByRole('button')).toHaveCount(14);
+  await expect(me.getByText('내 차례 · 버릴 패를 두 번 누르세요')).toBeVisible();
+  await expect(me.locator('.mj-center-wall b')).toHaveText('69');
+
+  // 가져온 패를 두 번 눌러 버리면 봇 셋이 두고 다시 내 차례(또는 그 사이 누가 이겼어요)
+  const drawn = me.locator('.mj-hand-drawn button');
+  await drawn.click();
+  await expect(drawn).toHaveAttribute('data-picked', 'true');
+  await drawn.click();
+  await expect(me.locator('.mj-center-wall b').or(me.locator('.mj-result')).first()).toBeVisible();
+  await expect(async () => {
+    const left = await me.locator('.mj-center-wall b').textContent();
+    expect(Number(left)).toBeLessThanOrEqual(65);
+  }).toPass();
+  expect(errors).toEqual([]);
 });

@@ -1,5 +1,9 @@
 import type { Card } from './cards';
 import type { ActionKind, Game, Legal, Settings } from './engine';
+import { isMjRules, type MjAction, type MjPrivate, type MjRules, type MjView } from './mahjong/view';
+
+/** 테이블의 게임 종류 (테이블을 만들 때 정해요) */
+export type GameType = 'holdem' | 'mahjong';
 
 export const MAX_MESSAGE_BYTES = 2048;
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ';
@@ -40,7 +44,11 @@ export type ClientMessage =
   | { type: 'seatOrder'; v: number; ids: string[] }
   | { type: 'kick'; playerId: string }
   | { type: 'transferHost'; playerId: string }
-  | { type: 'takeHost' };
+  | { type: 'takeHost' }
+  /** 마작: 버리기·쯔모·론·패스·구종구패. playerId는 자리 비운 사람을 대신 자동으로 둘 때만 ('auto'). */
+  | { type: 'mj'; v: number; action: MjAction }
+  | { type: 'mjAuto'; v: number; playerId: string }
+  | { type: 'mjRules'; v: number; rules: MjRules };
 
 export type Envelope = ClientMessage & { seq?: number };
 
@@ -105,6 +113,11 @@ export interface HandRecord {
 
 export interface RoomView {
   code: string;
+  gameType: GameType;
+  /** 마작 테이블: 모두에게 보여도 되는 판 (게임 전에는 null) */
+  mj: MjView | null;
+  /** 마작 테이블: 다음 게임 규칙 */
+  mjRules: MjRules | null;
   /** 카드 모드: 앱이 카드를 나눠주고 승자를 정해요 */
   cardMode: boolean;
   /** 카드 모드에서 지금 깔린 보드 카드 */
@@ -132,6 +145,8 @@ export interface YouView {
   legal: Legal | null;
   /** 카드 모드: 내 홀카드 (나한테만 보내요) */
   hole: Card[] | null;
+  /** 마작: 내 손패와 누를 수 있는 버튼 (나한테만 보내요) */
+  mj: MjPrivate | null;
 }
 
 export type ErrorCode = 'STALE' | 'NOT_TURN' | 'INVALID' | 'PHASE' | 'FORBIDDEN' | 'RATE' | 'NOT_FOUND';
@@ -149,6 +164,22 @@ const isId = (v: unknown): v is string => typeof v === 'string' && /^[a-z0-9]{8,
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
 const optId = (v: unknown) => v === undefined || isId(v);
 const KINDS: readonly string[] = ['fold', 'check', 'call', 'raise'];
+const isMjTile = (t: unknown): t is string => typeof t === 'string' && /^(?:[mps]\d|z[1-7])_?$/.test(t);
+
+function parseMjAction(a: unknown): MjAction | null {
+  if (!isObj(a) || typeof a.kind !== 'string') return null;
+  switch (a.kind) {
+    case 'discard':
+      return isMjTile(a.tile) ? { kind: 'discard', tile: a.tile } : null;
+    case 'tsumo':
+    case 'ron':
+    case 'pass':
+    case 'abort':
+      return { kind: a.kind };
+    default:
+      return null;
+  }
+}
 
 /** Strict structural validation. Unknown message types or malformed fields return null. */
 export function parseClientMessage(raw: string): Envelope | null {
@@ -240,6 +271,17 @@ export function parseClientMessage(raw: string): Envelope | null {
     case 'kick':
     case 'transferHost':
       return isId(m.playerId) ? out({ type: m.type, playerId: m.playerId }) : null;
+    case 'mj': {
+      const action = parseMjAction(m.action);
+      return isNum(v) && action ? out({ type: 'mj', v, action }) : null;
+    }
+    case 'mjAuto':
+      return isNum(v) && isId(m.playerId) ? out({ type: 'mjAuto', v, playerId: m.playerId }) : null;
+    case 'mjRules': {
+      if (!isNum(v) || !isMjRules(m.rules)) return null;
+      const { startPoints, length, aka, kuitan } = m.rules;
+      return out({ type: 'mjRules', v, rules: { startPoints, length, aka, kuitan } });
+    }
     default:
       return null;
   }

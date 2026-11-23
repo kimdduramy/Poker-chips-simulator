@@ -2,20 +2,25 @@ import { useState } from 'react';
 import { createRoom } from '../lib/api';
 import { setTest } from '../lib/testMode';
 import { CardModePick } from '../components/CardModePick';
+import { GamePick } from '../components/GamePick';
+import type { GameType } from '../../shared/protocol';
 
 /** /test : 혼자서 여러 명 판을 시험해 보는 테스트 판 만들기 */
 export function TestSetup({ navigate }: { navigate: (to: string) => void }) {
   const [bots, setBots] = useState(3);
   const [busy, setBusy] = useState(false);
   const [cardMode, setCardMode] = useState(false);
+  const [gameType, setGameType] = useState<GameType>('holdem');
+  const mahjong = gameType === 'mahjong';
   const [error, setError] = useState<string | null>(null);
 
   const start = async () => {
     setBusy(true);
     setError(null);
     try {
-      const code = await createRoom({ cardMode });
-      setTest(code, { bots, joined: false, seeded: false });
+      const code = await createRoom({ cardMode: !mahjong && cardMode, gameType });
+      // 마작은 4명이라 봇 3명이 고정이에요
+      setTest(code, { bots: mahjong ? 3 : bots, joined: false, seeded: false });
       navigate(`/t/${code}`);
     } catch (e) {
       setError((e as Error).message);
@@ -32,6 +37,12 @@ export function TestSetup({ navigate }: { navigate: (to: string) => void }) {
       </section>
 
       <section className="home-actions test-actions">
+        <span className="field-label">게임</span>
+        <GamePick value={gameType} onChange={setGameType} />
+        {mahjong ? (
+          <p className="hint">마작은 나 + 봇 3명이에요. 봇은 가져온 패를 그대로 버리고, 이길 수 있으면 이겨요.</p>
+        ) : (
+          <>
         <span className="field-label" id="bots-label">
           봇 인원 (나 포함 {bots + 1}명)
         </span>
@@ -51,6 +62,8 @@ export function TestSetup({ navigate }: { navigate: (to: string) => void }) {
         </div>
         <span className="field-label">카드</span>
         <CardModePick value={cardMode} onChange={setCardMode} />
+          </>
+        )}
         <button className="btn btn-primary btn-xl" onClick={start} disabled={busy}>
           {busy ? '만드는 중…' : '테스트 판 시작'}
         </button>

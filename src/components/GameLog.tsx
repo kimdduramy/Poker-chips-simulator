@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatMjHistory } from '../../shared/mahjong/record';
 import { cardRankText, cardSuitSymbol, isRed, type Card } from '../../shared/cards';
 import { findPlayer } from '../../shared/engine';
 import type { HandRecord } from '../../shared/protocol';
@@ -188,6 +189,26 @@ function CopyHistory() {
     setBusy(true);
     try {
       const r = await fetchHistory(room.code, deviceToken(), debug);
+      if (r.gameType === 'mahjong') {
+        const rounds = r.mjRounds ?? [];
+        if (!rounds.length) {
+          toast('아직 끝난 국이 없어요');
+          return;
+        }
+        const text = formatMjHistory(r.code, rounds);
+        try {
+          await navigator.clipboard.writeText(text);
+          toast(`${rounds.length}국 ${r.debug ? '디버그 ' : ''}기보를 복사했어요`);
+          setFallback(null);
+        } catch {
+          setFallback(text);
+        }
+        if (r.debug) {
+          setDebugOpen(false);
+          setCode('');
+        }
+        return;
+      }
       if (!r.hands.length) {
         toast('아직 끝난 핸드가 없어요');
         return;

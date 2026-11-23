@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 
-interface Term {
+export interface Term {
   term: string;
   /** 게임 중 작은 창 목록에 쓰는 짧은 이름 (없으면 term) */
   short?: string;
@@ -10,7 +10,9 @@ interface Term {
 }
 
 /** 앱 화면에 나오는 홀덤 용어. 국내 홀덤에서 쓰는 명칭 기준. */
-const GROUPS: { title: string; terms: Term[] }[] = [
+export type TermGroup = { title: string; terms: Term[] };
+
+export const HOLDEM_TERMS: TermGroup[] = [
   {
     title: '진행',
     terms: [
@@ -79,10 +81,10 @@ const GROUPS: { title: string; terms: Term[] }[] = [
 ];
 
 /** 게임 중 작은 창의 제목 줄 탭: 용어 설명 [진행|액션|칩과 팟|상황] */
-function GroupTabs({ group, onPick }: { group: number; onPick: (i: number) => void }) {
+function GroupTabs({ groups, group, onPick }: { groups: TermGroup[]; group: number; onPick: (i: number) => void }) {
   return (
     <div className="gl-tabs" role="tablist" aria-label="용어 묶음">
-      {GROUPS.map((g, i) => (
+      {groups.map((g, i) => (
         <button key={g.title} role="tab" aria-selected={i === group} className="gl-tab" onClick={() => onPick(i)}>
           {g.title}
         </button>
@@ -92,8 +94,8 @@ function GroupTabs({ group, onPick }: { group: number; onPick: (i: number) => vo
 }
 
 /** 게임 중용: 화면을 덜 가리도록 [용어 칩] → [고른 용어 설명 한 개]만 보여 줘요. */
-function CompactGlossary({ group, pick, onPick }: { group: number; pick: number; onPick: (i: number) => void }) {
-  const terms = GROUPS[group].terms;
+function CompactGlossary({ groups, group, pick, onPick }: { groups: TermGroup[]; group: number; pick: number; onPick: (i: number) => void }) {
+  const terms = groups[Math.min(group, groups.length - 1)].terms;
   const t = terms[Math.min(pick, terms.length - 1)];
   return (
     <div className="gl-compact">
@@ -120,25 +122,26 @@ function CompactGlossary({ group, pick, onPick }: { group: number; pick: number;
 }
 
 /** 도움말 창의 '용어' 탭: [진행|액션|칩과 팟|상황] 밑줄 탭 + 용어 글자 목록 + 설명 */
-export function TermsPanel() {
+export function TermsPanel({ groups = HOLDEM_TERMS }: { groups?: TermGroup[] }) {
   const [group, setGroup] = useState(0);
   const [pick, setPick] = useState(0);
   return (
     <div className="help-terms">
       <GroupTabs
+        groups={groups}
         group={group}
         onPick={(i) => {
           setGroup(i);
           setPick(0);
         }}
       />
-      <CompactGlossary group={group} pick={pick} onPick={setPick} />
+      <CompactGlossary groups={groups} group={group} pick={pick} onPick={setPick} />
     </div>
   );
 }
 
 /** 게임 중: 상단바의 작은 버튼으로 여는 작은 창. 바깥을 누르거나 Esc로 닫혀요. */
-export function GlossaryButton() {
+export function GlossaryButton({ groups = HOLDEM_TERMS }: { groups?: TermGroup[] }) {
   const [open, setOpen] = useState(false);
   const [group, setGroup] = useState(0);
   const [pick, setPick] = useState(0);
@@ -174,6 +177,7 @@ export function GlossaryButton() {
           <div className="glossary-pop-head">
             <span className="glossary-title">용어 설명</span>
             <GroupTabs
+              groups={groups}
               group={group}
               onPick={(i) => {
                 setGroup(i);
@@ -184,7 +188,7 @@ export function GlossaryButton() {
               <Icon name="close" size={14} />
             </button>
           </div>
-          <CompactGlossary group={group} pick={pick} onPick={setPick} />
+          <CompactGlossary groups={groups} group={group} pick={pick} onPick={setPick} />
         </div>
       )}
     </div>
