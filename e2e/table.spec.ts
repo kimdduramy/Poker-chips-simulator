@@ -528,16 +528,16 @@ test('mahjong: a solo table with three bots deals my hand and plays the bots aft
   const hand = me.getByRole('group', { name: '내 손패' });
   await expect(hand.getByRole('button')).toHaveCount(14);
   await expect(me.getByText('내 차례 · 버릴 패를 두 번 누르세요')).toBeVisible();
-  await expect(me.locator('.mj-wall-left')).toHaveText('69');
+  await expect(me.locator('.mj-center-wall b')).toHaveText('69');
 
   // 가져온 패를 두 번 눌러 버리면 봇 셋이 두고 다시 내 차례(또는 그 사이 누가 이겼어요)
   const drawn = me.locator('.mj-hand-drawn button');
   await drawn.click();
   await expect(drawn).toHaveAttribute('data-picked', 'true');
   await drawn.click();
-  await expect(me.locator('.mj-wall-left').or(me.locator('.mj-result')).first()).toBeVisible();
+  await expect(me.locator('.mj-center-wall b').or(me.locator('.mj-result')).first()).toBeVisible();
   await expect(async () => {
-    const left = await me.locator('.mj-wall-left').textContent();
+    const left = await me.locator('.mj-center-wall b').textContent();
     expect(Number(left)).toBeLessThanOrEqual(65);
   }).toPass();
   expect(errors).toEqual([]);

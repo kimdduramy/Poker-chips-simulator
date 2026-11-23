@@ -14,7 +14,7 @@ import { useTable } from '../lib/table';
 import { useDealLeft } from '../lib/dealer';
 import { APP_NAME } from '../lib/format';
 import { BOT_NAMES, getTest, setTest } from '../lib/testMode';
-import { MjInfo, MjSeats } from '../components/mahjong/Board';
+import { MjTableBoard } from '../components/mahjong/Board';
 import { MjDock, MjLobbyDock } from '../components/mahjong/Dock';
 
 export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: () => void }) {
@@ -81,10 +81,7 @@ export function Table({ onDisplay, onLeft }: { onDisplay: () => void; onLeft: ()
       <main id="table-main" className="table-main" tabIndex={-1}>
         {mahjong ? (
           mj ? (
-            <div className="mj-table">
-              <MjInfo mj={mj} />
-              <MjSeats mj={mj} />
-            </div>
+            <MjTableBoard mj={mj} />
           ) : (
             <Lobby onSettings={() => setSheet('settings')} onPlayers={() => setSheet('players')} />
           )

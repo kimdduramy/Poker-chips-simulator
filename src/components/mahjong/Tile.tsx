@@ -7,7 +7,7 @@ import { bare, isRed, tileName } from '../../../shared/mahjong/tiles';
 const HONOR = ['동', '남', '서', '북', '', '발', '중'];
 const SUIT = { m: '만', p: '통', s: '삭' } as const;
 
-export type TileSize = 'sm' | 'md' | 'lg';
+export type TileSize = 'sm' | 'md' | 'lg' | 'pond' | 'dora';
 
 interface Props {
   /** 'm3', 'p0', 'z7'. 버림패 기호('_' 쯔모기리 등)가 붙어 있어도 돼요. */

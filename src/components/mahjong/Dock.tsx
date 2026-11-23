@@ -44,10 +44,6 @@ function MjPlay({ mj, me }: { mj: MjView; me: MjPrivate }) {
 
   return (
     <div className="dock mj-dock" data-turn={myTurn || legal?.ron || undefined} data-discard={myTurn || undefined}>
-      <p className="mj-dock-title" aria-live="polite">
-        {title}
-      </p>
-
       <div className="mj-hand" role="group" aria-label="내 손패">
         {me.hand.map((t, i) => (
           <HandTile key={`${t}-${i}`} tile={t} picked={picked === t && i === me.hand.indexOf(t)} enabled={myTurn && allowed(t)} onTap={() => tap(t)} />
@@ -59,39 +55,44 @@ function MjPlay({ mj, me }: { mj: MjView; me: MjPrivate }) {
         )}
       </div>
 
-      <Helper me={me} />
-
-      <div className="mj-actions">
-        {legal?.tsumo && (
-          <button className="btn btn-primary btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'tsumo' } })}>
-            쯔모
-          </button>
-        )}
-        {legal?.ron && (
-          <>
-            <button className="btn btn-primary btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'ron' } })}>
-              론
+      {/* 세로 화면에서는 제목·도우미·버튼이 손패 위아래로, 가로 화면에서는 오른쪽 칸에 모여요 */}
+      <div className="mj-dock-side">
+        <p className="mj-dock-title" aria-live="polite">
+          {title}
+        </p>
+        <Helper me={me} />
+        <div className="mj-actions">
+          {legal?.tsumo && (
+            <button className="btn btn-primary btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'tsumo' } })}>
+              쯔모
             </button>
-            <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'pass' } })}>
-              넘기기
+          )}
+          {legal?.ron && (
+            <>
+              <button className="btn btn-primary btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'ron' } })}>
+                론
+              </button>
+              <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'pass' } })}>
+                넘기기
+              </button>
+            </>
+          )}
+          {myTurn && picked && (
+            <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => discard(picked)}>
+              {tileName(picked)} 버리기
             </button>
-          </>
-        )}
-        {myTurn && picked && (
-          <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => discard(picked)}>
-            {tileName(picked)} 버리기
-          </button>
-        )}
-        {legal?.abort && (
-          <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'abort' } })}>
-            구종구패 유국
-          </button>
-        )}
-        {turnAway && turnSeat && (
-          <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => send({ type: 'mjAuto', v, playerId: turnSeat.id })}>
-            {turnSeat.name} 대신 버리기
-          </button>
-        )}
+          )}
+          {legal?.abort && (
+            <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => send({ type: 'mj', v, action: { kind: 'abort' } })}>
+              구종구패 유국
+            </button>
+          )}
+          {turnAway && turnSeat && (
+            <button className="btn btn-quiet btn-lg" disabled={busy} onClick={() => send({ type: 'mjAuto', v, playerId: turnSeat.id })}>
+              {turnSeat.name} 대신 버리기
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

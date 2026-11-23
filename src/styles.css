@@ -4697,3 +4697,306 @@ body {
 .mj-display .mj-tile[data-size='sm'] {
   --tw: 30px;
 }
+
+/* ---------- 마작판 (실제 테이블 모양) ---------- */
+/*
+ * 정사각형 판. --t는 버림패 한 장 너비예요. 판 크기의 1/18로 잡아서
+ * 가운데 상자(6.6t) + 양쪽 버림패 4줄씩이 딱 들어가요.
+ * 자리마다 판 전체 크기의 층(.mj-side)을 그 사람 방향으로 돌려서, 버림패가 각자 앞에 쌓여요.
+ */
+.mj-board {
+  --t: calc(100cqmin / 15.4);
+  --center: calc(var(--t) * 6.6);
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 1;
+  margin: 10px auto 0;
+  container-type: size;
+  border-radius: var(--r-lg);
+  background: var(--mat, var(--surface));
+  overflow: hidden;
+}
+
+.mj-side {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.table-shell[data-game='mahjong'] .table-main:has(.mj-board) {
+  display: grid;
+  align-content: center;
+}
+
+.mj-pond {
+  position: absolute;
+  top: calc(50% + var(--center) / 2 + var(--t) * 0.3);
+  left: 50%;
+  translate: -50% 0;
+  display: grid;
+  gap: 1px;
+  width: calc(var(--t) * 6 + 5px);
+}
+
+.mj-pond-row {
+  display: flex;
+  gap: 1px;
+  min-height: calc(var(--t) * 1.34);
+}
+
+.mj-tile[data-size='pond'] {
+  --tw: var(--t);
+  box-shadow: none;
+}
+
+.mj-tile[data-size='dora'] {
+  --tw: calc(var(--t) * 0.86);
+}
+
+/* 이름표: 가운데 상자의 그 사람 쪽 가장자리 */
+.mj-side-label {
+  position: absolute;
+  top: calc(50% + var(--center) / 2 - var(--t) * 1.05);
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--t) * 0.22);
+  /* 양옆 이름표와 모서리에서 안 겹치게 */
+  width: calc(var(--center) - var(--t) * 2.1);
+  height: calc(var(--t) * 0.95);
+  padding: 0 calc(var(--t) * 0.15);
+  border-radius: calc(var(--t) * 0.3);
+  font-size: calc(var(--t) * 0.44);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mj-side[data-acting] .mj-side-label {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.mj-side-wind {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: calc(var(--t) * 0.72);
+  height: calc(var(--t) * 0.72);
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: calc(var(--t) * 0.42);
+}
+
+.mj-side-wind[data-dealer] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.mj-side-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.mj-side-points {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.mj-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: calc(var(--t) * 0.12);
+  width: var(--center);
+  height: var(--center);
+  border: 1px solid var(--line-strong);
+  border-radius: calc(var(--t) * 0.45);
+  background: var(--bg);
+  /* 이름표 네 개가 가장자리에 들어가요 */
+  padding: calc(var(--t) * 1);
+  line-height: 1.1;
+  text-align: center;
+}
+
+.mj-center-round {
+  font-weight: 700;
+  font-size: calc(var(--t) * 0.78);
+}
+
+.mj-center-sub,
+.mj-center-wall {
+  color: var(--ink-2);
+  font-size: calc(var(--t) * 0.48);
+}
+
+.mj-center-wall b {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: calc(var(--t) * 0.62);
+}
+
+.mj-center-dora {
+  display: inline-flex;
+  gap: 1px;
+  margin-top: calc(var(--t) * 0.1);
+}
+
+/* 손패 칸: 세로에서는 [제목 / 손패 / 도우미 / 버튼] 순서 */
+.mj-dock:not(.mj-result) {
+  grid-template-areas: 'title' 'hand' 'helper' 'actions';
+}
+
+.mj-dock-side {
+  display: contents;
+}
+
+.mj-dock-title {
+  grid-area: title;
+}
+
+.mj-hand {
+  grid-area: hand;
+}
+
+.mj-helper {
+  grid-area: helper;
+}
+
+.mj-actions {
+  grid-area: actions;
+}
+
+/* 가로로 눕힌 폰: 판을 가운데 크게, 손패는 아래 전체 폭, 제목·버튼은 오른쪽 칸 */
+@media (orientation: landscape) and (max-height: 520px) and (min-width: 600px) {
+  .table-shell[data-game='mahjong'][data-phase^='mj-'][data-phase] {
+    /* 판 한 변 = 화면 높이 - 손패 줄 */
+    --board: calc(100dvh - 96px);
+    grid-template-columns: minmax(0, 1fr) var(--board) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'top board side'
+      'undo board side'
+      'hand hand hand';
+    column-gap: 12px;
+    max-width: none;
+    padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+  }
+
+  .table-shell[data-game='mahjong'][data-phase='mj-lobby'] {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: 'top top' 'board side';
+  }
+
+  .table-shell[data-game='mahjong'] .topbar {
+    grid-area: top;
+    align-self: start;
+    border-bottom: 0;
+    padding-left: 0;
+  }
+
+  /* 국 이름은 판 가운데 상자에 있어서 위쪽 바에서는 빼요 */
+  .table-shell[data-game='mahjong'][data-phase^='mj-p'] .topbar-phase,
+  .table-shell[data-game='mahjong'][data-phase^='mj-r'] .topbar-phase,
+  .table-shell[data-game='mahjong'][data-phase^='mj-e'] .topbar-phase {
+    display: none;
+  }
+
+  .table-shell[data-game='mahjong'] .table-main {
+    grid-area: board;
+    margin: 0;
+    padding: 6px 0;
+    overflow: visible;
+  }
+
+  .table-shell[data-game='mahjong'] .mj-board {
+    width: var(--board);
+    height: var(--board);
+    max-width: none;
+    margin: 0 auto;
+  }
+
+  .table-shell[data-game='mahjong'] .dock-wrap {
+    display: contents;
+  }
+
+  .table-shell[data-game='mahjong'] .hist-bar {
+    grid-area: undo;
+    align-self: end;
+    flex-direction: column;
+    margin-bottom: 8px;
+    padding: 0;
+    border-top: 0;
+  }
+
+  .table-shell[data-game='mahjong'] .hist-bar > * {
+    flex: none;
+  }
+
+  .table-shell[data-game='mahjong'] .mj-dock-title {
+    font-size: 0.9375rem;
+    text-wrap: balance;
+  }
+
+  .table-shell[data-game='mahjong'] .mj-dock:not(.mj-result) {
+    display: contents;
+  }
+
+  .table-shell[data-game='mahjong'] .mj-dock-side {
+    grid-area: side;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    align-self: center;
+    margin-top: 8px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+  }
+
+  .table-shell[data-game='mahjong'][data-turn] .mj-dock[data-turn] .mj-dock-side {
+    border-color: transparent;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .table-shell[data-game='mahjong'] .mj-hand {
+    grid-area: hand;
+    padding: 6px 0 calc(var(--safe-bottom) + 8px);
+    min-height: 0;
+  }
+
+  .table-shell[data-game='mahjong'] .mj-hand .mj-tile[data-size='lg'] {
+    --tw: clamp(20px, calc((100vw - 120px) / 15), 46px);
+  }
+
+  .table-shell[data-game='mahjong'] .mj-actions {
+    flex-direction: column;
+  }
+
+  .table-shell[data-game='mahjong'] .mj-actions .btn {
+    flex: none;
+  }
+
+
+  .table-shell[data-game='mahjong'] .mj-result {
+    grid-area: side;
+    grid-row: 1 / 4;
+    max-height: 100dvh;
+    margin: 8px 0;
+  }
+}
